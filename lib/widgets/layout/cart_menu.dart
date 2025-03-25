@@ -12,19 +12,26 @@ class CartMenu extends StatefulWidget {
 
 class _CartMenuState extends State<CartMenu> {
   final CartRepository _cartRepository = CartRepository();
-  List<CartItem> cartItems = []; // Usando o modelo diretamente
+  List<Map<String, dynamic>> cartItems = [];
   bool isLoading = true;
   bool isMenuOpen = false;
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
 
   Future<void> _loadCartItems() async {
-    if (!mounted) return;
+    if (_isDisposed) return;
     
     setState(() => isLoading = true);
-    
+
     try {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) {
-        if (!mounted) return;
+        if (_isDisposed) return;
         setState(() => isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Faça login para ver seu carrinho')),
@@ -32,19 +39,194 @@ class _CartMenuState extends State<CartMenu> {
         return;
       }
 
-      final items = await _cartRepository.getCartItems(user.id);
-      if (!mounted) return;
+      final List<CartItem> items = await _cartRepository.getCartItems(user.id);
+      if (_isDisposed) return;
       setState(() {
-        cartItems = items;
+        cartItems = items.map((item) => item.toJson()).toList();
         isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (_isDisposed) return;
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao carregar carrinho: ${e.toString()}')),
       );
     }
+  }
+
+  Future<void> _removeItem(int index) async {
+    if (_isDisposed || index < 0 || index >= cartItems.length) return;
+
+    final BuildContext? currentContext = context;
+    if (currentContext == null) return;
+
+    final item = cartItems[index];
+    final itemId = item['id']?.toString();
+
+    if (itemId == null) {
+      ScaffoldMessenger.of(currentContext).showSnackBar(
+        const SnackBar(content: Text('ID do item inválido')),
+      );
+      return;
+    }
+
+    // Guarda o estado anterior
+    final previousItems = List<Map<String, dynamic>>.from(cartItems);
+    
+    // Remove otimista
+    if (!_isDisposed) {
+      setState(() => cartItems.removeAt(index));
+    }
+
+    try {
+      final removed = await _cartRepository.removeItem(itemId);
+      
+      if (!removed && !_isDisposed) {
+        // Rollback se falhou no servidor
+        setState(() => cartItems = previousItems);
+        ScaffoldMessenger.of(currentContext).showSnackBar(
+          const SnackBar(content: Text('Falha ao remover item do servidor')),
+        );
+      }
+    } catch (e) {
+      // Rollback em caso de erro
+      if (!_isDisposed) setState(() => cartItems = previousItems);
+      ScaffoldMessenger.of(currentContext).showSnackBar(
+        SnackBar(content: Text('Erro ao remover item: ${e.toString()}')),
+      );
+    }
+    
+    // Força a reconstrução do menu
+    if (!_isDisposed && isMenuOpen) {
+      Navigator.of(currentContext).pop(); // Fecha o menu atual
+      if (cartItems.isNotEmpty) {
+        // Reabre o menu após um pequeno delay
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (!_isDisposed) _showCartMenu(currentContext);
+        });
+      }
+    }
+  }
+
+  void _showCartMenu(BuildContext context) {
+    isMenuOpen = true;
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        MediaQuery.of(context).size.width - 300,
+        80,
+        0,
+        0,
+      ),
+      items: [
+        PopupMenuItem(
+          height: 400,
+          child: Container(
+            width: 300,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Seu Carrinho',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    Chip(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      label: Text(
+                        cartItems.isEmpty 
+                          ? 'Vazio' 
+                          : '${cartItems.length} ${cartItems.length == 1 ? 'item' : 'itens'}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                if (isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else if (cartItems.isEmpty)
+                  const Center(child: Text('Seu carrinho está vazio'))
+                else
+                  Column(
+                    children: [
+                      SizedBox(
+                        height: 250,
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: cartItems.length,
+                          itemBuilder: (context, index) {
+                            final item = cartItems[index];
+                            final itemId = item['id']?.toString() ?? index.toString();
+                            
+                            return Dismissible(
+                              key: Key(itemId),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                color: Colors.red,
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.only(right: 20),
+                                child: const Icon(Icons.delete, color: Colors.white),
+                              ),
+                              onDismissed: (direction) => _removeItem(index),
+                              child: ListTile(
+                                title: Text(item['product_name'] ?? 'Produto sem nome'),
+                                subtitle: Text('Qtd: ${item['quantity'] ?? 0}'),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'R\$ ${(item['price'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+                                      onPressed: () => _removeItem(index),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            // Adicione aqui a lógica de checkout
+                          },
+                          child: const Text('Finalizar Compra'),
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ).then((_) {
+      if (!_isDisposed) {
+        setState(() => isMenuOpen = false);
+      }
+    });
   }
 
   @override
@@ -88,84 +270,7 @@ class _CartMenuState extends State<CartMenu> {
         if (isMenuOpen) return;
         
         await _loadCartItems();
-        
-        setState(() => isMenuOpen = true);
-        
-        await showMenu(
-          context: context,
-          position: RelativeRect.fromLTRB(
-            MediaQuery.of(context).size.width - 300, // Largura maior
-            80, // Posição mais alta
-            0,
-            0,
-          ),
-          items: [
-            PopupMenuItem(
-              height: 400, // Altura fixa
-              child: SizedBox(
-                width: 300,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Seu Carrinho',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    const Divider(),
-                    if (isLoading)
-                      const Center(child: CircularProgressIndicator())
-                    else if (cartItems.isEmpty)
-                      const Center(
-                        child: Text('Seu carrinho está vazio'),
-                      )
-                    else
-                      Column(
-                        children: [
-                          SizedBox(
-                            height: 250, // Altura fixa para a lista
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: cartItems.length,
-                              itemBuilder: (context, index) {
-                                final item = cartItems[index];
-                                return ListTile(
-                                  title: Text(item.productName),
-                                  subtitle: Text('Qtd: ${item.quantity}'),
-                                  trailing: Text(
-                                    'R\$ ${item.price.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                              ),
-                              onPressed: () {
-                                Navigator.pop(context); // Fecha o menu
-                                // Adicione sua lógica de checkout aqui
-                              },
-                              child: const Text('Finalizar Compra'),
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ).then((_) => setState(() => isMenuOpen = false));
+        _showCartMenu(context);
       },
     );
   }
