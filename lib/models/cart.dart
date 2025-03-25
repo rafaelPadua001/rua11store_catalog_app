@@ -39,6 +39,7 @@ class CartItem {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'user_id': userId,
       'product_name': productName,
       'price': price,

@@ -50,13 +50,21 @@ class CartRepository {
     return CartItem.fromJson(response);
   }
 
-  Future<void> removeItem(String itemId) async {
-    await _client
+Future<bool> removeItem(String itemId) async {
+  try {
+    final response = await _client
       .from('cart')
       .delete()
-      .eq('id', itemId);
+      .eq('id', itemId)
+      .select();  // Adicione .select() para obter a resposta
+    
+    // No Supabase, a resposta é uma lista dos itens removidos
+    return response.isNotEmpty;
+  } catch (e) {
+    print('Erro ao remover item: $e');
+    return false;
   }
-
+}
   Future<void> clearCart(String userId) async {
     await _client
       .from('cart')
