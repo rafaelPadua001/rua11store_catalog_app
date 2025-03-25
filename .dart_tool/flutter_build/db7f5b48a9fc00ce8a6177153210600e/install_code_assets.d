@@ -1,1 +1,0 @@
- /home/rafael/Documentos/Apps/rua11store_catalog_app/.dart_tool/flutter_build/db7f5b48a9fc00ce8a6177153210600e/native_assets.json: 
