@@ -1,0 +1,2 @@
+/home/rafael/Documentos/Apps/rua11store_catalog_app/android/app/.cxx/Debug/33506q5w/x86_64/CMakeFiles/edit_cache.dir
+/home/rafael/Documentos/Apps/rua11store_catalog_app/android/app/.cxx/Debug/33506q5w/x86_64/CMakeFiles/rebuild_cache.dir
