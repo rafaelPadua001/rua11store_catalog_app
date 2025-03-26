@@ -33,18 +33,36 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
   void initState() {
     super.initState();
     _currentUser = widget.user;
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final profile = await _profileRepo.getProfile();
+      if (profile != null && mounted) {
+        setState(() {
+          _currentUser = profile;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading profile: $e');
+    }
   }
 
   Future<void> _updateProfile(UserModel updatedUser) async {
     try {
       final result = await _profileRepo.updateProfile(updatedUser);
-      setState(() {
-        _currentUser = result;
-      });
+      if (mounted) {
+        setState(() {
+          _currentUser = result;
+        });
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao atualizar perfil: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao atualizar perfil: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -114,6 +132,103 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
     );
   }
 
+  void _showEditNameDialog() {
+    final TextEditingController nameController = TextEditingController(
+      text: _currentUser.name,
+    );
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Editar Nome'),
+            content: TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Nome',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final newName = nameController.text.trim();
+                  if (newName.isNotEmpty) {
+                    final updatedUser = _currentUser.copyWith(name: newName);
+                    await _updateProfile(updatedUser);
+                    if (!mounted) return;
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text('Salvar'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showEditEmailDialog() {
+    final emailController = TextEditingController(text: _currentUser.email);
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Editar Email'),
+            content: TextField(
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: Navigator.of(context).pop,
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final newEmail = emailController.text.trim();
+                  if (newEmail.isNotEmpty && newEmail.contains('@')) {
+                    try {
+                      final updatedUser = _currentUser.copyWith(
+                        email: newEmail,
+                      );
+                      await _updateProfile(updatedUser);
+                      if (!mounted) return;
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Email atualizado - verifique sua caixa de entrada para confirmar',
+                          ),
+                        ),
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Erro ao atualizar email: ${e.toString()}',
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Salvar'),
+              ),
+            ],
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -167,9 +282,9 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
           ),
           child: ClipOval(
             child:
-                _currentUser.avatarUrl!.isNotEmpty
+                (_currentUser.avatarUrl?.isNotEmpty ?? false)
                     ? CachedNetworkImage(
-                      imageUrl: _currentUser.avatarUrl.toString(),
+                      imageUrl: _currentUser.avatarUrl!,
                       fit: BoxFit.cover,
                       placeholder:
                           (context, url) => Center(
@@ -229,18 +344,50 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
   Widget _buildUserInfo() {
     return Column(
       children: [
-        Text(
-          _currentUser.name,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
+        // Linha com nome e ícone de edição
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _currentUser.name,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => _showEditNameDialog(),
+              child: const Icon(
+                Icons.edit_outlined,
+                size: 20,
+                color: Colors.blue,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
-        Text(
-          _currentUser.email,
-          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+        // Linha com email e ícone de edição
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _currentUser.email,
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => _showEditEmailDialog(),
+              child: const Icon(
+                Icons.edit_outlined,
+                size: 16,
+                color: Colors.blue,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         Text(

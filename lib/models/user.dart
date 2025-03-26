@@ -24,8 +24,14 @@ class UserModel {
       name: json['name'] ?? '',
       age: json['age'] ?? 0,
       avatarUrl: json['avatar_url'],
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updated_at'] ?? json['created_at'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+        json['created_at'] ?? DateTime.now().toIso8601String(),
+      ),
+      updatedAt: DateTime.parse(
+        json['updated_at'] ??
+            json['created_at'] ??
+            DateTime.now().toIso8601String(),
+      ),
     );
   }
 

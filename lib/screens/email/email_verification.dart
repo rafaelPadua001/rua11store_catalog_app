@@ -10,10 +10,12 @@ import 'package:uuid/uuid.dart';
 class EmailVerificationScreen extends StatefulWidget {
   final String email;
 
-  const EmailVerificationScreen({Key? key, required this.email}) : super(key: key);
+  const EmailVerificationScreen({Key? key, required this.email})
+    : super(key: key);
 
   @override
-  _EmailVerificationScreenState createState() => _EmailVerificationScreenState();
+  _EmailVerificationScreenState createState() =>
+      _EmailVerificationScreenState();
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
@@ -65,9 +67,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           timer.cancel();
           await _completeRegistration(session.user!.id);
           if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => MyApp()),
-            );
+            Navigator.of(
+              context,
+            ).pushReplacement(MaterialPageRoute(builder: (_) => MyApp()));
           }
         }
       } catch (e) {
@@ -115,26 +117,30 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               ),
               const SizedBox(height: 20),
               const Text('Enviamos um link de confirmação para:'),
-              Text(widget.email, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                widget.email,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 30),
               ElevatedButton.icon(
                 onPressed: _isLoading ? null : _resendVerificationEmail,
-                icon: _isLoading 
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.email),
+                icon:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.email),
                 label: const Text('Reenviar e-mail de verificação'),
               ),
               const SizedBox(height: 20),
               TextButton(
                 onPressed: () {
                   _timer?.cancel();
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => Login()),
-                  );
+                  Navigator.of(
+                    context,
+                  ).pushReplacement(MaterialPageRoute(builder: (_) => Login()));
                 },
                 child: const Text('Voltar para login'),
               ),
