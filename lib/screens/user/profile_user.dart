@@ -249,8 +249,8 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                 _buildProfileImage(context),
                 const SizedBox(height: 24),
                 _buildUserInfo(),
-                const SizedBox(height: 32),
-                _buildEditButton(context),
+                // const SizedBox(height: 32),
+                // _buildEditButton(context),
               ],
             ),
           ),
@@ -398,17 +398,17 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
     );
   }
 
-  Widget _buildEditButton(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {
-        // Implementar navegação para tela de edição
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Theme.of(context).primaryColor,
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      ),
-      child: const Text('Editar Perfil', style: TextStyle(fontSize: 16)),
-    );
-  }
+  // Widget _buildEditButton(BuildContext context) {
+  //   return ElevatedButton(
+  //     onPressed: () {
+  //       // Implementar navegação para tela de edição
+  //     },
+  //     style: ElevatedButton.styleFrom(
+  //       backgroundColor: Theme.of(context).primaryColor,
+  //       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+  //     ),
+  //     child: const Text('Editar Perfil', style: TextStyle(fontSize: 16, color: Colors.white)),
+  //   );
+  // }
 }

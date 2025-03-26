@@ -26,7 +26,7 @@ class _StateDashboard extends State<Dashboard> {
       ),
     ),
     Center(child: Text('Página de Produtos')),
-    Center(child: Text('Página de Configurações')),
+    // Center(child: Text('Página de Configurações')),
   ];
 
   @override
