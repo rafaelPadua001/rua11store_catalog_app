@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:rua11store_catalog_app/main.dart';
+import 'package:rua11store_catalog_app/models/user.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../user/profile_user.dart';
 
 class Dashboard extends StatefulWidget {
   @override
@@ -6,22 +11,22 @@ class Dashboard extends StatefulWidget {
 }
 
 class _StateDashboard extends State<Dashboard> {
-  int _selectedIndex = 0; // Índice do item selecionado no NavigationRail
+  int _selectedIndex = 0;
+  final UserModel user = UserModel(
+    imageUrl: 'https://img.odcdn.com.br/wp-content/uploads/2022/08/fotografo.jpg', // URL de teste que funciona
+    name: 'Maria Oliveira',
+    email: 'maria@exemplo.com',
+    age: 28,
+  );
 
-  // Conteúdo exibido de acordo com o item selecionado
   final List<Widget> _widgetOptions = [
     Card(
       child: Padding(
         padding: EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Text('Página Inicial'),
-          ],
-        ),
+        child: Column(children: [Text('Página Inicial')]),
       ),
     ),
     Center(child: Text('Página de Produtos')),
-    Center(child: Text('Página de Perfil')),
     Center(child: Text('Página de Configurações')),
   ];
 
@@ -29,14 +34,55 @@ class _StateDashboard extends State<Dashboard> {
     setState(() {
       _selectedIndex = index;
     });
+
+    // Navegações devem estar fora do setState
+    if (index == 2) {
+      _navigateToProfile();
+    }
+    if (index == 4) {
+      _handleLogout(context);
+    }
+  }
+
+  Future<void> _navigateToProfile() async {
+    try {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProfileUserWidget(
+            user: user,
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao navegar: ${e.toString()}')),
+      );
+    }
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    try {
+      await Supabase.instance.client.auth.signOut();
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => MyApp()),
+        (route) => false,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Logout realizado com sucesso!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao fazer logout: ${e.toString()}')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-      ),
+      appBar: AppBar(title: const Text('Dashboard')),
       body: Row(
         children: <Widget>[
           NavigationRail(
@@ -64,13 +110,15 @@ class _StateDashboard extends State<Dashboard> {
                 selectedIcon: Icon(Icons.settings),
                 label: Text('Configurações'),
               ),
+              NavigationRailDestination(
+                icon: Icon(Icons.logout_outlined),
+                selectedIcon: Icon(Icons.logout),
+                label: Text('Logout'),
+              ),
             ],
           ),
-           VerticalDivider(thickness: 0, width: 0.1),
-          // Conteúdo principal
-          Expanded(
-            child: _widgetOptions.elementAt(_selectedIndex),
-          ),
+          VerticalDivider(thickness: 0, width: 0.1),
+          Expanded(child: _widgetOptions.elementAt(_selectedIndex < _widgetOptions.length ? _selectedIndex : 0)),
         ],
       ),
     );

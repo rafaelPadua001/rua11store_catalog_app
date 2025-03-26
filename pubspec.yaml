@@ -39,6 +39,7 @@ dependencies:
   intl: ^0.20.2
   supabase_flutter: ^2.8.4
   flutter_native_splash: ^2.4.5
+  cached_network_image: ^3.4.1
   
 
 dev_dependencies:
