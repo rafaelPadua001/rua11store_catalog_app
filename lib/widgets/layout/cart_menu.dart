@@ -210,6 +210,8 @@ class _CartMenuState extends State<CartMenu> {
                           ),
                           onPressed: () {
                             Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text('Ainda não completamos isso !')));
                             // Adicione aqui a lógica de checkout
                           },
                           child: const Text('Finalizar Compra'),
