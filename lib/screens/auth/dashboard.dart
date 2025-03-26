@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:rua11store_catalog_app/data/user_profile/user_profile_repository.dart';
 import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/models/user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../user/profile_user.dart';
+
 
 class Dashboard extends StatefulWidget {
   @override
@@ -12,16 +14,9 @@ class Dashboard extends StatefulWidget {
 
 class _StateDashboard extends State<Dashboard> {
   int _selectedIndex = 0;
-  final UserModel user = UserModel(
-    id: 'unique-user-id', // ID único do usuário
-    userId: 'auth-user-id', // ID do usuário no sistema de autenticação
-    name: 'Maria Oliveira',
-    email: 'maria@exemplo.com',
-    age: 28,
-    avatarUrl: 'https://img.odcdn.com.br/wp-content/uploads/2022/08/fotografo.jpg',
-    createdAt: DateTime.now(), // Data de criação atual
-    updatedAt: DateTime.now(), // Data de atualização atual
-  );
+  UserModel? user;
+  bool isLoading = true;
+  final UserProfileRepository _userProfileRepository = UserProfileRepository();
 
   final List<Widget> _widgetOptions = [
     Card(
@@ -34,13 +29,35 @@ class _StateDashboard extends State<Dashboard> {
     Center(child: Text('Página de Configurações')),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final userData = await _userProfileRepository.getProfile();
+      setState(() {
+        user = userData;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar dados do usuário: ${e.toString()}')),
+      );
+    }
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
 
-    // Navegações devem estar fora do setState
-    if (index == 2) {
+    if (index == 2 && user != null) {
       _navigateToProfile();
     }
     if (index == 4) {
@@ -54,7 +71,7 @@ class _StateDashboard extends State<Dashboard> {
         context,
         MaterialPageRoute(
           builder: (context) => ProfileUserWidget(
-            user: user,
+            user: user!,
           ),
         ),
       );
@@ -85,6 +102,12 @@ class _StateDashboard extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Dashboard')),
       body: Row(
