@@ -10,38 +10,44 @@ class UserProfileRepository {
     : _supabase = supabase ?? Supabase.instance.client;
 
   Future<UserModel?> getProfile() async {
-    try {
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) return null;
+  try {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return null;
 
-      final response = await _supabase
-        .from('user_profiles')
-        .select()
-        .eq('user_id', userId)
-        .maybeSingle();
+    // Handle createdAt - it might be String or DateTime
+    final createdAt = user.createdAt is DateTime 
+        ? (user.createdAt as DateTime).toIso8601String()
+        : user.createdAt?.toString();
 
-      if (response == null) return null;
-      return UserModel.fromJson(response);
-    } catch (e) {
-      debugPrint('Error fetching user profile: $e');
-      throw Exception('Failed to fetch user profile');
-    }
+    // First get basic auth data
+    final authData = {
+      'id': user.id,
+      'email': user.email,
+      'created_at': createdAt,
+      'display_name': user.userMetadata?['name'] ?? 
+                      user.userMetadata?['displayname'] ??
+                      user.email?.split('@').first,
+    };
+
+    // Try to get additional profile data
+    final profileResponse = await _supabase
+      .from('user_profiles')
+      .select()
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    // Combine auth data with profile data (if exists)
+    final combinedData = {
+      ...authData,
+      if (profileResponse != null) ...profileResponse,
+    };
+
+    return UserModel.fromJson(combinedData);
+  } catch (e) {
+    debugPrint('Error fetching user profile: $e');
+    throw Exception('Failed to fetch user profile');
   }
-
-  Future<UserModel> createProfile(UserModel profile) async {
-    try {
-      final response = await _supabase
-        .from('user_profiles')
-        .insert(profile.toJson())
-        .select()
-        .single();
-
-      return UserModel.fromJson(response);
-    } catch (e) {
-      debugPrint('Error creating user profile: $e');
-      throw Exception('Failed to create user profile');
-    }
-  }
+}
 
   Future<UserModel> updateProfile(UserModel profile) async {
     try {
