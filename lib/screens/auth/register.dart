@@ -43,97 +43,94 @@ class _StateRegister extends State<Register> {
   int _calculateAge(DateTime birthDate) {
     final now = DateTime.now();
     int age = now.year - birthDate.year;
-    if (now.month < birthDate.month || 
+    if (now.month < birthDate.month ||
         (now.month == birthDate.month && now.day < birthDate.day)) {
       age--;
     }
     return age;
   }
 
- Future<void> _register() async {
-  if (!_formKey.currentState!.validate()) return;
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  final scaffoldMessenger = ScaffoldMessenger.of(context);
-  final navigator = Navigator.of(context);
- // final isWeb = kIsWeb; // Import 'package:flutter/foundation.dart'
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    // final isWeb = kIsWeb; // Import 'package:flutter/foundation.dart'
 
-  try {
-    // 1. Validar idade
-    final birthDate = DateFormat('dd/MM/yyyy').parse(_dateController.text);
-    if (_calculateAge(birthDate) < 18) {
-      throw Exception('Você precisa ter mais de 18 anos');
-    }
+    try {
+      // 1. Validar idade
+      final birthDate = DateFormat('dd/MM/yyyy').parse(_dateController.text);
+      if (_calculateAge(birthDate) < 18) {
+        throw Exception('Você precisa ter mais de 18 anos');
+      }
 
-    // 2. Registrar no Auth
-    final authResponse = await Supabase.instance.client.auth.signUp(
-      email: _emailController.text,
-      password: _passwordController.text,
-      data: {
-        'name': _nameController.text,
-        'age': _calculateAge(birthDate),
-      },
-    );
+      // 2. Registrar no Auth
+      final authResponse = await Supabase.instance.client.auth.signUp(
+        email: _emailController.text,
+        password: _passwordController.text,
+        data: {'name': _nameController.text, 'age': _calculateAge(birthDate)},
+      );
 
-    // 3. Verificar se o e-mail precisa de confirmação
-    if (authResponse.user?.confirmedAt == null) {
-      // 4. Mostrar tela de confirmação em vez de tentar login
+      // 3. Verificar se o e-mail precisa de confirmação
+      if (authResponse.user?.confirmedAt == null) {
+        // 4. Mostrar tela de confirmação em vez de tentar login
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              'Enviamos um link de confirmação para ${_emailController.text}',
+            ),
+            duration: Duration(seconds: 5),
+          ),
+        );
+
+        // 5. Redirecionar para tela de verificação
+        navigator.pushReplacement(
+          MaterialPageRoute(
+            builder:
+                (_) => EmailVerificationScreen(email: _emailController.text),
+          ),
+        );
+        return;
+      }
+
+      // 6. Se o e-mail já estiver confirmado (configuração local)
+      await _completeRegistration(authResponse.user!.id);
+    } catch (e) {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('Enviamos um link de confirmação para ${_emailController.text}'),
+          content: Text('Erro: ${e.toString().replaceAll('Exception:', '')}'),
           duration: Duration(seconds: 5),
         ),
       );
-      
-      // 5. Redirecionar para tela de verificação
-      navigator.pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => EmailVerificationScreen(
-            email: _emailController.text,
-          ),
-        ),
-      );
-      return;
+      debugPrint('ERRO DETALHADO: $e');
     }
-
-    // 6. Se o e-mail já estiver confirmado (configuração local)
-    await _completeRegistration(authResponse.user!.id);
-    
-  } catch (e) {
-    scaffoldMessenger.showSnackBar(
-      SnackBar(
-        content: Text('Erro: ${e.toString().replaceAll('Exception:', '')}'),
-        duration: Duration(seconds: 5),
-      ),
-    );
-    debugPrint('ERRO DETALHADO: $e');
   }
-}
 
-Future<void> _completeRegistration(String userId) async {
-  // 1. Criar perfil automaticamente via trigger (recomendado)
-  // Ou usar função Edge se estiver usando Supabase Edge Functions
-  final profileRepo = UserProfileRepository();
-  
-  // 2. Se não usar trigger, criar perfil manualmente
-  // await profileRepo.createProfile(
-  //   UserModel(
-  //     id: _uuid.v4(),
-  //     userId: userId,
-  //     name: _nameController.text,
-  //     email: _emailController.text,
-  //     age: _calculateAge(DateFormat('dd/MM/yyyy').parse(_dateController.text)),
-  //     avatarUrl: '',
-  //     createdAt: DateTime.now(),
-  //     updatedAt: DateTime.now(),
-  //   ),
-  // );
+  Future<void> _completeRegistration(String userId) async {
+    // 1. Criar perfil automaticamente via trigger (recomendado)
+    // Ou usar função Edge se estiver usando Supabase Edge Functions
+    final profileRepo = UserProfileRepository();
 
-  // 3. Redirecionar para home
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (_) => MyApp()),
-  );
-}
+    // 2. Se não usar trigger, criar perfil manualmente
+    // await profileRepo.createProfile(
+    //   UserModel(
+    //     id: _uuid.v4(),
+    //     userId: userId,
+    //     name: _nameController.text,
+    //     email: _emailController.text,
+    //     age: _calculateAge(DateFormat('dd/MM/yyyy').parse(_dateController.text)),
+    //     avatarUrl: '',
+    //     createdAt: DateTime.now(),
+    //     updatedAt: DateTime.now(),
+    //   ),
+    // );
+
+    // 3. Redirecionar para home
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => MyApp()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
