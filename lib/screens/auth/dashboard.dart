@@ -13,10 +13,14 @@ class Dashboard extends StatefulWidget {
 class _StateDashboard extends State<Dashboard> {
   int _selectedIndex = 0;
   final UserModel user = UserModel(
-    imageUrl: 'https://img.odcdn.com.br/wp-content/uploads/2022/08/fotografo.jpg', // URL de teste que funciona
+    id: 'unique-user-id', // ID único do usuário
+    userId: 'auth-user-id', // ID do usuário no sistema de autenticação
     name: 'Maria Oliveira',
     email: 'maria@exemplo.com',
     age: 28,
+    avatarUrl: 'https://img.odcdn.com.br/wp-content/uploads/2022/08/fotografo.jpg',
+    createdAt: DateTime.now(), // Data de criação atual
+    updatedAt: DateTime.now(), // Data de atualização atual
   );
 
   final List<Widget> _widgetOptions = [
