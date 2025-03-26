@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/user_profile/user_profile_repository.dart';
 import '../../models/user.dart';
 import 'dart:io';
@@ -52,10 +53,9 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
       final XFile? image = await _picker.pickImage(source: source);
       if (image == null) return;
 
-      // Mostrar indicador de carregamento
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enviando imagem...')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Enviando imagem...')));
 
       final imageUrl = await _profileRepo.uploadAvatar(File(image.path));
       await _updateProfile(_currentUser.copyWith(avatarUrl: imageUrl));
@@ -64,10 +64,15 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Foto atualizada com sucesso!')),
       );
+    } on StorageException catch (e) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro de armazenamento: ${e.message}')),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao enviar imagem: ${e.toString()}')),
+        SnackBar(content: Text('Erro inesperado: ${e.toString()}')),
       );
     }
   }
@@ -75,30 +80,37 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
   void _showImageSourceDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Alterar foto de perfil"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(Icons.camera, color: Theme.of(context).primaryColor),
-              title: const Text("Tirar foto"),
-              onTap: () {
-                Navigator.pop(context);
-                _handleImageSelection(ImageSource.camera);
-              },
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Alterar foto de perfil"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: Icon(
+                    Icons.camera,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  title: const Text("Tirar foto"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _handleImageSelection(ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.photo_library,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  title: const Text("Escolher da galeria"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _handleImageSelection(ImageSource.gallery);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: Icon(Icons.photo_library, color: Theme.of(context).primaryColor),
-              title: const Text("Escolher da galeria"),
-              onTap: () {
-                Navigator.pop(context);
-                _handleImageSelection(ImageSource.gallery);
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -154,21 +166,24 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
             ],
           ),
           child: ClipOval(
-            child: _currentUser.avatarUrl.isNotEmpty
-                ? CachedNetworkImage(
-                    imageUrl: _currentUser.avatarUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.0,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).primaryColor,
-                        ),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => _buildDefaultAvatar(),
-                  )
-                : _buildDefaultAvatar(),
+            child:
+                _currentUser.avatarUrl!.isNotEmpty
+                    ? CachedNetworkImage(
+                      imageUrl: _currentUser.avatarUrl.toString(),
+                      fit: BoxFit.cover,
+                      placeholder:
+                          (context, url) => Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.0,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).primaryColor,
+                              ),
+                            ),
+                          ),
+                      errorWidget:
+                          (context, url, error) => _buildDefaultAvatar(),
+                    )
+                    : _buildDefaultAvatar(),
           ),
         ),
         _buildUploadButton(),
@@ -189,10 +204,7 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 2.0),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 4,
-              ),
+              BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4),
             ],
           ),
           child: const Icon(Icons.camera_alt, size: 20, color: Colors.white),
@@ -228,18 +240,12 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
         const SizedBox(height: 8),
         Text(
           _currentUser.email,
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
         ),
         const SizedBox(height: 8),
         Text(
           '${_currentUser.age} anos',
-          style: const TextStyle(
-            fontSize: 16,
-            color: Colors.black54,
-          ),
+          style: const TextStyle(fontSize: 16, color: Colors.black54),
         ),
       ],
     );
@@ -253,14 +259,9 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
       style: ElevatedButton.styleFrom(
         backgroundColor: Theme.of(context).primaryColor,
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
-      child: const Text(
-        'Editar Perfil',
-        style: TextStyle(fontSize: 16),
-      ),
+      child: const Text('Editar Perfil', style: TextStyle(fontSize: 16)),
     );
   }
 }
