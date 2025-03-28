@@ -3,10 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/screens/email/email_verification.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
-import '../../data/user_profile/user_profile_repository.dart';
-import '../../models/user.dart';
-import 'login.dart';
 
 class Register extends StatefulWidget {
   @override
@@ -20,7 +16,6 @@ class _StateRegister extends State<Register> {
   final TextEditingController _confirmPassword = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  final Uuid _uuid = Uuid();
 
   DateTime? _selectedDate;
 
@@ -55,25 +50,27 @@ class _StateRegister extends State<Register> {
 
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    // final isWeb = kIsWeb; // Import 'package:flutter/foundation.dart'
 
     try {
-      // 1. Validar idade
+      // 1. Validate birth date
       final birthDate = DateFormat('dd/MM/yyyy').parse(_dateController.text);
-      if (_calculateAge(birthDate) < 18) {
+      final age = _calculateAge(birthDate);
+      if (age < 18) {
         throw Exception('Você precisa ter mais de 18 anos');
       }
 
-      // 2. Registrar no Auth
+      // 2. Register in Auth
       final authResponse = await Supabase.instance.client.auth.signUp(
         email: _emailController.text,
         password: _passwordController.text,
-        data: {'name': _nameController.text, 'age': _calculateAge(birthDate)},
+        data: {
+          'display_name': _nameController.text, // Correct column name
+          'birth_date': birthDate.toIso8601String(),
+        },
       );
 
-      // 3. Verificar se o e-mail precisa de confirmação
+      // 3. Check if email needs confirmation
       if (authResponse.user?.confirmedAt == null) {
-        // 4. Mostrar tela de confirmação em vez de tentar login
         scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(
@@ -83,18 +80,16 @@ class _StateRegister extends State<Register> {
           ),
         );
 
-        // 5. Redirecionar para tela de verificação
         navigator.pushReplacement(
           MaterialPageRoute(
-            builder:
-                (_) => EmailVerificationScreen(email: _emailController.text),
+            builder: (_) => EmailVerificationScreen(email: _emailController.text),
           ),
         );
         return;
       }
 
-      // 6. Se o e-mail já estiver confirmado (configuração local)
-      await _completeRegistration(authResponse.user!.id);
+      // 4. If email is already confirmed
+      await _completeRegistration(authResponse.user!, birthDate: birthDate);
     } catch (e) {
       scaffoldMessenger.showSnackBar(
         SnackBar(
@@ -106,31 +101,32 @@ class _StateRegister extends State<Register> {
     }
   }
 
-  Future<void> _completeRegistration(String userId) async {
-    // 1. Criar perfil automaticamente via trigger (recomendado)
-    // Ou usar função Edge se estiver usando Supabase Edge Functions
-    final profileRepo = UserProfileRepository();
+  Future<void> _completeRegistration(User user, {required DateTime birthDate}) async {
+  final supabase = Supabase.instance.client;
+  print(user);
+  // 1. Criar perfil na tabela profile_users
+  final profileResponse = await supabase.from('profile_users').insert({
+    'user_id': user.id,
+    'full_name': user.userMetadata?['display_name'] ?? _nameController.text, // Usando fullname
+    'email': user.email ?? user.userMetadata?['email'] ?? _emailController.text,
+    'birth_date': user.userMetadata?['birth_date'] ?? birthDate.toIso8601String(),
+    'created_at': DateTime.now().toIso8601String(),
+    'updated_at': DateTime.now().toIso8601String(),
+    'profile_complete': false,
+    'avatar_url': null,
+  });
 
-    // 2. Se não usar trigger, criar perfil manualmente
-    // await profileRepo.createProfile(
-    //   UserModel(
-    //     id: _uuid.v4(),
-    //     userId: userId,
-    //     name: _nameController.text,
-    //     email: _emailController.text,
-    //     age: _calculateAge(DateFormat('dd/MM/yyyy').parse(_dateController.text)),
-    //     avatarUrl: '',
-    //     createdAt: DateTime.now(),
-    //     updatedAt: DateTime.now(),
-    //   ),
-    // );
+  if (profileResponse.error != null) {
+    throw Exception('Falha ao criar perfil: ${profileResponse.error!.message}');
+  }
 
-    // 3. Redirecionar para home
-    Navigator.pushReplacement(
-      context,
+  // 2. Navegar para a tela inicial
+  if (mounted) {
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => MyApp()),
     );
   }
+}
 
   @override
   Widget build(BuildContext context) {

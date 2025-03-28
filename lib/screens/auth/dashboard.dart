@@ -25,7 +25,7 @@ class _StateDashboard extends State<Dashboard> {
         child: Column(children: [Text('Página Inicial')]),
       ),
     ),
-    Center(child: Text('Página de Produtos')),
+    // Center(child: Text('Página de Produtos')),
     // Center(child: Text('Página de Configurações')),
   ];
 
