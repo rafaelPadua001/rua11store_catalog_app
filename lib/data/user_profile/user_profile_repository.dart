@@ -30,11 +30,11 @@ class UserProfileRepository {
         'created_at': _parseDateToString(user.createdAt),
         'display_name':
             user.userMetadata?['name'] ??
-            user.userMetadata?['displayname'] ??
+            user.userMetadata?['display_name'] ??
             user.email?.split('@').first ??
             'Usuário',
       };
-
+  print(authData);
       // Busca dados adicionais do perfil
       final profileResponse =
           await _supabase
@@ -43,12 +43,15 @@ class UserProfileRepository {
               .eq('user_id', user.id)
               .maybeSingle();
 
+    print(profileResponse);
       // Verifica se o perfil existe, se não, cria um novo
       if (profileResponse == null) {
         final newProfile = {
           'user_id': user.id,
           'created_at': DateTime.now().toIso8601String(),
           'avatar_url': null,
+          'full_name': user.userMetadata?['display_name'],
+          'email': user.userMetadata?['email'],
         };
 
         await _supabase.from('user_profiles').insert(newProfile);
@@ -64,34 +67,64 @@ class UserProfileRepository {
     }
   }
 
-  Future<UserModel> updateProfile(UserModel profile) async {
-    try {
-      // 1. Verifica se o email foi alterado
-      final currentUser = _supabase.auth.currentUser;
-      if (currentUser?.email != profile.email) {
-        // Atualiza o email no Auth
-        await _supabase.auth.updateUser(UserAttributes(email: profile.email));
-
-        // O Supabase enviará automaticamente um email de confirmação
-        debugPrint('Email de confirmação enviado para ${profile.email}');
-      }
-
-      // 2. Atualiza o perfil na tabela user_profiles
-      final response =
-          await _supabase
-              .from('user_profiles')
-              .update(profile.toJson())
-              .eq('user_id', profile.id)
-              .select()
-              .single();
-
-      return UserModel.fromJson(response);
-    } catch (e) {
-      debugPrint('Error updating user profile: $e');
-      throw Exception('Failed to update user profile: ${e.toString()}');
+Future<UserModel> updateProfile(UserModel profile) async {
+  try {
+    final currentUser = _supabase.auth.currentUser;
+    if (currentUser == null) {
+      throw Exception('Usuário não autenticado');
     }
-  }
 
+    // 1. Atualizar email no Auth (se alterado)
+    if (currentUser.email != profile.email) {
+      await _supabase.auth.updateUser(
+        UserAttributes(email: profile.email),
+      );
+      debugPrint('Email de confirmação enviado para ${profile.email}');
+    }
+
+    // 2. Atualizar display_name no Auth (user_metadata)
+    final currentDisplayName = currentUser.userMetadata?['display_name']?.toString();
+    if (currentDisplayName != profile.full_name) {
+      await _supabase.auth.updateUser(
+        UserAttributes(data: {'display_name': profile.full_name}),
+      );
+      debugPrint('Display name atualizado no Auth');
+    }
+
+    // 3. Preparar dados para user_profiles
+    final profileData = {
+      'full_name': profile.full_name, // Mapeia para o nome da coluna na tabela
+      'email': profile.email,
+      'birth_date': profile.birthDate?.toIso8601String(),
+      'avatar_url': profile.avatarUrl,
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    // 4. Atualizar user_profiles
+    final response = await _supabase
+        .from('user_profiles')
+        .update(profileData)
+        .eq('user_id', profile.id)
+        .select()
+        .single();
+
+    // 5. Atualizar tabela public.users (se existir)
+    try {
+      await _supabase.from('users').update({
+        'display_name': profile.full_name,
+        'email': profile.email,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', profile.id);
+    } catch (e) {
+      debugPrint('Ignorando atualização em public.users: $e');
+    }
+
+    return UserModel.fromJson(response);
+  } catch (e) {
+    debugPrint('Error updating user profile: $e');
+    throw Exception('Falha ao atualizar perfil: ${e.toString()}');
+  }
+}
   Future<String> uploadAvatar(File imageFile) async {
     try {
       final userId = _supabase.auth.currentUser?.id;

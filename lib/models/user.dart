@@ -2,8 +2,8 @@ class UserModel {
   final String id;
   final String email;
   final DateTime createdAt;
-  final String name;
-  final int age;
+  final String full_name;
+  final DateTime? birthDate;  // Replaced age with birthDate
   final String? avatarUrl;
   final DateTime updatedAt;
 
@@ -11,8 +11,8 @@ class UserModel {
     required this.id,
     required this.email,
     required this.createdAt,
-    this.name = '',
-    this.age = 0,
+    this.full_name = '',
+    this.birthDate,  // Added birthDate
     this.avatarUrl,
     DateTime? updatedAt,
   }) : updatedAt = updatedAt ?? createdAt;
@@ -21,8 +21,10 @@ class UserModel {
     return UserModel(
       id: json['user_id'] ?? json['id'] ?? '',
       email: json['email'] ?? '',
-      name: json['name'] ?? '',
-      age: json['age'] ?? 0,
+      full_name: json['full_name'] ?? '',
+      birthDate: json['birth_date'] != null 
+          ? DateTime.parse(json['birth_date'])
+          : null,  // Parse birthDate instead of age
       avatarUrl: json['avatar_url'],
       createdAt: DateTime.parse(
         json['created_at'] ?? DateTime.now().toIso8601String(),
@@ -38,8 +40,8 @@ class UserModel {
   Map<String, dynamic> toJson() => {
     'user_id': id,
     'email': email,
-    'name': name,
-    'age': age,
+    'full_name': full_name,
+    'birth_date': birthDate?.toIso8601String(),  // Replaced age with birth_date
     'avatar_url': avatarUrl,
     'created_at': createdAt.toIso8601String(),
     'updated_at': updatedAt.toIso8601String(),
@@ -48,8 +50,8 @@ class UserModel {
   UserModel copyWith({
     String? id,
     String? email,
-    String? name,
-    int? age,
+    String? full_name,
+    DateTime? birthDate,  // Replaced age with birthDate
     String? avatarUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -57,8 +59,8 @@ class UserModel {
     return UserModel(
       id: id ?? this.id,
       email: email ?? this.email,
-      name: name ?? this.name,
-      age: age ?? this.age,
+      full_name: full_name ?? this.full_name,
+      birthDate: birthDate ?? this.birthDate,  // Updated parameter
       avatarUrl: avatarUrl ?? this.avatarUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
