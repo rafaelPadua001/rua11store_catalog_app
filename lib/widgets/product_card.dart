@@ -7,6 +7,7 @@ import '../controllers/productsController.dart';
 import '../../data/cart/cart_repository.dart';
 import '../models/cart.dart';
 import 'package:provider/provider.dart';
+import '../screens/product/productScreen.dart';
 
 class ProductCard extends StatefulWidget {
   final Product product;
@@ -126,7 +127,15 @@ class _ProductCardState extends State<ProductCard> {
         widget.product.image.startsWith('http')
             ? widget.product.image
             : baseUrl + widget.product.image;
-    return Card(
+    return GestureDetector(
+      onTap:(){
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProductScreen(product:widget.product)),
+          );
+      },
+      child: Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       elevation: 1,
       child: Column(
@@ -210,6 +219,9 @@ class _ProductCardState extends State<ProductCard> {
           ),
         ],
       ),
+    ),
     );
+
+    
   }
 }
