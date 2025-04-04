@@ -230,6 +230,10 @@ mime
 3.2
 file:///home/rafael/.pub-cache/hosted/pub.dev/mime-2.0.0/
 file:///home/rafael/.pub-cache/hosted/pub.dev/mime-2.0.0/lib/
+nested
+2.12
+file:///home/rafael/.pub-cache/hosted/pub.dev/nested-1.0.0/
+file:///home/rafael/.pub-cache/hosted/pub.dev/nested-1.0.0/lib/
 octo_image
 3.0
 file:///home/rafael/.pub-cache/hosted/pub.dev/octo_image-2.1.0/
@@ -282,6 +286,10 @@ postgrest
 3.0
 file:///home/rafael/.pub-cache/hosted/pub.dev/postgrest-2.4.1/
 file:///home/rafael/.pub-cache/hosted/pub.dev/postgrest-2.4.1/lib/
+provider
+2.12
+file:///home/rafael/.pub-cache/hosted/pub.dev/provider-6.1.4/
+file:///home/rafael/.pub-cache/hosted/pub.dev/provider-6.1.4/lib/
 realtime_client
 3.0
 file:///home/rafael/.pub-cache/hosted/pub.dev/realtime_client-2.4.2/

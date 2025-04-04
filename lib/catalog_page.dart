@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:rua11store_catalog_app/models/categories.dart';
 import 'package:rua11store_catalog_app/widgets/categories_chip.dart';
+import 'controllers/categoriesController.dart';
+import 'package:provider/provider.dart';
 import 'models/product.dart'; // Importando o modelo de produto
 import 'widgets/product_card.dart'; // Importando o card de produto
 
@@ -65,12 +67,21 @@ class _CatalogPageState extends State<CatalogPage> {
     
   ];
 
+  @override 
+  void initState(){
+    super.initState();
+    Future.microtask(() => 
+      Provider.of<Categoriescontroller>(context, listen: false)
+        .fetchCategories()
+      );
+  }
+
   final List<Categories> categories = [
 
-  Categories(name: "Sedas", icon: Icons.layers),
-  Categories(name: "Tabacos", icon: Icons.smoking_rooms),
-  Categories(name: "Filtros", icon: Icons.filter_alt),
-  Categories(name: "Piteiras", icon: Icons.circle),
+  // Categories(name: "Sedas", icon: Icons.layers),
+  // Categories(name: "Tabacos", icon: Icons.smoking_rooms),
+  // Categories(name: "Filtros", icon: Icons.filter_alt),
+  // Categories(name: "Piteiras", icon: Icons.circle),
 ];
 
 
@@ -78,7 +89,8 @@ class _CatalogPageState extends State<CatalogPage> {
   Widget build(BuildContext context) {
     final filteredProducts =
         products.where((product) {
-          return product.name.toLowerCase().contains(searchQuery.toLowerCase());
+          return product.name.toLowerCase().contains(searchQuery.toLowerCase()) &&
+            (selectedCategory.isEmpty || product.category == selectedCategory);
         }).toList();
 
     return Scaffold(
@@ -103,13 +115,18 @@ class _CatalogPageState extends State<CatalogPage> {
               },
             ),
           ),
-          SizedBox(
+           SizedBox(
             height: 50,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              children:
-                  categories
+            child: Consumer<Categoriescontroller>(
+              builder: (context, controller, child) {
+                if (controller.isLoading) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                return ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  children: controller.categories
                       .map(
                         (category) => Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 5),
@@ -124,6 +141,8 @@ class _CatalogPageState extends State<CatalogPage> {
                         ),
                       )
                       .toList(),
+                );
+              },
             ),
           ),
           Expanded(
