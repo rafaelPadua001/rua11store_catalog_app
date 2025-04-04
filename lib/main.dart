@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:rua11store_catalog_app/controllers/categoriesController.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/supabase_config.dart';
 import 'widgets/layout/appbar.dart';
@@ -12,7 +14,14 @@ void main() async {
     url: SupabaseConfig.supabaseUrl,
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
-  runApp(const MyApp());
+  runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => Categoriescontroller()),
+        ],
+        child: const MyApp(),
+        ),
+    );
 }
 
 class MyApp extends StatelessWidget {
