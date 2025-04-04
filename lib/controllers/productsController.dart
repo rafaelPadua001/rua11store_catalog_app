@@ -14,7 +14,7 @@ class ProductsController extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final url = Uri.parse('http://localhost:5000/products');
+    final url = Uri.parse('https://rua11storecatalogapi-production.up.railway.app/products');
 
     try {
       final response = await http.get(url);
