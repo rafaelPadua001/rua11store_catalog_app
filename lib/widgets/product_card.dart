@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:rua11store_catalog_app/main.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/product.dart';
+import '../controllers/productsController.dart';
 import '../../data/cart/cart_repository.dart';
 import '../models/cart.dart';
+import 'package:provider/provider.dart';
 
 class ProductCard extends StatefulWidget {
   final Product product;
@@ -19,6 +22,29 @@ class ProductCard extends StatefulWidget {
 
 class _ProductCardState extends State<ProductCard> {
   bool _isAddingToCart = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   Provider.of<ProductsController>(context, listen: false).fetchProducts();
+    // });
+    // Future.microtask(
+    //   () =>
+    //       Provider.of<Categoriescontroller>(
+    //         context,
+    //         listen: false,
+    //       ).fetchCategories(),
+    // );
+
+    // Future.microtask(
+    //   () =>
+    //       Provider.of<ProductsController>(
+    //         context,
+    //         listen: false,
+    //       ).fetchProducts(),
+    // );
+  }
 
   void _openWhatsApp() async {
     final String phone = widget.product.phone
@@ -67,7 +93,7 @@ class _ProductCardState extends State<ProductCard> {
         description: widget.product.description,
         quantity: 1,
         imageUrl: widget.product.image,
-        category: widget.product.category,
+        category: widget.product.categoryId.toString(),
       );
 
       await widget.cartRepository.addItem(cartItem);
@@ -94,6 +120,12 @@ class _ProductCardState extends State<ProductCard> {
 
   @override
   Widget build(BuildContext context) {
+    String baseUrl = "https://rua11storecatalogapi-production.up.railway.app/";
+
+    String imageUrl =
+        widget.product.image.startsWith('http')
+            ? widget.product.image
+            : baseUrl + widget.product.image;
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       elevation: 1,
@@ -105,7 +137,21 @@ class _ProductCardState extends State<ProductCard> {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(6),
               ),
-              child: Image.asset(widget.product.image, fit: BoxFit.cover),
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const Center(child: CircularProgressIndicator());
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.image_not_supported,
+                    size: 50,
+                    color: Colors.grey,
+                  );
+                },
+              ),
             ),
           ),
           Padding(
