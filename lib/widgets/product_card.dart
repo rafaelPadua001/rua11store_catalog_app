@@ -164,7 +164,7 @@ class _ProductCardState extends State<ProductCard> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2.0),
             child: Text(
-              widget.product.price,
+              'R\$ ${widget.product.price}',
               style: const TextStyle(color: Colors.green),
             ),
           ),
