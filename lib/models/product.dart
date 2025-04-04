@@ -56,6 +56,6 @@ class Product {
     return double.tryParse(
           price.replaceAll(RegExp(r'[^0-9,]'), '').replaceAll(',', '.'),
         ) ??
-        0.0;
+        0.00;
   }
 }
