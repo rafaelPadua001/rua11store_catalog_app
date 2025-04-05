@@ -176,6 +176,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "flutter_dotenv",
+      "rootUri": "file:///home/rafael/.pub-cache/hosted/pub.dev/flutter_dotenv-5.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "flutter_lints",
       "rootUri": "file:///home/rafael/.pub-cache/hosted/pub.dev/flutter_lints-5.0.0",
       "packageUri": "lib/",
@@ -746,7 +752,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2025-04-04T19:36:44.930503Z",
+  "generated": "2025-04-05T01:56:08.077416Z",
   "generator": "pub",
   "generatorVersion": "3.7.0",
   "flutterRoot": "file:///home/rafael/snap/flutter/common/flutter",
