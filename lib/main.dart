@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'controllers/categoriesController.dart';
-import 'controllers/productsController.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/supabase_config.dart';
+import 'controllers/categoriesController.dart';
+import 'controllers/productsController.dart';
 import 'widgets/layout/appbar.dart';
 import 'catalog_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,15 +16,18 @@ void main() async {
     url: SupabaseConfig.supabaseUrl,
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
+
+  await dotenv.load(fileName: ".env");
+
   runApp(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (context) => Categoriescontroller()),
-          ChangeNotifierProvider(create: (context) => ProductsController())
-        ],
-        child: const MyApp(),
-        ),
-    );
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => Categoriescontroller()),
+        ChangeNotifierProvider(create: (context) => ProductsController()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -48,7 +52,6 @@ class MyApp extends StatelessWidget {
           onBackground: Color(0xFF5E4B6E),
           onError: Colors.white,
           brightness: Brightness.light,
-         
         ),
         textTheme: TextTheme(
           // displayLarge: const TextStyle(
@@ -74,8 +77,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-
-
   final String title;
 
   @override
@@ -93,13 +94,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       appBar: const AppBarExample(),
       // appBar: AppBar(
-      
+
       //   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-       
+
       //   title: Text(widget.title),
       // ),
       body: CatalogPage(),
