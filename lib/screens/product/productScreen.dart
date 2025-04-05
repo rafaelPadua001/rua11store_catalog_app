@@ -26,6 +26,7 @@ class _ProductScreenState extends State<ProductScreen> {
             _buildProductImage(apiUrl),
             SizedBox(height: 10),
             _buildPriceCard(),
+            _buildDeliveryCard(),
             _buildDescription(),
           ],
         ),
@@ -37,8 +38,8 @@ class _ProductScreenState extends State<ProductScreen> {
   Widget _buildProductImage(apiUrl) {
     return Image.network(
       apiUrl + widget.product.image,
-      height: 300,
-      width: 300,
+      // height: 350,
+      width: 340,
       fit: BoxFit.cover,
     );
   }
@@ -56,7 +57,44 @@ class _ProductScreenState extends State<ProductScreen> {
               alignment: Alignment.centerLeft,
               child: Text(
                 'Price: R\$ ${double.parse(widget.product.price).toStringAsFixed(2)}',
+                style: TextStyle(fontSize: 14)
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeliveryCard() {
+    return Card(
+      elevation: 5,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          mainAxisAlignment:
+              MainAxisAlignment.spaceBetween, // alinhamento horizontal
+          children: [
+            Expanded(
+              // garante que o texto ocupe o espaço necessário
+              child: Text(
+                'Delivery Price: R\$ ${double.parse(widget.product.price).toStringAsFixed(2)}',
+                style: TextStyle(fontSize: 14),
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.arrow_forward_ios),
+              iconSize: 15,
+              tooltip: 'Mais detalhes',
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Informações de entrega ainda não disponíveis',
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -70,7 +108,10 @@ class _ProductScreenState extends State<ProductScreen> {
       child: ExpansionTile(
         title: const Text(
           'Description',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14
+          ),
         ),
         children: [
           Padding(
@@ -78,7 +119,11 @@ class _ProductScreenState extends State<ProductScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [Text('Description: ${widget.product.description}')],
+              children: [
+                Text('Description: ${widget.product.description}',
+                style: TextStyle(fontSize: 12)
+                ),
+              ],
             ),
           ),
         ],
@@ -86,86 +131,82 @@ class _ProductScreenState extends State<ProductScreen> {
     );
   }
 
- Widget _buildCardActions() {
-  return Container(
-    color: Colors.deepPurple, // Aqui você define o background da área toda
-    child: SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            // Botão de comentário com fundo
-            Container(
-              decoration: BoxDecoration(
-                // color: Colors.blue.shade100,
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                color: Colors.white,
-                icon: Icon(Icons.comment),
-                tooltip: 'message',
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Botão comentar ainda não está pronto'),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SizedBox(width: 8),
-
-            // Botão de carrinho com fundo
-            Container(
-              decoration: BoxDecoration(
-                // color: Colors.red.shade100,
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                color: Colors.white,
-                icon: Icon(Icons.add_shopping_cart_sharp),
-                tooltip: 'cart',
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Botão adicionar ao carrinho ainda não está pronto',
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            // SizedBox(width: 8),
-
-            // Botão Buy Now
-            Expanded(
-              child: TextButton(
-                
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero,
-                  ),
-                  backgroundColor: Colors.deepPurple,
-                  minimumSize: Size(double.infinity, 50),
+  Widget _buildCardActions() {
+    return Container(
+      color: Colors.deepPurple, // Aqui você define o background da área toda
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              // Botão de comentário com fundo
+              Container(
+                decoration: BoxDecoration(
+                  // color: Colors.blue.shade100,
+                  shape: BoxShape.circle,
                 ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Botão comprar ainda não está pronto'),
-                    ),
-                  );
-                },
-                child: Text('Buy Now', style: TextStyle(color: Colors.white)),
+                child: IconButton(
+                  color: Colors.white,
+                  icon: Icon(Icons.comment),
+                  tooltip: 'message',
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Botão comentar ainda não está pronto'),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+              SizedBox(width: 8),
+
+              // Botão de carrinho com fundo
+              Container(
+                decoration: BoxDecoration(
+                  // color: Colors.red.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  color: Colors.white,
+                  icon: Icon(Icons.add_shopping_cart_sharp),
+                  tooltip: 'cart',
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Botão adicionar ao carrinho ainda não está pronto',
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // SizedBox(width: 8),
+
+              // Botão Buy Now
+              Expanded(
+                child: TextButton(
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero,
+                    ),
+                    backgroundColor: Colors.deepPurple,
+                    minimumSize: Size(double.infinity, 50),
+                  ),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Botão comprar ainda não está pronto'),
+                      ),
+                    );
+                  },
+                  child: Text('Buy Now', style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
-
-}
-
-
