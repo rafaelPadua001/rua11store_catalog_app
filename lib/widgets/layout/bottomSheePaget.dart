@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'zipcodeInput.dart';
+import '../../services/delivery_service.dart';
 
 class BottomSheetPage extends StatefulWidget {
   @override
@@ -13,56 +15,26 @@ class _BottomSheetState extends State<BottomSheetPage> {
   List deliveryOptions = [];
   Map<String, dynamic>? selectedOption;
 
-  Future<void> calculateDelivery(
+  Future<void> _handleCalculateDelivery(
     BuildContext context,
-    String zipDestiny,
+    String zipcode,
   ) async {
-    final bool isLocal = false;
-    final url = Uri.parse(
-      isLocal 
-      ? 'http://127.0.0.1:5000/melhorEnvio/calculate-delivery' 
-      : 'https://rua11storecatalogapi-production.up.railway.app/melhorEnvio/calculate-delivery',
-    ); //api local
-
-    print(url);
-    final body = jsonEncode({
-      "zipcode_origin": "73080-180",
-      "zipcode_destiny": zipDestiny,
-      "weight": 0.5,
-      "height": 10,
-      "width": 15,
-      "length": 20,
-      "secure_value": 150,
-      "quantity": 1,
-    });
+    final service = DeliveryService();
 
     try {
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: body,
+      final result = await service.calculateDelivery(zipDestiny: zipcode);
+
+      setState(() {
+        deliveryOptions = result;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Frete calculado com sucesso')),
       );
-
-      if (response.statusCode == 200) {
-        final result = jsonDecode(response.body);
-
-        setState(() {
-          deliveryOptions = result;
-        });
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Frete calculado com sucesso')));
-        _buildListView(result);
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erro: ${response.body}')));
-      }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Erro ao conectar à API: $e')));
+      ).showSnackBar(SnackBar(content: Text('Erro ao calcular frete: $e')));
     }
   }
 
@@ -83,7 +55,10 @@ class _BottomSheetState extends State<BottomSheetPage> {
                 MainAxisSize
                     .min, // importante para ajustar à altura do conteúdo
             children: [
-              _buildZipcodeInput(),
+              ZipcodeInputWidget(
+                zipController: zipController,
+                onSearch: (zipcode) => _handleCalculateDelivery(context, zipcode),
+              ),
               Divider(),
               Expanded(child: _buildListView(deliveryOptions)),
               SizedBox(height: 6),
@@ -108,42 +83,7 @@ class _BottomSheetState extends State<BottomSheetPage> {
     );
   }
 
-  Widget _buildZipcodeInput() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        children: [
-          // Campo de texto (CEP)
-          Expanded(
-            child: TextField(
-              controller: zipController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'CEP',
-                hintText: '00000-000',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          SizedBox(width: 8), // Espaço entre o input e o botão
-          // Botão ao lado
-          TextButton(
-            onPressed: () {
-              final zipcode = zipController.text.trim();
-              if (zipcode.isEmpty || zipcode.length < 8) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text('cep inválido')));
-              }
-              calculateDelivery(context, zipcode);
-            },
-            child: Text('Buscar'),
-          ),
-          Divider(),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildListView(List result) {
     if (result.isEmpty) {
