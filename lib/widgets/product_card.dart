@@ -27,24 +27,7 @@ class _ProductCardState extends State<ProductCard> {
   @override
   void initState() {
     super.initState();
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   Provider.of<ProductsController>(context, listen: false).fetchProducts();
-    // });
-    // Future.microtask(
-    //   () =>
-    //       Provider.of<Categoriescontroller>(
-    //         context,
-    //         listen: false,
-    //       ).fetchCategories(),
-    // );
-
-    // Future.microtask(
-    //   () =>
-    //       Provider.of<ProductsController>(
-    //         context,
-    //         listen: false,
-    //       ).fetchProducts(),
-    // );
+    
   }
 
   void _openWhatsApp() async {
