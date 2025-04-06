@@ -9,6 +9,7 @@ import 'widgets/layout/appbar.dart';
 import 'catalog_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -58,14 +59,14 @@ class MyApp extends StatelessWidget {
           //   fontSize: 16,
           //   fontWeight: FontWeight.bold,
           // ),
-          titleLarge: GoogleFonts.lobster(
-            fontSize: 20,
-            fontStyle: FontStyle.normal,
-          ),
-          bodyMedium: GoogleFonts.lobster(
-            fontSize: 18,
-            // fontWeight: FontWeight.bold
-          ),
+          // titleLarge: GoogleFonts.lobster(
+          //   fontSize: 20,
+          //   fontStyle: FontStyle.normal,
+          // ),
+          // bodyMedium: GoogleFonts.lobster(
+          //   fontSize: 18,
+          //   // fontWeight: FontWeight.bold
+          // ),
           displaySmall: GoogleFonts.hahmlet(fontSize: 14),
         ),
       ),

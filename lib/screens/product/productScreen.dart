@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../models/product.dart';
+import '../../widgets/layout/bottomSheePaget.dart';
 
 class ProductScreen extends StatefulWidget {
   final Product product;
+  // final BottomSheetPage _bottomSheetPage = BottomSheetPage();
+  
 
   ProductScreen({Key? key, required this.product}) : super(key: key);
   @override
@@ -12,6 +15,8 @@ class ProductScreen extends StatefulWidget {
 
 class _ProductScreenState extends State<ProductScreen> {
   final apiUrl = dotenv.env['API_URL'];
+  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,7 +62,7 @@ class _ProductScreenState extends State<ProductScreen> {
               alignment: Alignment.centerLeft,
               child: Text(
                 'Price: R\$ ${double.parse(widget.product.price).toStringAsFixed(2)}',
-                style: TextStyle(fontSize: 14)
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)
               ),
             ),
           ],
@@ -79,7 +84,7 @@ class _ProductScreenState extends State<ProductScreen> {
               // garante que o texto ocupe o espaço necessário
               child: Text(
                 'Delivery Price: R\$ ${double.parse(widget.product.price).toStringAsFixed(2)}',
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
             ),
             IconButton(
@@ -87,12 +92,12 @@ class _ProductScreenState extends State<ProductScreen> {
               iconSize: 15,
               tooltip: 'Mais detalhes',
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Informações de entrega ainda não disponíveis',
-                    ),
+                showModalBottomSheet(
+                  context: context,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                   ),
+                  builder: (context) => BottomSheetPage(),
                 );
               },
             ),

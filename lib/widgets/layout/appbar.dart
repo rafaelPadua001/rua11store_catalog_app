@@ -3,6 +3,8 @@ import 'package:rua11store_catalog_app/screens/auth/dashboard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../screens/auth/login.dart';
 import 'cart_menu.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 
 class AppBarExample extends StatelessWidget implements PreferredSizeWidget {
   @override
@@ -37,7 +39,12 @@ class AppBarExample extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: const Text('Rua11Store', style: TextStyle(color: Colors.white)),
+     title: Text(
+  'Rua11Store',
+  style: GoogleFonts.lobster(
+    textStyle: TextStyle(color: Colors.white),
+  ),
+),
       backgroundColor: Theme.of(context).colorScheme.primary,
       actions: <Widget>[
         // Substitua o IconButton pelo CartMenu

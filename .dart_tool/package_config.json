@@ -188,6 +188,12 @@
       "languageVersion": "3.5"
     },
     {
+      "name": "flutter_masked_text2",
+      "rootUri": "file:///home/rafael/.pub-cache/hosted/pub.dev/flutter_masked_text2-0.9.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "flutter_native_splash",
       "rootUri": "file:///home/rafael/.pub-cache/hosted/pub.dev/flutter_native_splash-2.4.5",
       "packageUri": "lib/",
@@ -752,7 +758,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2025-04-05T01:56:08.077416Z",
+  "generated": "2025-04-06T04:47:08.947315Z",
   "generator": "pub",
   "generatorVersion": "3.7.0",
   "flutterRoot": "file:///home/rafael/snap/flutter/common/flutter",
