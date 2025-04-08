@@ -27,7 +27,6 @@ class _CartMenuState extends State<CartMenu> {
   bool _isDisposed = false;
   OverlayEntry? _menuOverlayEntry;
   double deliveryFee = 0.0;
-  
 
   @override
   void initState() {
