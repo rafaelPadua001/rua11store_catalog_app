@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/cart/cart_repository.dart';
 import '../../models/cart.dart';
+import '../../data/cart/cart_notifier.dart';
 
 class CartMenu extends StatefulWidget {
   const CartMenu({Key? key}) : super(key: key);
@@ -23,90 +24,89 @@ class _CartMenuState extends State<CartMenu> {
     super.dispose();
   }
 
-  Future<void> _loadCartItems() async {
-    if (_isDisposed) return;
-    
-    setState(() => isLoading = true);
+Future<void> _loadCartItems() async {
+  if (_isDisposed) return;
 
-    try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) {
-        if (_isDisposed) return;
-        setState(() => isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Faça login para ver seu carrinho')),
-        );
-        return;
-      }
+  setState(() => isLoading = true);
 
-      final List<CartItem> items = await _cartRepository.getCartItems(user.id);
-      if (_isDisposed) return;
-      setState(() {
-        cartItems = items.map((item) => item.toJson()).toList();
-        isLoading = false;
-      });
-    } catch (e) {
+  try {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
       if (_isDisposed) return;
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao carregar carrinho: ${e.toString()}')),
-      );
-    }
-  }
-
-  Future<void> _removeItem(int index) async {
-    if (_isDisposed || index < 0 || index >= cartItems.length) return;
-
-    final BuildContext? currentContext = context;
-    if (currentContext == null) return;
-
-    final item = cartItems[index];
-    final itemId = item['id']?.toString();
-
-    if (itemId == null) {
-      ScaffoldMessenger.of(currentContext).showSnackBar(
-        const SnackBar(content: Text('ID do item inválido')),
+        const SnackBar(content: Text('Faça login para ver seu carrinho')),
       );
       return;
     }
 
-    // Guarda o estado anterior
-    final previousItems = List<Map<String, dynamic>>.from(cartItems);
-    
-    // Remove otimista
-    if (!_isDisposed) {
-      setState(() => cartItems.removeAt(index));
-    }
+    // Apenas chama a função (não tenta receber retorno dela)
+    await _cartRepository.fetchCartItems(user.id);
 
-    try {
-      final removed = await _cartRepository.removeItem(itemId);
-      
-      if (!removed && !_isDisposed) {
-        // Rollback se falhou no servidor
-        setState(() => cartItems = previousItems);
-        ScaffoldMessenger.of(currentContext).showSnackBar(
-          const SnackBar(content: Text('Falha ao remover item do servidor')),
-        );
-      }
-    } catch (e) {
-      // Rollback em caso de erro
-      if (!_isDisposed) setState(() => cartItems = previousItems);
-      ScaffoldMessenger.of(currentContext).showSnackBar(
-        SnackBar(content: Text('Erro ao remover item: ${e.toString()}')),
-      );
-    }
-    
-    // Força a reconstrução do menu
-    if (!_isDisposed && isMenuOpen) {
-      Navigator.of(currentContext).pop(); // Fecha o menu atual
-      if (cartItems.isNotEmpty) {
-        // Reabre o menu após um pequeno delay
-        Future.delayed(const Duration(milliseconds: 50), () {
-          if (!_isDisposed) _showCartMenu(currentContext);
-        });
-      }
-    }
+    if (_isDisposed) return;
+    setState(() {
+      cartItems = _cartRepository.items.map((item) => item.toJson()).toList();
+      cartItemCount.value = cartItems.length;
+      isLoading = false;
+    });
+  } catch (e) {
+    if (_isDisposed) return;
+    setState(() => isLoading = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erro ao carregar carrinho: ${e.toString()}')),
+    );
   }
+}
+
+
+  Future<void> _removeItem(int index) async {
+  if (_isDisposed || index < 0 || index >= cartItems.length) return;
+
+  final BuildContext? currentContext = context;
+  if (currentContext == null) return;
+
+  final item = cartItems[index];
+  final itemId = item['id']?.toString();
+
+  if (itemId == null) {
+    ScaffoldMessenger.of(currentContext).showSnackBar(
+      const SnackBar(content: Text('ID do item inválido')),
+    );
+    return;
+  }
+
+  // Guarda o estado anterior
+  final previousItems = List<Map<String, dynamic>>.from(cartItems);
+  
+  // Remove otimista
+  if (!_isDisposed) {
+    setState(() => cartItems.removeAt(index));
+    cartItemCount.value = cartItems.length;
+  }
+
+  try {
+    await _cartRepository.removeItem(itemId); // <- agora sem atribuir
+
+  } catch (e) {
+    // Rollback em caso de erro
+    if (!_isDisposed) setState((){
+      cartItems = previousItems;
+      cartItemCount.value = cartItems.length;
+    });
+    ScaffoldMessenger.of(currentContext).showSnackBar(
+      SnackBar(content: Text('Erro ao remover item: ${e.toString()}')),
+    );
+  }
+
+  if (!_isDisposed) {
+  Navigator.of(currentContext).pop(); // Fecha o menu atual
+  await Future.delayed(const Duration(milliseconds: 50));
+  if (cartItems.isNotEmpty) {
+    _showCartMenu(currentContext); // Reabre o menu com os dados atualizados
+  }
+}
+}
+
 
   void _showCartMenu(BuildContext context) {
     isMenuOpen = true;
@@ -238,42 +238,47 @@ class _CartMenuState extends State<CartMenu> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: Stack(
-        children: [
-          const Icon(Icons.shopping_cart, color: Colors.white),
-          if (cartItems.isNotEmpty)
-            Positioned(
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                constraints: const BoxConstraints(
-                  minWidth: 16,
-                  minHeight: 16,
-                ),
-                child: Text(
-                  cartItems.length.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
+Widget build(BuildContext context) {
+  return ValueListenableBuilder<int>(
+    valueListenable: cartItemCount,
+    builder: (context, value, _) {
+      return IconButton(
+        icon: Stack(
+          children: [
+            const Icon(Icons.shopping_cart, color: Colors.white),
+            if (value > 0)
+              Positioned(
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  textAlign: TextAlign.center,
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    value.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
-            ),
-        ],
-      ),
-      onPressed: () async {
-        if (isMenuOpen) return;
-        
-        await _loadCartItems();
-        _showCartMenu(context);
-      },
-    );
-  }
+          ],
+        ),
+        onPressed: () async {
+          if (isMenuOpen) return;
+
+          await _loadCartItems();
+          _showCartMenu(context);
+        },
+      );
+    },
+  );
+}
 }

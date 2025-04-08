@@ -2,74 +2,102 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/cart.dart';
 
-class CartRepository {
+class CartRepository extends ChangeNotifier {
   final SupabaseClient _client;
+  List<CartItem> _items = [];
+
+  List<CartItem> get items => List.unmodifiable(_items); // Protege de modificações externas
 
   CartRepository({SupabaseClient? client})
-    : _client = client ?? Supabase.instance.client;
+      : _client = client ?? Supabase.instance.client;
 
-  Future<List<CartItem>> getCartItems(String userId) async {
-    final response = await _client
-      .from('cart')
-      .select()
-      .eq('user_id', userId)
-      .order('created_at', ascending: false);
+  Future<void> fetchCartItems(String userId) async {
+    try {
+      final response = await _client
+          .from('cart')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
 
-      return (response as List)
-        .map((item) => CartItem.fromJson(item))
-        .toList();
+      _items = (response as List)
+          .map((item) => CartItem.fromJson(item))
+          .toList();
 
+      notifyListeners();
+    } catch (e) {
+      print('Erro ao buscar itens do carrinho: $e');
+      rethrow;
+    }
   }
 
-  Future<CartItem> addItem(CartItem item) async {
-  try {
-    // Remove o ID antes de inserir (o Supabase vai gerar um novo)
-    final itemToInsert = item.toJson()..remove('id');
-    
-    final response = await _client
-      .from('cart')
-      .insert(itemToInsert)
-      .select()
-      .single();
+  Future<void> addItem(CartItem item) async {
+    try {
+      final itemToInsert = item.toJson()..remove('id');
 
-    return CartItem.fromJson(response);
-  } catch (e) {
-    print(e.toString());
-    throw Exception('Failed to add item to cart: ${e.toString()}');
-  }
-}
+      final response = await _client
+          .from('cart')
+          .insert(itemToInsert)
+          .select()
+          .single();
 
-  Future<CartItem> updateQuantity(String itemId, int newQuantity) async {
-    final response = await _client
-      .from('cart')
-      .update({'quantity': newQuantity})
-      .eq('id', itemId)
-      .select()
-      .single();
-
-    return CartItem.fromJson(response);
+      final newItem = CartItem.fromJson(response);
+      _items.insert(0, newItem); // Adiciona no início
+      notifyListeners();
+    } catch (e) {
+      print('Erro ao adicionar item: $e');
+      throw Exception('Failed to add item to cart');
+    }
   }
 
-Future<bool> removeItem(String itemId) async {
-  try {
-    final response = await _client
-      .from('cart')
-      .delete()
-      .eq('id', itemId)
-      .select();  // Adicione .select() para obter a resposta
-    
-    // No Supabase, a resposta é uma lista dos itens removidos
-    return response.isNotEmpty;
-  } catch (e) {
-    print('Erro ao remover item: $e');
-    return false;
+  Future<void> updateQuantity(String itemId, int newQuantity) async {
+    try {
+      final response = await _client
+          .from('cart')
+          .update({'quantity': newQuantity})
+          .eq('id', itemId)
+          .select()
+          .single();
+
+      final updatedItem = CartItem.fromJson(response);
+      final index = _items.indexWhere((item) => item.id == itemId);
+      if (index != -1) {
+        _items[index] = updatedItem;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Erro ao atualizar quantidade: $e');
+      throw Exception('Erro ao atualizar quantidade');
+    }
   }
-}
+
+  Future<void> removeItem(String itemId) async {
+    try {
+      await _client
+          .from('cart')
+          .delete()
+          .eq('id', itemId)
+          .select(); // mantém para segurança
+
+      _items.removeWhere((item) => item.id == itemId);
+      notifyListeners();
+    } catch (e) {
+      print('Erro ao remover item: $e');
+      throw Exception('Erro ao remover item');
+    }
+  }
+
   Future<void> clearCart(String userId) async {
-    await _client
-      .from('cart')
-      .delete()
-      .eq('user_id', userId);
-  }
+    try {
+      await _client
+          .from('cart')
+          .delete()
+          .eq('user_id', userId);
 
+      _items.clear();
+      notifyListeners();
+    } catch (e) {
+      print('Erro ao limpar carrinho: $e');
+      throw Exception('Erro ao limpar carrinho');
+    }
+  }
 }

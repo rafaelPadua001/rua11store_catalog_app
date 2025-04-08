@@ -121,6 +121,7 @@ class _BottomSheetState extends State<BottomSheetPage> {
           onTap: () {
             setState(() {
               selectedOption = item;
+              Navigator.pop(context, item);
             });
           },
           child: Card(
