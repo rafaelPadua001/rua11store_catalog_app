@@ -26,7 +26,7 @@ class CartItem {
       id: json['id'],
       userId: json['user_id'],
       productName: json['product_name'],
-      price: (json['price'] as num).toDouble(),
+      price: (json['price'] as num).toDouble() / 100,
       description: json['description'],
       quantity: json['quantity'] as int,
       imageUrl: json['image_url'],

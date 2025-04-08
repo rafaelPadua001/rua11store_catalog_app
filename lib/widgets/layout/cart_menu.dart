@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rua11store_catalog_app/services/delivery_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/cart/cart_repository.dart';
-import '../../models/cart.dart';
+// import '../../models/cart.dart';
 import '../../data/cart/cart_notifier.dart';
 import 'zipcodeInput.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
@@ -63,7 +63,7 @@ class _CartMenuState extends State<CartMenu> {
       setState(() {
         cartItems = _cartRepository.items.map((item) => item.toJson()).toList();
         cartItemCount.value = cartItems.length;
-        print(cartItems);
+
         isLoading = false;
       });
     } catch (e) {
@@ -151,8 +151,8 @@ class _CartMenuState extends State<CartMenu> {
     _menuOverlayEntry = OverlayEntry(
       builder:
           (context) => Positioned(
-            left: position.dx - 250,
-            top: position.dy + 40,
+            left: position.dx - 205,
+            top: position.dy + 50,
             child: Material(
               elevation: 8,
               child: Container(
@@ -230,7 +230,7 @@ class _CartMenuState extends State<CartMenu> {
   }
 
   String _formatCurrency(double value) {
-    return 'R\$${value.toStringAsFixed(2).replaceAll('.', ',')}';
+    return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
   }
 
   double _calculateSubtotal() {
@@ -238,36 +238,25 @@ class _CartMenuState extends State<CartMenu> {
       if (cartItems == null || cartItems.isEmpty) return 0.0;
 
       double subtotal = 0.0;
+
       for (var item in cartItems) {
         if (item is Map && item.containsKey('price')) {
           final price = item['price'];
 
           if (price == null) continue;
 
-          if (price is String) {
-            String cleanedPrice = price.replaceAll(RegExp('r^[^0-9, .]'), '');
-
-            double value;
-            if (cleanedPrice.contains(',') || cleanedPrice.contains('.')) {
-              cleanedPrice = cleanedPrice
-                  .replaceAll('.', '')
-                  .replaceAll(',', '');
-              value = double.tryParse(cleanedPrice) ?? 0.0;
-            } else {
-              value = (double.tryParse(cleanedPrice) ?? 0) / 100;
-            }
-
-            subtotal += double.tryParse(cleanedPrice) ?? 0.0;
-          } else if (price is int) {
-            subtotal += price / 100;
-          } else if (price is double) {
-            subtotal += price;
+          if (price is num) {
+            subtotal += price.toDouble();
+          } else if (price is String) {
+            // caso por algum motivo venha string, ainda trata
+            String cleaned = price.replaceAll(RegExp(r'[^0-9,\.]'), '');
+            cleaned = cleaned.replaceAll('.', '').replaceAll(',', '.');
+            subtotal += double.tryParse(cleaned) ?? 0.0;
           }
         }
       }
       return subtotal;
     } catch (e) {
-      // Em caso de erro inesperado, retorna 0.0
       debugPrint('Erro ao calcular subtotal: $e');
       return 0.0;
     }
@@ -301,7 +290,7 @@ class _CartMenuState extends State<CartMenu> {
             child: Column(
               children: [
                 SizedBox(
-                  height: 200,
+                  height: 145,
                   child: ListView.builder(
                     shrinkWrap: true,
                     itemCount: cartItems.length,
@@ -337,8 +326,8 @@ class _CartMenuState extends State<CartMenu> {
                                       borderRadius: BorderRadius.circular(8),
                                       child: Image.network(
                                         imageUrl,
-                                        width: 50,
-                                        height: 50,
+                                        width: 30,
+                                        height: 30,
                                         fit: BoxFit.cover,
                                         errorBuilder:
                                             (context, error, stackTrace) =>
@@ -484,9 +473,9 @@ class _CartMenuState extends State<CartMenu> {
   }
 
   Widget _buildListView(List result) {
-    // if (result.isEmpty) {
-    //   return const Center(child: Text("Digite um CEP para calcular o frete"));
-    // }
+    if (result.isEmpty) {
+      return const Center(child: Text("Digite um CEP para calcular o frete"));
+    }
 
     return ListView.builder(
       itemCount: result.length,
@@ -502,7 +491,7 @@ class _CartMenuState extends State<CartMenu> {
             ),
             leading: Container(
               width: 40,
-              height: 40,
+              height: 35,
               child: Image.network(
                 item["company"]["picture"],
                 fit: BoxFit.contain,
@@ -555,7 +544,7 @@ class _CartMenuState extends State<CartMenu> {
 
   Widget _buildSubtotalPrice() {
     return Text(
-      'Subtotal: R\$ ${_calculateSubtotal().toStringAsFixed(2)}',
+      'Subtotal: R\$ ${_formatCurrency(_calculateSubtotal())}',
       style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
     );
   }
