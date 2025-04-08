@@ -25,10 +25,19 @@ class _CartMenuState extends State<CartMenu> {
   bool isLoading = true;
   bool isMenuOpen = false;
   bool _isDisposed = false;
+  OverlayEntry? _menuOverlayEntry;
+  double deliveryFee = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCartItems();
+  }
 
   @override
   void dispose() {
     _isDisposed = true;
+    _menuOverlayEntry?.remove();
     super.dispose();
   }
 
@@ -48,13 +57,13 @@ class _CartMenuState extends State<CartMenu> {
         return;
       }
 
-      // Apenas chama a função (não tenta receber retorno dela)
       await _cartRepository.fetchCartItems(user.id);
 
       if (_isDisposed) return;
       setState(() {
         cartItems = _cartRepository.items.map((item) => item.toJson()).toList();
         cartItemCount.value = cartItems.length;
+        print(cartItems);
         isLoading = false;
       });
     } catch (e) {
@@ -82,268 +91,352 @@ class _CartMenuState extends State<CartMenu> {
       return;
     }
 
-    // Guarda o estado anterior
     final previousItems = List<Map<String, dynamic>>.from(cartItems);
 
-    // Remove otimista
     if (!_isDisposed) {
       setState(() => cartItems.removeAt(index));
       cartItemCount.value = cartItems.length;
     }
 
     try {
-      await _cartRepository.removeItem(itemId); // <- agora sem atribuir
+      await _cartRepository.removeItem(itemId);
     } catch (e) {
-      // Rollback em caso de erro
-      if (!_isDisposed)
+      if (!_isDisposed) {
         setState(() {
           cartItems = previousItems;
           cartItemCount.value = cartItems.length;
         });
+      }
       ScaffoldMessenger.of(currentContext).showSnackBar(
         SnackBar(content: Text('Erro ao remover item: ${e.toString()}')),
       );
     }
 
-    if (!_isDisposed) {
-      Navigator.of(currentContext).pop(); // Fecha o menu atual
-      await Future.delayed(const Duration(milliseconds: 50));
-      if (cartItems.isNotEmpty) {
-        _showCartMenu(currentContext); // Reabre o menu com os dados atualizados
-      }
+    if (!_isDisposed && cartItems.isNotEmpty) {
+      _updateMenuContent(); // Atualiza o conteúdo sem fechar o menu
     }
   }
 
-  Future<void> _handleCalculateDelivery(
-  BuildContext context,
-  String zipcode,
-) async {
-  final service = DeliveryService();
+  Future<void> _handleCalculateDelivery(String zipcode) async {
+    final service = DeliveryService();
 
-  try {
-    final result = await service.calculateDelivery(zipDestiny: zipcode);
+    try {
+      final result = await service.calculateDelivery(zipDestiny: zipcode);
 
-    setState(() {
-      deliveryOptions = result;
-    });
+      setState(() {
+        deliveryOptions = result;
+        selectedOption = null; // Reseta a seleção ao calcular novo frete
+      });
+      _updateMenuContent();
 
-    Navigator.of(context).pop(); // fecha menu atual
-    await Future.delayed(Duration(milliseconds: 100));
-    if (!_isDisposed) _showCartMenu(context); // reabre com lista atualizada
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Frete calculado com sucesso')),
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Erro ao calcular frete: $e')),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Frete calculado com sucesso')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao calcular frete: $e')));
+    }
   }
-}
-
 
   void _showCartMenu(BuildContext context) {
+    if (isMenuOpen) return;
+
     isMenuOpen = true;
 
-    showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        MediaQuery.of(context).size.width - 300,
-        80,
-        0,
-        0,
-      ),
-      items: [
-        PopupMenuItem(
-          height: 400,
-          child: Container(
-            width: 300,
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Seu Carrinho',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    Chip(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      label: Text(
-                        cartItems.isEmpty
-                            ? 'Vazio'
-                            : '${cartItems.length} ${cartItems.length == 1 ? 'item' : 'itens'}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
+    final overlayState = Overlay.of(context);
+    final renderBox = context.findRenderObject() as RenderBox;
+    final position = renderBox.localToGlobal(Offset.zero);
+
+    _menuOverlayEntry = OverlayEntry(
+      builder:
+          (context) => Positioned(
+            left: position.dx - 250,
+            top: position.dy + 40,
+            child: Material(
+              elevation: 8,
+              child: Container(
+                width: 300,
+                height: 800,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 10,
+                      spreadRadius: 2,
                     ),
                   ],
                 ),
-                const Divider(),
-                if (isLoading)
-                  const Center(child: CircularProgressIndicator())
-                else if (cartItems.isEmpty)
-                  const Center(child: Text('Seu carrinho está vazio'))
-                else
-                  Column(
-                    children: [
-                      SizedBox(
-                        height: 250,
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: cartItems.length,
-                          itemBuilder: (context, index) {
-                            final item = cartItems[index];
-                            final itemId =
-                                item['id']?.toString() ?? index.toString();
-                            String baseUrl =
-                                "https://rua11storecatalogapi-production.up.railway.app/";
+                child: _buildMenuContent(),
+              ),
+            ),
+          ),
+    );
 
-                            String imageUrl =
-                                item['image_url'].startsWith('http')
-                                    ? item['image_url']
-                                    : baseUrl + item['image_url'];
+    overlayState.insert(_menuOverlayEntry!);
+  }
 
-                            return Card(
-                              child: Dismissible(
-                                key: Key(itemId),
-                                direction: DismissDirection.endToStart,
-                                background: Container(
-                                  color: Colors.red,
-                                  alignment: Alignment.centerRight,
-                                  padding: const EdgeInsets.only(right: 20),
-                                  child: const Icon(
-                                    Icons.delete,
-                                    color: Colors.white,
+  void _closeMenu() {
+    if (_menuOverlayEntry != null) {
+      _menuOverlayEntry!.remove();
+      _menuOverlayEntry = null;
+    }
+    isMenuOpen = false;
+  }
+
+  void _updateMenuContent() {
+    if (_menuOverlayEntry != null) {
+      _menuOverlayEntry!.markNeedsBuild();
+    }
+  }
+
+  String _formatPrice(dynamic price) {
+    try {
+      if (price == null) return 'R\$ 0,00';
+
+      // Se for string (caso mais comum com seu banco de dados)
+      if (price is String) {
+        // Remove todos os caracteres não numéricos exceto vírgula/ponto
+        String cleaned = price.replaceAll(RegExp(r'[^0-9,.]'), '');
+
+        // Converte para double tratando tanto . quanto , como separador decimal
+        double value;
+        if (cleaned.contains(',')) {
+          // Formato brasileiro (1.234,56)
+          cleaned = cleaned.replaceAll('.', '').replaceAll(',', '.');
+          value = double.tryParse(cleaned) ?? 0.0;
+        } else {
+          // Assume que está em centavos se não tiver separador decimal
+          value = (double.tryParse(cleaned) ?? 0) / 100;
+        }
+
+        return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
+      }
+
+      // Se já for numérico, trata como centavos se for inteiro
+      if (price is num) {
+        double value = price is int ? price / 100 : price.toDouble();
+        return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
+      }
+
+      return 'R\$ 0,00';
+    } catch (e) {
+      debugPrint('Erro ao formatar preço: $e');
+      return 'R\$ 0,00';
+    }
+  }
+
+  String _formatCurrency(double value) {
+    return 'R\$${value.toStringAsFixed(2).replaceAll('.', ',')}';
+  }
+
+  double _calculateSubtotal() {
+    try {
+      if (cartItems == null || cartItems.isEmpty) return 0.0;
+
+      double subtotal = 0.0;
+      for (var item in cartItems) {
+        if (item is Map && item.containsKey('price')) {
+          final price = item['price'];
+
+          if (price == null) continue;
+
+          if (price is String) {
+            String cleanedPrice = price.replaceAll(RegExp('r^[^0-9, .]'), '');
+
+            double value;
+            if (cleanedPrice.contains(',') || cleanedPrice.contains('.')) {
+              cleanedPrice = cleanedPrice
+                  .replaceAll('.', '')
+                  .replaceAll(',', '');
+              value = double.tryParse(cleanedPrice) ?? 0.0;
+            } else {
+              value = (double.tryParse(cleanedPrice) ?? 0) / 100;
+            }
+
+            subtotal += double.tryParse(cleanedPrice) ?? 0.0;
+          } else if (price is int) {
+            subtotal += price / 100;
+          } else if (price is double) {
+            subtotal += price;
+          }
+        }
+      }
+      return subtotal;
+    } catch (e) {
+      // Em caso de erro inesperado, retorna 0.0
+      debugPrint('Erro ao calcular subtotal: $e');
+      return 0.0;
+    }
+  }
+
+  double _calculateTotal() {
+    return _calculateSubtotal() + deliveryFee;
+  }
+
+  Widget _buildMenuContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Seu Carrinho',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            IconButton(icon: const Icon(Icons.close), onPressed: _closeMenu),
+          ],
+        ),
+        const Divider(),
+        if (isLoading)
+          const Center(child: CircularProgressIndicator())
+        else if (cartItems.isEmpty)
+          const Center(child: Text('Seu carrinho está vazio'))
+        else
+          Expanded(
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 200,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: cartItems.length,
+                    itemBuilder: (context, index) {
+                      final item = cartItems[index];
+                      final itemId = item['id']?.toString() ?? index.toString();
+                      String baseUrl =
+                          "https://rua11storecatalogapi-production.up.railway.app/";
+
+                      String imageUrl =
+                          item['image_url'].startsWith('http')
+                              ? item['image_url']
+                              : baseUrl + item['image_url'];
+
+                      return Card(
+                        child: Dismissible(
+                          key: Key(itemId),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            color: Colors.red,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
+                            ),
+                          ),
+                          onDismissed: (direction) => _removeItem(index),
+                          child: ListTile(
+                            leading:
+                                item['image_url'] != null
+                                    ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        imageUrl,
+                                        width: 50,
+                                        height: 50,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(Icons.broken_image),
+                                      ),
+                                    )
+                                    : const Icon(Icons.image_not_supported),
+                            title: Text(
+                              item['product_name'] ?? 'Produto sem nome',
+                              style: TextStyle(fontSize: 10),
+                            ),
+                            subtitle: Text(
+                              'Qtd: ${item['quantity'] ?? 0}',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _formatPrice(item['price']),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                onDismissed: (direction) => _removeItem(index),
-                                child: ListTile(
-                                  leading:
-                                      item['image_url'] != null
-                                          ? ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            child: Image.network(
-                                              imageUrl,
-                                              width: 50,
-                                              height: 50,
-                                              fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (
-                                                    context,
-                                                    error,
-                                                    stackTrace,
-                                                  ) => const Icon(
-                                                    Icons.broken_image,
-                                                  ),
-                                            ),
-                                          )
-                                          : const Icon(
-                                            Icons.image_not_supported,
-                                          ),
-                                  title: Text(
-                                    item['product_name'] ?? 'Produto sem nome',
-                                    style: TextStyle(fontSize: 10),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.remove_circle_outline,
+                                    color: Colors.red,
                                   ),
-                                  subtitle: Text(
-                                    'Qtd: ${item['quantity'] ?? 0}',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'R\$ ${(item['price'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.remove_circle_outline,
-                                          color: Colors.red,
-                                        ),
-                                        onPressed: () => _removeItem(index),
-                                      ),
-                                    ],
-                                  ),
+                                  onPressed: () => _removeItem(index),
                                 ),
-                              ),
-                            );
-                          },
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                      ZipcodeInputWidget(
+                      );
+                    },
+                  ),
+                ),
+                ExpansionTile(
+                  title: Text('Endereço de Entrega'),
+                  leading: Icon(Icons.location_on),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: ZipcodeInputWidget(
                         zipController: _zipController,
                         onSearch:
-                            (zipcode) =>
-                                _handleCalculateDelivery(context, zipcode),
+                            (zipcode) => _handleCalculateDelivery(zipcode),
                       ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height:
-                            150, // altura definida para evitar erro de layout
-                        child: _buildListView(deliveryOptions),
-                      ),
+                    ),
 
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          onPressed:
-                              selectedOption == null
-                                  ? null
-                                  : () {
-                                    Navigator.of(context).pop();
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Compra finalizada com ${selectedOption!["company"]["name"]} - ${selectedOption!["name"]}, valor R\$ ${selectedOption!["price"].toStringAsFixed(2)}',
-                                        ),
-                                      ),
-                                    );
-
-                                    // TODO: Aqui você pode chamar seu método de checkout passando o selectedOption
-                                  },
-                          child: Text(
-                            selectedOption == null
-                                ? 'Escolha uma opção de frete'
-                                : 'Finalizar Compra',
-                          ),
-                        ),
-                      ),
-                    ],
+                    // Wrap com Container para simular o Expanded
+                    Container(
+                      height:
+                          175, // ou qualquer altura apropriada que você deseja
+                      child: _buildListView(deliveryOptions),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _buildSubtotalPrice(),
+                Divider(),
+                const SizedBox(height: 3),
+                _buildTotalPrice(),
+                Divider(),
+                const SizedBox(height: 3),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onPressed:
+                        selectedOption == null
+                            ? null
+                            : () {
+                              _closeMenu();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Compra finalizada com ${selectedOption!["company"]["name"]} - ${selectedOption!["name"]}, valor R\$ ${selectedOption!["price"].toStringAsFixed(2)}',
+                                  ),
+                                ),
+                              );
+                            },
+                    child: Text(
+                      selectedOption == null
+                          ? 'Escolha uma opção de frete'
+                          : 'Finalizar Compra',
+                    ),
                   ),
+                ),
               ],
             ),
           ),
-        ),
       ],
-    ).then((_) {
-      if (!_isDisposed) {
-        setState(() => isMenuOpen = false);
-      }
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCartItems();
+    );
   }
 
   @override
@@ -378,10 +471,12 @@ class _CartMenuState extends State<CartMenu> {
             ],
           ),
           onPressed: () async {
-            if (isMenuOpen) return;
-
-            await _loadCartItems();
-            _showCartMenu(context);
+            if (isMenuOpen) {
+              _closeMenu();
+            } else {
+              await _loadCartItems();
+              _showCartMenu(context);
+            }
           },
         );
       },
@@ -389,9 +484,9 @@ class _CartMenuState extends State<CartMenu> {
   }
 
   Widget _buildListView(List result) {
-    if (result.isEmpty) {
-      return Center(child: Text("nenhum resultado"));
-    }
+    // if (result.isEmpty) {
+    //   return const Center(child: Text("Digite um CEP para calcular o frete"));
+    // }
 
     return ListView.builder(
       itemCount: result.length,
@@ -418,17 +513,15 @@ class _CartMenuState extends State<CartMenu> {
             ),
           );
         }
+
         final isSelected =
             selectedOption != null && selectedOption!['id'] == item["id"];
         return GestureDetector(
           onTap: () {
             setState(() {
-             
-                  selectedOption = item;
-                  print(selectedOption);
-               
-                //Navigator.pop(context, item);
-              
+              selectedOption = item;
+              deliveryFee = double.tryParse(item['price'].toString()) ?? 0.0;
+              _updateMenuContent(); // Atualiza o menu para mostrar a seleção
             });
           },
           child: Card(
@@ -457,6 +550,35 @@ class _CartMenuState extends State<CartMenu> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSubtotalPrice() {
+    return Text(
+      'Subtotal: R\$ ${_calculateSubtotal().toStringAsFixed(2)}',
+      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildTotalPrice() {
+    return Column(
+      children: [
+        //_buildSubtotalPrice(), // Já existente
+        const SizedBox(height: 8),
+        Text(
+          'Taxa de entrega: ${_formatCurrency(deliveryFee)}',
+          style: const TextStyle(fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Total: ${_formatCurrency(_calculateTotal())}',
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.green,
+          ),
+        ),
+      ],
     );
   }
 }
