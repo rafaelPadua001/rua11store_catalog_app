@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rua11store_catalog_app/data/cart/cart_notifier.dart';
 import 'package:rua11store_catalog_app/main.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -80,7 +81,11 @@ class _ProductCardState extends State<ProductCard> {
         category: widget.product.categoryId.toString(),
       );
 
-      await widget.cartRepository.addItem(cartItem);
+       await widget.cartRepository.addItem(cartItem);
+      // Recarrega os itens atualizados
+      await widget.cartRepository.fetchCartItems(user.id);
+
+      cartItemCount.value = widget.cartRepository.items.length;
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

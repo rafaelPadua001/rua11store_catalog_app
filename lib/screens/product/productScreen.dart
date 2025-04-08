@@ -1,28 +1,98 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/product.dart';
 import '../../widgets/layout/bottomSheePaget.dart';
+import '../../data/cart/cart_repository.dart';
+import '../../models/cart.dart';
+import '../../data/cart/cart_notifier.dart';
 
 class ProductScreen extends StatefulWidget {
   final Product product;
-  // final BottomSheetPage _bottomSheetPage = BottomSheetPage();
-  
+  final CartRepository cartRepository;
 
-  ProductScreen({Key? key, required this.product}) : super(key: key);
+  ProductScreen({
+    Key? key,
+    required this.product,
+    CartRepository? cartRepository,
+  }) : cartRepository = cartRepository ?? CartRepository(),
+       super(key: key);
+
   @override
   State<ProductScreen> createState() => _ProductScreenState();
 }
 
 class _ProductScreenState extends State<ProductScreen> {
   final apiUrl = dotenv.env['API_URL'];
-  
+  Map<String, dynamic>? selectedDelivery;
+  bool _isAddingToCart = false;
+
+  Future<void> _addToCart() async {
+    final user = Supabase.instance.client.auth.currentUser;
+
+    if (user == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Faça login para adicionar ao carrinho'),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() => _isAddingToCart = true);
+
+    try {
+      final cartItem = CartItem(
+        id: '',
+        userId: user.id,
+        productName: widget.product.name,
+        price: widget.product.numericPrice,
+        description: widget.product.description,
+        quantity: 1,
+        imageUrl: widget.product.image,
+        category: widget.product.categoryId.toString(),
+      );
+
+      await widget.cartRepository.addItem(cartItem);
+      // Recarrega os itens atualizados
+      await widget.cartRepository.fetchCartItems(user.id);
+
+      cartItemCount.value = widget.cartRepository.items.length;
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${widget.product.name} adicionado ao carrinho!'),
+          ),
+        );
+
+        // Reabre o menu (caso exista uma função _showCartMenu)
+        Navigator.of(context).pop(); // fecha se estiver aberto
+        await Future.delayed(const Duration(milliseconds: 50));
+        //_showCartMenu(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao adicionar: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isAddingToCart = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    // final cartProvider = context.watch<CartProvider>();
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.product.name), // usando o nome do produto
-      ),
+      appBar: AppBar(title: Text(widget.product.name)),
       body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -43,7 +113,6 @@ class _ProductScreenState extends State<ProductScreen> {
   Widget _buildProductImage(apiUrl) {
     return Image.network(
       apiUrl + widget.product.image,
-      // height: 350,
       width: 340,
       fit: BoxFit.cover,
     );
@@ -54,18 +123,12 @@ class _ProductScreenState extends State<ProductScreen> {
       elevation: 5,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Price: R\$ ${double.parse(widget.product.price).toStringAsFixed(2)}',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)
-              ),
-            ),
-          ],
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Price: R\$ ${double.parse(widget.product.price).toStringAsFixed(2)}',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );
@@ -77,28 +140,35 @@ class _ProductScreenState extends State<ProductScreen> {
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Row(
-          mainAxisAlignment:
-              MainAxisAlignment.spaceBetween, // alinhamento horizontal
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-              // garante que o texto ocupe o espaço necessário
               child: Text(
-                'Delivery Price: R\$ ${double.parse(widget.product.price).toStringAsFixed(2)}',
+                selectedDelivery != null
+                    ? 'Delivery price: R\$ ${double.parse(selectedDelivery!['price'].toString())}'
+                    : 'Delivery Price: R\$ -',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
             ),
             IconButton(
-              icon: Icon(Icons.arrow_forward_ios),
-              iconSize: 15,
+              icon: Icon(Icons.arrow_forward_ios, size: 15),
               tooltip: 'Mais detalhes',
-              onPressed: () {
-                showModalBottomSheet(
+              onPressed: () async {
+                final selectedOption = await showModalBottomSheet(
                   context: context,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
                   ),
                   builder: (context) => BottomSheetPage(),
                 );
+
+                if (selectedOption != null) {
+                  setState(() {
+                    selectedDelivery = selectedOption;
+                  });
+                }
               },
             ),
           ],
@@ -113,22 +183,14 @@ class _ProductScreenState extends State<ProductScreen> {
       child: ExpansionTile(
         title: const Text(
           'Description',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
         children: [
           Padding(
             padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Description: ${widget.product.description}',
-                style: TextStyle(fontSize: 12)
-                ),
-              ],
+            child: Text(
+              'Description: ${widget.product.description}',
+              style: TextStyle(fontSize: 12),
             ),
           ),
         ],
@@ -138,57 +200,31 @@ class _ProductScreenState extends State<ProductScreen> {
 
   Widget _buildCardActions() {
     return Container(
-      color: Colors.deepPurple, // Aqui você define o background da área toda
+      color: Colors.deepPurple,
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
-              // Botão de comentário com fundo
-              Container(
-                decoration: BoxDecoration(
-                  // color: Colors.blue.shade100,
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  color: Colors.white,
-                  icon: Icon(Icons.comment),
-                  tooltip: 'message',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Botão comentar ainda não está pronto'),
-                      ),
-                    );
-                  },
-                ),
+              IconButton(
+                color: Colors.white,
+                icon: Icon(Icons.comment),
+                tooltip: 'message',
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Botão comentar ainda não está pronto'),
+                    ),
+                  );
+                },
               ),
               SizedBox(width: 8),
-
-              // Botão de carrinho com fundo
-              Container(
-                decoration: BoxDecoration(
-                  // color: Colors.red.shade100,
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  color: Colors.white,
-                  icon: Icon(Icons.add_shopping_cart_sharp),
-                  tooltip: 'cart',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Botão adicionar ao carrinho ainda não está pronto',
-                        ),
-                      ),
-                    );
-                  },
-                ),
+              IconButton(
+                color: Colors.white,
+                icon: Icon(Icons.add_shopping_cart_sharp),
+                tooltip: 'cart',
+                onPressed: _isAddingToCart ? null : _addToCart,
               ),
-              // SizedBox(width: 8),
-
-              // Botão Buy Now
               Expanded(
                 child: TextButton(
                   style: ElevatedButton.styleFrom(
