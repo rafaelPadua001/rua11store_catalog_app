@@ -207,6 +207,7 @@ class _CartMenuState extends State<CartMenu> {
 
   String _formatPrice(dynamic price) {
     try {
+        print(price);
       if (price == null) return 'R\$ 0,00';
 
       // Se for string (caso mais comum com seu banco de dados)
