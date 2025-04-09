@@ -8,6 +8,7 @@ class Product {
   final double width;
   final double height;
   final double weight;
+  final double length;
   final String phone;
   final int categoryId;
   final int? subcategoryId;
@@ -23,6 +24,7 @@ class Product {
     required this.width,
     required this.height,
     required this.weight,
+    required this.length,
     required this.price,
     required this.phone,
     required this.categoryId,
@@ -53,6 +55,10 @@ class Product {
       weight:
           json['weight'] != null
               ? double.tryParse(json['weight'].toString()) ?? 0.0
+              : 0.0,
+      length:
+          json['weight'] != null
+              ? double.tryParse(json['length'].toString()) ?? 0.0
               : 0.0,
       phone: json['phone']?.toString() ?? 'Sem telefone',
       categoryId:
