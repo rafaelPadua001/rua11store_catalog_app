@@ -80,6 +80,7 @@ class _ProductCardState extends State<ProductCard> {
         width: widget.product.width,
         height: widget.product.height,
         weight: widget.product.weight,
+        length: widget.product.length,
         imageUrl: widget.product.image,
         category: widget.product.categoryId.toString(),
       );
