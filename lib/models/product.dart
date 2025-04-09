@@ -5,6 +5,9 @@ class Product {
   final String image;
   final int quantity;
   final String price;
+  final double width;
+  final double height;
+  final double weight;
   final String phone;
   final int categoryId;
   final int? subcategoryId;
@@ -17,6 +20,9 @@ class Product {
     required this.description,
     required this.image,
     required this.quantity,
+    required this.width,
+    required this.height,
+    required this.weight,
     required this.price,
     required this.phone,
     required this.categoryId,
@@ -31,23 +37,40 @@ class Product {
       name: json['name']?.toString() ?? 'Nome não disponível',
       description: json['description']?.toString() ?? 'Sem descrição',
       image: json['image_path']?.toString() ?? '', // Removido caminho local
-      quantity: json['quantity'] != null
-          ? int.tryParse(json['quantity'].toString()) ?? 0
-          : 0,
+      quantity:
+          json['quantity'] != null
+              ? int.tryParse(json['quantity'].toString()) ?? 0
+              : 0,
       price: json['price']?.toString() ?? '0',
+      width:
+          json['width'] != null
+              ? double.tryParse(json['width'].toString()) ?? 0.0
+              : 0.0,
+      height:
+          json['height'] != null
+              ? double.tryParse(json['height'].toString()) ?? 0.0
+              : 0.0,
+      weight:
+          json['weight'] != null
+              ? double.tryParse(json['weight'].toString()) ?? 0.0
+              : 0.0,
       phone: json['phone']?.toString() ?? 'Sem telefone',
-      categoryId: json['category_id'] != null
-          ? int.tryParse(json['category_id'].toString()) ?? 0
-          : 0,
-      subcategoryId: json['subcategory_id'] != null
-          ? int.tryParse(json['subcategory_id'].toString())
-          : null,
-      parentId: json['parent_id'] != null
-          ? int.tryParse(json['parent_id'].toString())
-          : null,
-      userId: json['user_id'] != null
-          ? int.tryParse(json['user_id'].toString()) ?? 0
-          : 0,
+      categoryId:
+          json['category_id'] != null
+              ? int.tryParse(json['category_id'].toString()) ?? 0
+              : 0,
+      subcategoryId:
+          json['subcategory_id'] != null
+              ? int.tryParse(json['subcategory_id'].toString())
+              : null,
+      parentId:
+          json['parent_id'] != null
+              ? int.tryParse(json['parent_id'].toString())
+              : null,
+      userId:
+          json['user_id'] != null
+              ? int.tryParse(json['user_id'].toString()) ?? 0
+              : 0,
     );
   }
 

@@ -6,6 +6,19 @@ import 'zipcodeInput.dart';
 import '../../services/delivery_service.dart';
 
 class BottomSheetPage extends StatefulWidget {
+  final List<Map<String, dynamic>> products;
+  // final double width;
+  // final double height;
+  // final double weight;
+
+  const BottomSheetPage({
+    Key? key,
+    required this.products,
+    // required this.width,
+    // required this.height,
+    // required this.weight,
+  });
+
   @override
   _BottomSheetState createState() => _BottomSheetState();
 }
@@ -22,7 +35,10 @@ class _BottomSheetState extends State<BottomSheetPage> {
     final service = DeliveryService();
 
     try {
-      final result = await service.calculateDelivery(zipDestiny: zipcode);
+      final result = await service.calculateDelivery(
+        zipDestiny: zipcode,
+        products: widget.products,
+      );
 
       setState(() {
         deliveryOptions = result;
@@ -57,7 +73,8 @@ class _BottomSheetState extends State<BottomSheetPage> {
             children: [
               ZipcodeInputWidget(
                 zipController: zipController,
-                onSearch: (zipcode) => _handleCalculateDelivery(context, zipcode),
+                onSearch:
+                    (zipcode) => _handleCalculateDelivery(context, zipcode),
               ),
               Divider(),
               Expanded(child: _buildListView(deliveryOptions)),
@@ -82,8 +99,6 @@ class _BottomSheetState extends State<BottomSheetPage> {
       ],
     );
   }
-
-
 
   Widget _buildListView(List result) {
     if (result.isEmpty) {

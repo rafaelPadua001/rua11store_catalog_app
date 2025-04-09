@@ -4,10 +4,14 @@ import 'package:http/http.dart' as http;
 class DeliveryService {
   final bool isLocal;
 
-  DeliveryService({this.isLocal = false});
+  DeliveryService({this.isLocal = true});
 
   Future<List> calculateDelivery({
     required String zipDestiny,
+    required List<Map<String, dynamic>> products,
+    // required width,
+    // required height,
+    // required weight,
   }) async {
     final url = Uri.parse(
       isLocal
@@ -18,12 +22,13 @@ class DeliveryService {
     final body = jsonEncode({
       "zipcode_origin": "73080-180",
       "zipcode_destiny": zipDestiny,
-      "weight": 0.5,
-      "height": 10,
-      "width": 15,
-      "length": 20,
-      "secure_value": 150,
-      "quantity": 1,
+      "products": products,
+      // "weight": weight,
+      // "height": height,
+      // "width": width,
+      // "length": 1,
+      // "secure_value": 0,
+      // "quantity": 1,
     });
 
     final response = await http.post(

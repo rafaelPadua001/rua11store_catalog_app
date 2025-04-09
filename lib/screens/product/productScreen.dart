@@ -52,6 +52,9 @@ class _ProductScreenState extends State<ProductScreen> {
         price: widget.product.numericPrice,
         description: widget.product.description,
         quantity: 1,
+        width: widget.product.weight,
+        height: widget.product.height,
+        weight: widget.product.weight,
         imageUrl: widget.product.image,
         category: widget.product.categoryId.toString(),
       );
@@ -161,7 +164,18 @@ class _ProductScreenState extends State<ProductScreen> {
                       top: Radius.circular(16),
                     ),
                   ),
-                  builder: (context) => BottomSheetPage(),
+                  builder: (context) => BottomSheetPage(
+                    products: [
+    {
+      "width": widget.product.width,
+      "height": widget.product.height,
+      "weight": widget.product.weight,
+      "length": 1,
+      "secure_value": 0,
+      "quantity": 1,
+    }
+  ],
+                  ),
                 );
 
                 if (selectedOption != null) {
