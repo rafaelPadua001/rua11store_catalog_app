@@ -205,42 +205,36 @@ class _CartMenuState extends State<CartMenu> {
     }
   }
 
-  String _formatPrice(dynamic price) {
-    try {
-        print(price);
-      if (price == null) return 'R\$ 0,00';
+String _formatPrice(dynamic price) {
+  try {
+    if (price == null) return 'R\$ 0,00';
 
-      // Se for string (caso mais comum com seu banco de dados)
-      if (price is String) {
-        // Remove todos os caracteres não numéricos exceto vírgula/ponto
-        String cleaned = price.replaceAll(RegExp(r'[^0-9,.]'), '');
+    // Se for string
+    if (price is String) {
+      String cleaned = price.replaceAll(RegExp(r'[^0-9.,]'), '');
 
-        // Converte para double tratando tanto . quanto , como separador decimal
-        double value;
-        if (cleaned.contains(',')) {
-          // Formato brasileiro (1.234,56)
-          cleaned = cleaned.replaceAll('.', '').replaceAll(',', '.');
-          value = double.tryParse(cleaned) ?? 0.0;
-        } else {
-          // Assume que está em centavos se não tiver separador decimal
-          value = (double.tryParse(cleaned) ?? 0) / 100;
-        }
-
-        return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
+      // Se tiver vírgula, trata como formato brasileiro
+      if (cleaned.contains(',')) {
+        cleaned = cleaned.replaceAll('.', '').replaceAll(',', '.');
       }
 
-      // Se já for numérico, trata como centavos se for inteiro
-      if (price is num) {
-        double value = price is int ? price / 100 : price.toDouble();
-        return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
-      }
-
-      return 'R\$ 0,00';
-    } catch (e) {
-      debugPrint('Erro ao formatar preço: $e');
-      return 'R\$ 0,00';
+      double value = double.tryParse(cleaned) ?? 0.0;
+      return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
     }
+
+    // Se for num (int ou double), apenas formata com 2 casas decimais
+    if (price is num) {
+      double value = price.toDouble();
+      return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
+    }
+
+    return 'R\$ 0,00';
+  } catch (e) {
+    debugPrint('Erro ao formatar preço: $e');
+    return 'R\$ 0,00';
   }
+}
+
 
   String _formatCurrency(double value) {
     return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
