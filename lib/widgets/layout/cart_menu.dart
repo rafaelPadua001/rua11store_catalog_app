@@ -63,7 +63,7 @@ class _CartMenuState extends State<CartMenu> {
       setState(() {
         cartItems = _cartRepository.items.map((item) => item.toJson()).toList();
         cartItemCount.value = cartItems.length;
-
+        print(cartItems);
         isLoading = false;
       });
     } catch (e) {
@@ -120,8 +120,20 @@ class _CartMenuState extends State<CartMenu> {
   Future<void> _handleCalculateDelivery(String zipcode) async {
     final service = DeliveryService();
 
+    final List<Map<String, dynamic>> products =
+        cartItems.map((item) {
+          return {
+            "width": item['width'],
+            "height": item['height'],
+            "weight": item['weight'],
+            "length": item['length'] ?? 1,
+            "quantity": item['quantity'] ?? 1,
+            "secure_value": item['price'], // valor para seguro, opcional
+          };
+        }).toList();
+
     try {
-      final result = await service.calculateDelivery(zipDestiny: zipcode);
+      final result = await service.calculateDelivery(zipDestiny: zipcode, products: products);
 
       setState(() {
         deliveryOptions = result;

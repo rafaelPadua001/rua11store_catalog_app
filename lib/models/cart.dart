@@ -5,6 +5,9 @@ class CartItem {
   final double price;
   final String description;
   final int quantity;
+  final double width;
+  final double height;
+  final double weight;
   final String imageUrl;
   final String category; // Novo campo
   final DateTime? createdAt;
@@ -16,6 +19,9 @@ class CartItem {
     required this.price,
     required this.description,
     this.quantity = 1,
+    required this.width,
+    required this.height,
+    required this.weight,
     required this.imageUrl,
     required this.category,
     this.createdAt,
@@ -29,6 +35,9 @@ class CartItem {
       price: (json['price'] as num).toDouble() / 100,
       description: json['description'],
       quantity: json['quantity'] as int,
+      width: (json['width'] as num?)?.toDouble() ?? 0.0,
+      height: (json['height'] as num?)?.toDouble() ?? 0.0,
+      weight: (json['weight'] as num?)?.toDouble() ?? 0.0,
       imageUrl: json['image_url'],
       category: json['category'], // Novo campo
       createdAt: json['created_at'] != null 
@@ -45,6 +54,9 @@ class CartItem {
       'price': price,
       'description': description,
       'quantity': quantity,
+      'width': width,
+      'height': height,
+      'weight': weight,
       'image_url': imageUrl,
       'category': category, // Novo campo
     };
