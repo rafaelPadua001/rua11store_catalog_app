@@ -12,9 +12,11 @@ import '../screens/product/productScreen.dart';
 
 class ProductCard extends StatefulWidget {
   final Product product;
+  final String? zipCode;
+  final Map<String, dynamic>? company;
   final CartRepository cartRepository;
 
-  ProductCard({Key? key, required this.product, CartRepository? cartRepository})
+  ProductCard({Key? key, required this.product, this.zipCode, this.company,  CartRepository? cartRepository})
     : cartRepository = cartRepository ?? CartRepository(),
       super(key: key);
 
