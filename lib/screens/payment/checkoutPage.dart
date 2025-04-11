@@ -20,28 +20,36 @@ class CheckoutPage extends StatefulWidget {
 class _CheckoutPageState extends State<CheckoutPage> {
   String _selectedPayment = 'Crédito'; // valor padrão
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Checkout')),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildProductsList(),
-              _buildAddressCard(context),
-              _buildPaymentCard(context),
-              _buildTotalCard(context),
-              const SizedBox(height: 16),
-              _buildElevatedButton(),
-            ],
-          ),
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('Checkout')),
+    body: SafeArea(
+      child: SingleChildScrollView(
+        physics: BouncingScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildProductsList(),      // Certifique-se que aqui não tem ListView com scroll
+                  _buildAddressCard(context),
+                  _buildPaymentCard(context),
+                  _buildTotalCard(context),
+                  const SizedBox(height: 16),
+                  _buildElevatedButton(),   // Botão azul grande
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildProductsList() {
     final apiUrl = dotenv.env['API_URL'] ?? '';
