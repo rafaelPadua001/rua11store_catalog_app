@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
+import 'package:rua11store_catalog_app/screens/payment/checkoutPage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/product.dart';
 import '../../widgets/layout/bottomSheePaget.dart';
@@ -26,21 +27,29 @@ class ProductScreen extends StatefulWidget {
 class _ProductScreenState extends State<ProductScreen> {
   final apiUrl = dotenv.env['API_URL'];
   Map<String, dynamic>? selectedDelivery;
+  String? selectedZipCode;
   bool _isAddingToCart = false;
+  bool _isBuying = false;
 
-  Future<void> _addToCart() async {
-    final user = Supabase.instance.client.auth.currentUser;
+  Future<User?> verifyLogged() async {
+    final session = Supabase.instance.client.auth.currentSession;
+    final user = session?.user;
+
+    print('Usuário retornado: $user');
 
     if (user == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Faça login para adicionar ao carrinho'),
-          ),
-        );
-      }
-      return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Faça login para adicionar ao carrinho')),
+      );
     }
+
+    return user;
+  }
+
+  Future<void> _addToCart() async {
+    final user = await verifyLogged();
+
+    if (user == null) return;
 
     setState(() => _isAddingToCart = true);
 
@@ -89,6 +98,70 @@ class _ProductScreenState extends State<ProductScreen> {
         setState(() => _isAddingToCart = false);
       }
     }
+  }
+
+  Future<void> _buyNow() async {
+    final user = await verifyLogged();
+    print('Usuário retornado: $user');
+
+    if (user == null) {
+      print('Usuário é nulo, encerrando _buyNow');
+      return;
+    }
+
+    if (selectedDelivery == null || selectedZipCode == null) {
+      print('Delivery ou CEP não selecionado');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecione uma opção de entrega e insira o CEP'),
+        ),
+      );
+      return;
+    }
+
+    print('Iniciando processo de compra...');
+
+    final productData = {
+      'id': widget.product.id,
+      'name': widget.product.name,
+      'image': widget.product.image,
+      'price': widget.product.price,
+      'width': widget.product.width,
+      'height': widget.product.height,
+      'length': widget.product.length,
+      'weight': widget.product.weight,
+    };
+
+    final deliveryData = {
+      'name': selectedDelivery?['name'],
+      'price': selectedDelivery?['price'],
+      'type': selectedDelivery?['type'],
+    };
+
+    final payload = {
+      'user': user.id,
+      'product': productData,
+      'delivery': deliveryData,
+      'zipcode': selectedZipCode,
+    };
+
+    debugPrint('Enviando para API: $payload');
+    print('Compra iniciada');
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Compra iniciada com sucesso!')),
+    );
+
+   Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => CheckoutPage(
+      userId: user.id,
+      products: [productData],
+      delivery: deliveryData,
+    ),
+  ),
+);
   }
 
   @override
@@ -150,7 +223,7 @@ class _ProductScreenState extends State<ProductScreen> {
               child: Text(
                 selectedDelivery != null
                     ? 'Delivery price: R\$ ${double.parse(selectedDelivery!['price'].toString())}'
-                    : 'Delivery Price: R\$ -',
+                    : 'Delivery Price: R\$ - ',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
             ),
@@ -158,31 +231,40 @@ class _ProductScreenState extends State<ProductScreen> {
               icon: Icon(Icons.arrow_forward_ios, size: 15),
               tooltip: 'Mais detalhes',
               onPressed: () async {
-                final selectedOption = await showModalBottomSheet(
+                final result = await showModalBottomSheet(
                   context: context,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.vertical(
                       top: Radius.circular(16),
                     ),
                   ),
-                  builder: (context) => BottomSheetPage(
-                    products: [
-    {
-      "width": widget.product.width,
-      "height": widget.product.height,
-      "weight": widget.product.weight,
-      "length": widget.product.length,
-      "secure_value": 0,
-      "quantity": 1,
-    }
-  ],
-                  ),
+                  builder:
+                      (context) => BottomSheetPage(
+                        products: [
+                          {
+                            "width": widget.product.width,
+                            "height": widget.product.height,
+                            "weight": widget.product.weight,
+                            "length": widget.product.length,
+                            "secure_value": 0,
+                            "quantity": 1,
+                          },
+                        ],
+                      ),
                 );
 
-                if (selectedOption != null) {
-                  setState(() {
-                    selectedDelivery = selectedOption;
-                  });
+                if (result != null && result is Map) {
+                  final zip = result['zipCode'] ?? result['zipcode'];
+                  if (zip is String) {
+                    setState(() {
+                      selectedDelivery = result['delivery'];
+                      selectedZipCode = zip;
+                    });
+                  } else {
+                    debugPrint(
+                      'Erro: zipCode está nulo ou em formato inválido',
+                    );
+                  }
                 }
               },
             ),
@@ -249,13 +331,10 @@ class _ProductScreenState extends State<ProductScreen> {
                     backgroundColor: Colors.deepPurple,
                     minimumSize: Size(double.infinity, 50),
                   ),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Botão comprar ainda não está pronto'),
-                      ),
-                    );
+                  onPressed: () async {
+                    await _buyNow(); 
                   },
+                  
                   child: Text('Buy Now', style: TextStyle(color: Colors.white)),
                 ),
               ),

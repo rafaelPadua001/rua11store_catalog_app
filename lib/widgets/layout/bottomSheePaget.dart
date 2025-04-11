@@ -75,6 +75,7 @@ class _BottomSheetState extends State<BottomSheetPage> {
                 zipController: zipController,
                 onSearch:
                     (zipcode) => _handleCalculateDelivery(context, zipcode),
+                   
               ),
               Divider(),
               Expanded(child: _buildListView(deliveryOptions)),
@@ -134,10 +135,25 @@ class _BottomSheetState extends State<BottomSheetPage> {
             selectedOption != null && selectedOption!['id'] == item["id"];
         return GestureDetector(
           onTap: () {
-            setState(() {
+        
               selectedOption = item;
-              Navigator.pop(context, item);
-            });
+              final zip = zipController.text;
+              if(zip.isEmpty){
+               ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Digite um CEP válido')),
+              );
+              return;
+              }
+
+              setState((){
+                selectedOption = item;
+              });
+              
+              Navigator.pop(context,{
+                'delivery': selectedOption,
+                'zipcode': zip,
+              });
+            
           },
           child: Card(
             color: isSelected ? Colors.blue[50] : Colors.white,
