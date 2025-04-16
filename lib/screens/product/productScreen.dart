@@ -159,6 +159,7 @@ class _ProductScreenState extends State<ProductScreen> {
       userId: user.id,
       products: [productData],
       delivery: deliveryData,
+      zipCode: selectedZipCode,
     ),
   ),
 );
