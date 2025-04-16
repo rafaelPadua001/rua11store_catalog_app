@@ -196,6 +196,7 @@ Widget build(BuildContext context) {
                 onChanged: (value) {
                   setState(() {
                     _selectedPayment = value!;
+                   
                   });
                 },
               ),
@@ -209,10 +210,44 @@ Widget build(BuildContext context) {
                   });
                 },
               ),
+
+              const SizedBox(height: 16,),
+
+              if(_selectedPayment == 'Crédito' || _selectedPayment == 'Débito')
+                _buildCardPaymentForm()
+              else if(_selectedPayment == 'Pix')
+                _buildPixInfo(),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCardPaymentForm(){
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const TextField(decoration: InputDecoration(labelText: 'Número do Cartão')),
+        const TextField(decoration: InputDecoration(labelText: 'Nome no Cartão')),
+        Row(
+          children: [
+            Expanded(child: TextField(decoration: InputDecoration(labelText: 'Validade'))),
+            SizedBox(width: 10),
+            Expanded(child: TextField(decoration: InputDecoration(labelText: 'CVV'))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPixInfo(){
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Você selecionou pagamento via pix"),
+        Text('A chave pix será exibida após o pedido')
+      ],
     );
   }
 
