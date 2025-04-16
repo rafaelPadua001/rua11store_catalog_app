@@ -157,6 +157,7 @@ class _ProductScreenState extends State<ProductScreen> {
   MaterialPageRoute(
     builder: (context) => CheckoutPage(
       userId: user.id,
+      userEmail: user.email.toString(),
       products: [productData],
       delivery: deliveryData,
       zipCode: selectedZipCode,
