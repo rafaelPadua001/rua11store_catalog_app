@@ -5,6 +5,7 @@ import '../../models/payment.dart';
 
 class CheckoutPage extends StatefulWidget {
   final String userId;
+  final String userEmail;
   final String? zipCode;
   final List<Map> products;
   final Map delivery;
@@ -12,6 +13,7 @@ class CheckoutPage extends StatefulWidget {
   const CheckoutPage({
     super.key,
     required this.userId,
+    required this.userEmail,
     required this.products,
     required this.delivery,
     this.zipCode,
@@ -31,16 +33,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
   late TextEditingController _cardExpiryController;
   late TextEditingController _cardCVVController;
 
-
-
+  final TextEditingController _cpfController = TextEditingController();
+  final docType = 'CPF';
+  late TextEditingController _installmentsController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-      _numberCardController = TextEditingController();
+    _numberCardController = TextEditingController();
     _nameCardController = TextEditingController();
     _cardExpiryController = TextEditingController();
     _cardCVVController = TextEditingController();
+    _installmentsController = TextEditingController();
 
     _subtotal = widget.products.fold<double>(
       0.0,
@@ -52,12 +56,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _total = _subtotal + _shipping;
   }
 
-    @override
+  @override
   void dispose() {
     _numberCardController.dispose();
     _nameCardController.dispose();
     _cardExpiryController.dispose();
     _cardCVVController.dispose();
+    _installmentsController.dispose();
     super.dispose();
   }
 
@@ -69,9 +74,47 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   item.map((key, value) => MapEntry(key.toString(), value)),
             )
             .toList();
+    final paymentController = PaymentController();
+
+    String? token;
+    if (_selectedPayment == 'credit' || _selectedPayment == 'debit') {
+      final tempPayment = Payment(
+        zipCode: widget.zipCode!,
+        userEmail: widget.userEmail,
+        cpf: _cpfController.text,
+        address: 'qms 10 rua 11 casa 20',
+        paymentType: _selectedPayment,
+        subtotal: _subtotal,
+        shipping: _shipping,
+        total: _total,
+        products: convertedProducts,
+        numberCard:
+            _selectedPayment != 'Pix' ? _numberCardController.text : null,
+        nameCard: _selectedPayment != 'Pix' ? _nameCardController.text : null,
+        expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
+        cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
+        installments: int.tryParse(_installmentsController.text) ?? 1,
+      );
+      final expiryParts = (tempPayment.expiry ?? '').split('/');
+      final expirationMonth = int.tryParse(expiryParts[0]) ?? 0;
+      final expirationYear = int.tryParse('20${expiryParts[1]}') ?? 0;
+
+      token = await paymentController.generateCardToken(
+        cardNumber: tempPayment.numberCard ?? '',
+        expirationMonth: expirationMonth,
+        expirationYear: expirationYear,
+        securityCode: tempPayment.cvv ?? '',
+        cardholderName: tempPayment.nameCard ?? '',
+        docType: docType,
+        docNumber: _cpfController.text,
+      );
+    }
 
     final payment = Payment(
+      cardToken: token,
       zipCode: widget.zipCode!,
+      userEmail: widget.userEmail,
+      cpf: _cpfController.text,
       address: 'qms 10 rua 11 casa 20',
       paymentType: _selectedPayment,
       subtotal: _subtotal,
@@ -82,6 +125,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       nameCard: _selectedPayment != 'Pix' ? _nameCardController.text : null,
       expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
       cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
+      installments: int.tryParse(_installmentsController.text) ?? 1,
     );
 
     final controller = PaymentController();
@@ -306,6 +350,22 @@ class _CheckoutPageState extends State<CheckoutPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextField(
+  controller: _cpfController,
+  keyboardType: TextInputType.number,
+  decoration: InputDecoration(labelText: 'CPF'),
+),TextFormField(
+              controller: _installmentsController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: 'Número de Parcelas'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor, insira o número de parcelas';
+                }
+                return null;
+              },
+            ),
+
+        TextField(
           controller: _numberCardController,
           decoration: InputDecoration(labelText: 'Número do Cartão'),
         ),
@@ -321,11 +381,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 decoration: InputDecoration(labelText: 'Validade'),
               ),
             ),
-            SizedBox(width: 10),
+            SizedBox(width: 5),
             Expanded(
-              
-              child: TextField(controller: _cardCVVController, decoration: InputDecoration(labelText: 'CVV')),
+              child: TextField(
+                controller: _cardCVVController,
+                decoration: InputDecoration(labelText: 'CVV'),
+              ),
             ),
+             
           ],
         ),
       ],
