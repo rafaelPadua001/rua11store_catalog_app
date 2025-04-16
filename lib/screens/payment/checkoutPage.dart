@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../controllers/PaymentController.dart';
+import '../../models/payment.dart';
 
 class CheckoutPage extends StatefulWidget {
   final String userId;
+  final String? zipCode;
   final List<Map> products;
   final Map delivery;
 
@@ -11,6 +14,7 @@ class CheckoutPage extends StatefulWidget {
     required this.userId,
     required this.products,
     required this.delivery,
+    this.zipCode,
   });
 
   @override
@@ -19,37 +23,111 @@ class CheckoutPage extends StatefulWidget {
 
 class _CheckoutPageState extends State<CheckoutPage> {
   String _selectedPayment = 'Crédito'; // valor padrão
+  double _subtotal = 0.0;
+  double _shipping = 0.0;
+  double _total = 0.0;
+  late TextEditingController _numberCardController;
+  late TextEditingController _nameCardController;
+  late TextEditingController _cardExpiryController;
+  late TextEditingController _cardCVVController;
 
- @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(title: const Text('Checkout')),
-    body: SafeArea(
-      child: SingleChildScrollView(
-        physics: BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildProductsList(),      // Certifique-se que aqui não tem ListView com scroll
-                  _buildAddressCard(context),
-                  _buildPaymentCard(context),
-                  _buildTotalCard(context),
-                  const SizedBox(height: 16),
-                  _buildElevatedButton(),   // Botão azul grande
-                ],
+
+
+
+  @override
+  void initState() {
+    super.initState();
+      _numberCardController = TextEditingController();
+    _nameCardController = TextEditingController();
+    _cardExpiryController = TextEditingController();
+    _cardCVVController = TextEditingController();
+
+    _subtotal = widget.products.fold<double>(
+      0.0,
+      (sum, item) => sum + (double.tryParse(item['price'].toString()) ?? 0.0),
+    );
+
+    _shipping = double.tryParse(widget.delivery['price'].toString()) ?? 0.0;
+
+    _total = _subtotal + _shipping;
+  }
+
+    @override
+  void dispose() {
+    _numberCardController.dispose();
+    _nameCardController.dispose();
+    _cardExpiryController.dispose();
+    _cardCVVController.dispose();
+    super.dispose();
+  }
+
+  void _handlePayment() async {
+    final convertedProducts =
+        widget.products
+            .map<Map<String, dynamic>>(
+              (item) =>
+                  item.map((key, value) => MapEntry(key.toString(), value)),
+            )
+            .toList();
+
+    final payment = Payment(
+      zipCode: widget.zipCode!,
+      address: 'qms 10 rua 11 casa 20',
+      paymentType: _selectedPayment,
+      subtotal: _subtotal,
+      shipping: _shipping,
+      total: _total,
+      products: convertedProducts,
+      numberCard: _selectedPayment != 'Pix' ? _numberCardController.text : null,
+      nameCard: _selectedPayment != 'Pix' ? _nameCardController.text : null,
+      expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
+      cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
+    );
+
+    final controller = PaymentController();
+    final success = await controller.sendPayment(payment);
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pagamento enviado com sucesso!')),
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Erro ao enviar pagamento')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Checkout')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildProductsList(), // Certifique-se que aqui não tem ListView com scroll
+                    _buildAddressCard(context),
+                    _buildPaymentCard(context),
+                    _buildTotalCard(context),
+                    const SizedBox(height: 16),
+                    _buildElevatedButton(), // Botão azul grande
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildProductsList() {
     final apiUrl = dotenv.env['API_URL'] ?? '';
@@ -181,7 +259,7 @@ Widget build(BuildContext context) {
               ),
               RadioListTile<String>(
                 title: const Text('Cartão de Crédito'),
-                value: 'Crédito',
+                value: 'credit',
                 groupValue: _selectedPayment,
                 onChanged: (value) {
                   setState(() {
@@ -191,18 +269,17 @@ Widget build(BuildContext context) {
               ),
               RadioListTile<String>(
                 title: const Text('Cartão de Débito'),
-                value: 'Débito',
+                value: 'debit',
                 groupValue: _selectedPayment,
                 onChanged: (value) {
                   setState(() {
                     _selectedPayment = value!;
-                   
                   });
                 },
               ),
               RadioListTile<String>(
                 title: const Text('Pix'),
-                value: 'Pix',
+                value: 'pix',
                 groupValue: _selectedPayment,
                 onChanged: (value) {
                   setState(() {
@@ -211,11 +288,11 @@ Widget build(BuildContext context) {
                 },
               ),
 
-              const SizedBox(height: 16,),
+              const SizedBox(height: 16),
 
-              if(_selectedPayment == 'Crédito' || _selectedPayment == 'Débito')
+              if (_selectedPayment == 'credit' || _selectedPayment == 'debit')
                 _buildCardPaymentForm()
-              else if(_selectedPayment == 'Pix')
+              else if (_selectedPayment == 'pix')
                 _buildPixInfo(),
             ],
           ),
@@ -224,44 +301,48 @@ Widget build(BuildContext context) {
     );
   }
 
-  Widget _buildCardPaymentForm(){
+  Widget _buildCardPaymentForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const TextField(decoration: InputDecoration(labelText: 'Número do Cartão')),
-        const TextField(decoration: InputDecoration(labelText: 'Nome no Cartão')),
+        TextField(
+          controller: _numberCardController,
+          decoration: InputDecoration(labelText: 'Número do Cartão'),
+        ),
+        TextField(
+          controller: _nameCardController,
+          decoration: InputDecoration(labelText: 'Nome no Cartão'),
+        ),
         Row(
           children: [
-            Expanded(child: TextField(decoration: InputDecoration(labelText: 'Validade'))),
+            Expanded(
+              child: TextField(
+                controller: _cardExpiryController,
+                decoration: InputDecoration(labelText: 'Validade'),
+              ),
+            ),
             SizedBox(width: 10),
-            Expanded(child: TextField(decoration: InputDecoration(labelText: 'CVV'))),
+            Expanded(
+              
+              child: TextField(controller: _cardCVVController, decoration: InputDecoration(labelText: 'CVV')),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildPixInfo(){
+  Widget _buildPixInfo() {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text("Você selecionou pagamento via pix"),
-        Text('A chave pix será exibida após o pedido')
+        Text('A chave pix será exibida após o pedido'),
       ],
     );
   }
 
   Widget _buildTotalCard(BuildContext context) {
-    final subtotal = widget.products.fold<double>(
-      0.0,
-      (sum, item) => sum + (double.tryParse(item['price'].toString()) ?? 0.0),
-    );
-
-    final shipping =
-        double.tryParse(widget.delivery['price'].toString()) ?? 0.0;
-
-    final total = subtotal + shipping;
-
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
@@ -275,11 +356,11 @@ Widget build(BuildContext context) {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              Text('Subtotal: R\$ ${subtotal.toStringAsFixed(2)}'),
-              Text('Shipping: R\$ ${shipping}'),
+              Text('Subtotal: R\$ ${_subtotal.toStringAsFixed(2)}'),
+              Text('Shipping: R\$ ${_shipping}'),
               const SizedBox(height: 8),
               Text(
-                'Total: R\$ ${total}',
+                'Total: R\$ ${_total}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -307,9 +388,10 @@ Widget build(BuildContext context) {
           ),
         ),
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Estamos trabalhando nisso')),
-          );
+          _handlePayment();
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   const SnackBar(content: Text('Estamos trabalhando nisso')),
+          // );
         },
         child: const Text(
           'Place Order Now',
