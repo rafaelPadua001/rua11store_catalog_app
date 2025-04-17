@@ -36,6 +36,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final TextEditingController _cpfController = TextEditingController();
   final docType = 'CPF';
   late TextEditingController _installmentsController = TextEditingController();
+   final TextEditingController _recipientNameController = TextEditingController(text: "João da Silva");
+  final TextEditingController _streetController = TextEditingController(text: "Rua das Laranjeiras");
+  final TextEditingController _numberController = TextEditingController(text: "456");
+  final TextEditingController _complementController = TextEditingController(text: "Casa dos fundos");
+  final TextEditingController _cityController = TextEditingController(text: "Rio de Janeiro");
+  final TextEditingController _stateController = TextEditingController(text: "RJ");
+  late TextEditingController _zipCodeController = TextEditingController();
+  final TextEditingController _countryController = TextEditingController(text: "Brasil");
+  final TextEditingController _phoneController = TextEditingController(text: "(21) 99999-9999");
 
   @override
   void initState() {
@@ -45,6 +54,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _cardExpiryController = TextEditingController();
     _cardCVVController = TextEditingController();
     _installmentsController = TextEditingController();
+    _zipCodeController = TextEditingController(text: widget.zipCode);
 
     _subtotal = widget.products.fold<double>(
       0.0,
@@ -80,6 +90,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     if (_selectedPayment == 'credit' || _selectedPayment == 'debit') {
       final tempPayment = Payment(
         zipCode: widget.zipCode!,
+        userId: widget.userId,
         userEmail: widget.userEmail,
         cpf: _cpfController.text,
         address: 'qms 10 rua 11 casa 20',
@@ -114,6 +125,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       cardToken: token,
       zipCode: widget.zipCode!,
       userEmail: widget.userEmail,
+      userId: widget.userId,
       cpf: _cpfController.text,
       address: 'qms 10 rua 11 casa 20',
       paymentType: _selectedPayment,
@@ -277,7 +289,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               TextButton(
                 onPressed: () {
-                  // lógica de alterar endereço
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context){ 
+                      return _buildAddressFormDialog(context);
+                    } );
                 },
                 child: const Text('Change'),
               ),
@@ -285,6 +301,85 @@ class _CheckoutPageState extends State<CheckoutPage> {
           ),
         ),
       ),
+    );
+  }
+
+ Widget _buildAddressFormDialog(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edit Address'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _recipientNameController,
+            decoration: const InputDecoration(labelText: 'Recipient Name'),
+          ),
+          TextField(
+            controller: _streetController,
+            decoration: const InputDecoration(labelText: 'Street'),
+          ),
+          TextField(
+            controller: _numberController,
+            decoration: const InputDecoration(labelText: 'Number'),
+          ),
+          TextField(
+            controller: _complementController,
+            decoration: const InputDecoration(labelText: 'Complement'),
+          ),
+          TextField(
+            controller: _cityController,
+            decoration: const InputDecoration(labelText: 'City'),
+          ),
+          TextField(
+            controller: _stateController,
+            decoration: const InputDecoration(labelText: 'State'),
+          ),
+          TextField(
+            controller: _zipCodeController,
+            decoration: const InputDecoration(labelText: 'Zip Code'),
+          ),
+          TextField(
+            controller: _countryController,
+            decoration: const InputDecoration(labelText: 'Country'),
+          ),
+          TextField(
+            controller: _phoneController,
+            decoration: const InputDecoration(labelText: 'Phone'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(); // Fecha o dialog
+          },
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            // Aqui você pode coletar os dados dos controladores e salvar ou enviar os dados
+            final addressData = {
+              "user_id": 1,
+              "product_id": 101,
+              "recipient_name": _recipientNameController.text,
+              "street": _streetController.text,
+              "number": _numberController.text,
+              "complement": _complementController.text,
+              "city": _cityController.text,
+              "state": _stateController.text,
+              "zip_code": _zipCodeController.text,
+              "country": _countryController.text,
+              "phone": _phoneController.text,
+            };
+
+            // Aqui você pode salvar ou processar o `addressData` conforme necessário
+            print(addressData);
+
+            Navigator.of(context).pop(); // Fecha o dialog
+          },
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 
