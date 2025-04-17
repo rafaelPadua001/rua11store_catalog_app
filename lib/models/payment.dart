@@ -1,6 +1,7 @@
 class Payment {
   final String zipCode;
   final String userEmail;
+  final String userId;
   final String address;
   final String paymentType;
   final double subtotal;
@@ -19,6 +20,7 @@ class Payment {
   Payment({
     required this.zipCode,
     required this.userEmail,
+    required this.userId,
     required this.address,
     required this.paymentType,
     required this.subtotal,
@@ -40,6 +42,7 @@ class Payment {
       'installments': installments,
       'zipCode': zipCode,
       'payer_email': userEmail,
+      'userId': userId,
       'payer_cpf': cpf,
       'address': address,
       'paymentType': paymentType,
