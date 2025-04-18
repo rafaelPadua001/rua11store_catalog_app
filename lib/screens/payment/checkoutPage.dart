@@ -1,7 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../controllers/PaymentController.dart';
+import '../../controllers/addressController.dart';
 import '../../models/payment.dart';
+import 'package:http/http.dart' as http;
+
 
 class CheckoutPage extends StatefulWidget {
   final String userId;
@@ -36,7 +41,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final TextEditingController _cpfController = TextEditingController();
   final docType = 'CPF';
   late TextEditingController _installmentsController = TextEditingController();
-   final TextEditingController _recipientNameController = TextEditingController(text: "João da Silva");
+  final TextEditingController _recipientNameController = TextEditingController(text: "João da Silva");
   final TextEditingController _streetController = TextEditingController(text: "Rua das Laranjeiras");
   final TextEditingController _numberController = TextEditingController(text: "456");
   final TextEditingController _complementController = TextEditingController(text: "Casa dos fundos");
@@ -44,7 +49,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final TextEditingController _stateController = TextEditingController(text: "RJ");
   late TextEditingController _zipCodeController = TextEditingController();
   final TextEditingController _countryController = TextEditingController(text: "Brasil");
+  late TextEditingController _bairroController = TextEditingController(text: 'Bairro ...');
   final TextEditingController _phoneController = TextEditingController(text: "(21) 99999-9999");
+
+
+  final _addressController = AddressController();
 
   @override
   void initState() {
@@ -55,6 +64,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _cardCVVController = TextEditingController();
     _installmentsController = TextEditingController();
     _zipCodeController = TextEditingController(text: widget.zipCode);
+    _bairroController = TextEditingController();
 
     _subtotal = widget.products.fold<double>(
       0.0,
@@ -64,6 +74,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _shipping = double.tryParse(widget.delivery['price'].toString()) ?? 0.0;
 
     _total = _subtotal + _shipping;
+
+    _findAddress(widget.zipCode!);
   }
 
   @override
@@ -73,6 +85,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _cardExpiryController.dispose();
     _cardCVVController.dispose();
     _installmentsController.dispose();
+    _zipCodeController.dispose();
+    _bairroController.dispose();
     super.dispose();
   }
 
@@ -151,6 +165,25 @@ class _CheckoutPageState extends State<CheckoutPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Erro ao enviar pagamento')));
+    }
+  }
+
+  Future<void> _findAddress(String cep) async {
+    final cleanedCep = cep.replaceAll(RegExp(r'\D'), '');
+    if(cleanedCep.length == 8){
+      final response = await http.get(Uri.parse('http://viacep.com.br/ws/$cleanedCep/json'));
+      if(response.statusCode == 200){
+        final data = jsonDecode(response.body);
+        print(data);
+        if(!data.containsKey('error')){
+          setState(() {
+              _streetController.text = data['logradouro'] ?? '';
+              _cityController.text = data['localidade'] ?? '';
+              _stateController.text = data['uf'] ?? '';
+              _bairroController.text = data['bairro'] ?? '';
+          });
+        }
+      }
     }
   }
 
@@ -311,6 +344,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
+              controller: _zipCodeController,
+              decoration: const InputDecoration(labelText: 'CEP'),
+              keyboardType: TextInputType.number,
+              onSubmitted: _findAddress,
+            ),
+          TextField(
             controller: _recipientNameController,
             decoration: const InputDecoration(labelText: 'Recipient Name'),
           ),
@@ -335,8 +374,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
             decoration: const InputDecoration(labelText: 'State'),
           ),
           TextField(
-            controller: _zipCodeController,
-            decoration: const InputDecoration(labelText: 'Zip Code'),
+            controller: _bairroController,
+            decoration: const InputDecoration(labelText: 'bairro'),
           ),
           TextField(
             controller: _countryController,
@@ -359,8 +398,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
           onPressed: () {
             // Aqui você pode coletar os dados dos controladores e salvar ou enviar os dados
             final addressData = {
-              "user_id": 1,
-              "product_id": 101,
+              "user_id": widget.userId,
+              //"product_id": 101,
               "recipient_name": _recipientNameController.text,
               "street": _streetController.text,
               "number": _numberController.text,
@@ -376,6 +415,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             print(addressData);
 
             Navigator.of(context).pop(); // Fecha o dialog
+            _addressController.insertAddress(addressData);
           },
           child: const Text('Save'),
         ),
