@@ -4,30 +4,69 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AddressController {
   final _supabase = Supabase.instance.client;
   final userId = Supabase.instance.client.auth.currentUser!.id;
+  List<Map<String, dynamic>> addresses = [];
 
-
- Future<void> insertAddress(Map<String, dynamic> addressData) async {
+Future<Map<String, dynamic>?> insertAddress(Map<String, dynamic> addressData) async {
   try {
     final response = await Supabase.instance.client
         .from('addresses')
-        .insert(addressData);
+        .insert(addressData)
+        .select()
+        .single(); // importante!
 
     print('Endereço salvo com sucesso: $response');
+
+    addresses.add(response); // adiciona localmente se quiser
+
+    return response; // retorna o endereço inserido
   } catch (e) {
     print('Erro ao salvar endereço: $e');
+    return null;
   }
 }
 
-  Future<void> updateAddress(int id, Address address) async {
+
+
+Future<bool> updateAddress(String userId, Map<String, dynamic> addressData) async {
+  try {
+    // Realiza a atualização no Supabase
     final response = await _supabase
         .from('addresses')
-        .update(address.toJson())
-        .eq('id', id);
+        .update(addressData)
+        .eq('user_id', userId);
 
-    if (response.error != null) {
-      throw Exception('Erro ao atualizar: ${response.error!.message}');
+    // Verifica se a resposta está nula ou mal formada
+    if (response == null) {
+      print('Erro: A resposta do Supabase é nula');
+      return false; // Retorna false se a resposta for nula
     }
+
+    // Imprime a resposta completa para depuração
+    print('Resposta do Supabase: ${response.data}');
+    print('Erro: ${response.error}');
+
+    // Verifica se houve um erro na resposta
+    if (response.error != null) {
+      print('Erro ao atualizar o endereço: ${response.error!.message}');
+      return false; // Retorna false se houve erro
+    }
+
+    // Verifica se a resposta contém dados atualizados
+    if (response.data != null && response.data.isNotEmpty) {
+      print('Endereço atualizado com sucesso!');
+      return true; // Retorna true se a atualização foi bem-sucedida
+    } else {
+      // Se não houver dados na resposta
+      print('Nenhum dado retornado após a atualização.');
+      return false; // Retorna false se não houver dados ou se a atualização falhou
+    }
+  } catch (e) {
+    // Captura qualquer outro erro inesperado
+    print('Erro inesperado ao atualizar o endereço: $e');
+    return false; // Retorna false se ocorrer uma exceção
   }
+}
+
 
   Future<void> deleteAddress(int id) async {
     final response = await _supabase.from('addresses').delete().eq('id', id);
