@@ -2,11 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:rua11store_catalog_app/models/adress.dart';
 import '../../controllers/PaymentController.dart';
 import '../../controllers/addressController.dart';
 import '../../models/payment.dart';
 import 'package:http/http.dart' as http;
-
 
 class CheckoutPage extends StatefulWidget {
   final String userId;
@@ -41,19 +41,38 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final TextEditingController _cpfController = TextEditingController();
   final docType = 'CPF';
   late TextEditingController _installmentsController = TextEditingController();
-  final TextEditingController _recipientNameController = TextEditingController(text: "João da Silva");
-  final TextEditingController _streetController = TextEditingController(text: "Rua das Laranjeiras");
-  final TextEditingController _numberController = TextEditingController(text: "456");
-  final TextEditingController _complementController = TextEditingController(text: "Casa dos fundos");
-  final TextEditingController _cityController = TextEditingController(text: "Rio de Janeiro");
-  final TextEditingController _stateController = TextEditingController(text: "RJ");
+  final TextEditingController _recipientNameController = TextEditingController(
+    text: "João da Silva",
+  );
+  final TextEditingController _streetController = TextEditingController(
+    text: "Rua das Laranjeiras",
+  );
+  final TextEditingController _numberController = TextEditingController(
+    text: "456",
+  );
+  final TextEditingController _complementController = TextEditingController(
+    text: "Casa dos fundos",
+  );
+  final TextEditingController _cityController = TextEditingController(
+    text: "Rio de Janeiro",
+  );
+  final TextEditingController _stateController = TextEditingController(
+    text: "RJ",
+  );
   late TextEditingController _zipCodeController = TextEditingController();
-  final TextEditingController _countryController = TextEditingController(text: "Brasil");
-  late TextEditingController _bairroController = TextEditingController(text: 'Bairro ...');
-  final TextEditingController _phoneController = TextEditingController(text: "(21) 99999-9999");
-
+  final TextEditingController _countryController = TextEditingController(
+    text: "Brasil",
+  );
+  late TextEditingController _bairroController = TextEditingController(
+    text: 'Bairro ...',
+  );
+  final TextEditingController _phoneController = TextEditingController(
+    text: "(21) 99999-9999",
+  );
+  late Future<List<Address>> _addressesFuture;
 
   final _addressController = AddressController();
+  Map<String, dynamic>? _selectedAddress;
 
   @override
   void initState() {
@@ -75,7 +94,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     _total = _subtotal + _shipping;
 
-    _findAddress(widget.zipCode!);
+    if (widget.zipCode != null) {
+      _findAddress(widget.zipCode!);
+    }
+    _addressesFuture = _addressController.getUserAddresses(widget.userId);
   }
 
   @override
@@ -170,19 +192,26 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   Future<void> _findAddress(String cep) async {
     final cleanedCep = cep.replaceAll(RegExp(r'\D'), '');
-    if(cleanedCep.length == 8){
-      final response = await http.get(Uri.parse('http://viacep.com.br/ws/$cleanedCep/json'));
-      if(response.statusCode == 200){
+    if (cleanedCep.length == 8) {
+      final response = await http.get(
+        Uri.parse('http://viacep.com.br/ws/$cleanedCep/json'),
+      );
+      if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print(data);
-        if(!data.containsKey('error')){
+        if (data != null && !data.containsKey('error')) {
           setState(() {
-              _streetController.text = data['logradouro'] ?? '';
-              _cityController.text = data['localidade'] ?? '';
-              _stateController.text = data['uf'] ?? '';
-              _bairroController.text = data['bairro'] ?? '';
+            _streetController.text = data['logradouro'] ?? '';
+            _cityController.text = data['localidade'] ?? '';
+            _stateController.text = data['uf'] ?? '';
+            _bairroController.text = data['bairro'] ?? '';
           });
+        } else {
+          // Se houver erro na resposta, você pode tratar isso aqui
+          print('Erro na resposta do endereço: ${data['error']}');
         }
+      } else {
+        print('Falha na requisição: ${response.statusCode}');
       }
     }
   }
@@ -203,7 +232,55 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildProductsList(), // Certifique-se que aqui não tem ListView com scroll
-                    _buildAddressCard(context),
+                    FutureBuilder<List<Address>>(
+                      future: _addressesFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Text(
+                            'Erro ao carregar endereço: ${snapshot.error}',
+                          );
+                        } else if (!snapshot.hasData ||
+                            snapshot.data!.isEmpty) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Nenhum endereço encontrado.'),
+                              const SizedBox(height: 8),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  final result = await showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return _buildAddressFormDialog(context);
+                                    },
+                                  );
+
+                                  if (result == true) {
+                                    // Se o usuário adicionou um novo endereço, recarregue a lista
+                                    setState(() {
+                                      _addressesFuture = _addressController
+                                          .getUserAddresses(widget.userId);
+                                    });
+                                  }
+                                },
+                                child: const Text('Adicionar Endereço'),
+                              ),
+                            ],
+                          );
+                        } else {
+                          Address address =
+                              snapshot
+                                  .data!
+                                  .first; // ou o selecionado, se for o caso
+                          return _buildAddressCard(context, address);
+                        }
+                      },
+                    ),
                     _buildPaymentCard(context),
                     _buildTotalCard(context),
                     const SizedBox(height: 16),
@@ -292,7 +369,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _buildAddressCard(BuildContext context) {
+  Widget _buildAddressCard(BuildContext context, Address address) {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
@@ -305,7 +382,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       'Delivery to Address',
                       style: TextStyle(
@@ -313,9 +390,29 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text('John Doe'),
-                    Text('123 Main Street'),
-                    Text('Springfield, IL 62791'),
+                    // Atualizado para acessar corretamente os dados de _selectedAddress
+                    Text(
+                      _selectedAddress != null
+                          ? _selectedAddress!['recipient_name'] ??
+                              'Nome não informado'
+                          : address.recipientName,
+                    ),
+                    Text(
+                      _selectedAddress != null
+                          ? '${_selectedAddress!['street']}, ${_selectedAddress!['number']}'
+                          : '${address.street}, ${address.number}',
+                    ),
+                    Text(
+                      _selectedAddress != null
+                          ? '${_selectedAddress!['city']}, ${_selectedAddress!['state']} ${_selectedAddress!['zip_code']}'
+                          : '${address.city}, ${address.state} , ${address.bairro}, ${address.zipCode}',
+                    ),
+                    Text(
+                      _selectedAddress != null
+                          ? _selectedAddress!['bairro'] ??
+                              'Bairro não informado'
+                          : address.bairro,
+                    ),
                     SizedBox(height: 6),
                   ],
                 ),
@@ -324,11 +421,23 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 onPressed: () {
                   showDialog(
                     context: context,
-                    builder: (BuildContext context){ 
+                    builder: (BuildContext context) {
                       return _buildAddressFormDialog(context);
-                    } );
+                    },
+                  );
                 },
                 child: const Text('Change'),
+              ),
+              TextButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return _buildAddressFormDialog(context);
+                    },
+                  );
+                },
+                child: const Text('remove'),
               ),
             ],
           ),
@@ -337,91 +446,125 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
- Widget _buildAddressFormDialog(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Edit Address'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-              controller: _zipCodeController,
-              decoration: const InputDecoration(labelText: 'CEP'),
-              keyboardType: TextInputType.number,
-              onSubmitted: _findAddress,
-            ),
-          TextField(
-            controller: _recipientNameController,
-            decoration: const InputDecoration(labelText: 'Recipient Name'),
-          ),
-          TextField(
-            controller: _streetController,
-            decoration: const InputDecoration(labelText: 'Street'),
-          ),
-          TextField(
-            controller: _numberController,
-            decoration: const InputDecoration(labelText: 'Number'),
-          ),
-          TextField(
-            controller: _complementController,
-            decoration: const InputDecoration(labelText: 'Complement'),
-          ),
-          TextField(
-            controller: _cityController,
-            decoration: const InputDecoration(labelText: 'City'),
-          ),
-          TextField(
-            controller: _stateController,
-            decoration: const InputDecoration(labelText: 'State'),
-          ),
-          TextField(
-            controller: _bairroController,
-            decoration: const InputDecoration(labelText: 'bairro'),
-          ),
-          TextField(
-            controller: _countryController,
-            decoration: const InputDecoration(labelText: 'Country'),
-          ),
-          TextField(
-            controller: _phoneController,
-            decoration: const InputDecoration(labelText: 'Phone'),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(); // Fecha o dialog
-          },
-          child: const Text('Cancel'),
+Widget _buildAddressFormDialog(BuildContext context) {
+  return AlertDialog(
+    title: const Text('Edit Address'),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          controller: _zipCodeController,
+          decoration: const InputDecoration(labelText: 'CEP'),
+          keyboardType: TextInputType.number,
+          onSubmitted: _findAddress,
         ),
-        ElevatedButton(
-          onPressed: () {
-            // Aqui você pode coletar os dados dos controladores e salvar ou enviar os dados
-            final addressData = {
-              "user_id": widget.userId,
-              //"product_id": 101,
-              "recipient_name": _recipientNameController.text,
-              "street": _streetController.text,
-              "number": _numberController.text,
-              "complement": _complementController.text,
-              "city": _cityController.text,
-              "state": _stateController.text,
-              "zip_code": _zipCodeController.text,
-              "country": _countryController.text,
-              "phone": _phoneController.text,
-            };
-
-            // Aqui você pode salvar ou processar o `addressData` conforme necessário
-            print(addressData);
-
-            Navigator.of(context).pop(); // Fecha o dialog
-            _addressController.insertAddress(addressData);
+        TextField(
+          controller: _recipientNameController,
+          decoration: const InputDecoration(labelText: 'Recipient Name'),
+        ),
+        TextField(
+          controller: _streetController,
+          decoration: const InputDecoration(labelText: 'Street'),
+          onChanged: (value) {
+            setState(() {
+              _selectedAddress?['street'] = value;
+            });
           },
-          child: const Text('Save'),
+        ),
+        TextField(
+          controller: _numberController,
+          decoration: const InputDecoration(labelText: 'Number'),
+        ),
+        TextField(
+          controller: _complementController,
+          decoration: const InputDecoration(labelText: 'Complement'),
+        ),
+        TextField(
+          controller: _cityController,
+          decoration: const InputDecoration(labelText: 'City'),
+        ),
+        TextField(
+          controller: _stateController,
+          decoration: const InputDecoration(labelText: 'State'),
+        ),
+        TextField(
+          controller: _bairroController,
+          decoration: const InputDecoration(labelText: 'bairro'),
+        ),
+        TextField(
+          controller: _countryController,
+          decoration: const InputDecoration(labelText: 'Country'),
+        ),
+        TextField(
+          controller: _phoneController,
+          decoration: const InputDecoration(labelText: 'Phone'),
         ),
       ],
-    );
-  }
+    ),
+    actions: [
+      TextButton(
+        onPressed: () {
+          Navigator.of(context).pop(); // Fecha o dialog
+        },
+        child: const Text('Cancel'),
+      ),
+      ElevatedButton(
+  onPressed: () async {
+    // Coleta os dados dos controladores
+    final addressData = {
+      "user_id": widget.userId,
+      "recipient_name": _recipientNameController.text,
+      "street": _streetController.text,
+      "number": _numberController.text,
+      "complement": _complementController.text,
+      "city": _cityController.text,
+      "state": _stateController.text,
+      "zip_code": _zipCodeController.text,
+      "country": _countryController.text,
+      "bairro": _bairroController.text,
+      "phone": _phoneController.text,
+    };
+
+    // Verifica se já existe um endereço para este usuário
+    final existingAddress = await _addressController.getUserAddresses(widget.userId);
+
+    if (existingAddress != null && existingAddress.isNotEmpty) {
+      // Se existir, chama o update
+      final updateSuccess = await _addressController.updateAddress(widget.userId, addressData);
+      if (updateSuccess) {
+        setState(() {
+          // Se a atualização foi bem-sucedida, atualize a UI com o novo endereço
+          _addressController.getUserAddresses(widget.userId); // Opcional, dependendo de como você usa os dados
+        });
+        Navigator.of(context).pop(true); // Fecha a tela
+      } else {
+        // Exibe erro de atualização
+        print('Erro ao atualizar endereço');
+      }
+    } else {
+      // Se não existir, chama o insert
+      final Map<String, dynamic>? insertedAddress = await _addressController.insertAddress(addressData);
+
+      // Verifica se a inserção foi bem-sucedida (verifica se o valor não é nulo)
+      if (insertedAddress != null) {
+        setState(() {
+          // Se a inserção foi bem-sucedida, atualize a UI com o novo endereço
+          _addressController.getUserAddresses(widget.userId); // Opcional, dependendo de como você usa os dados
+        });
+        Navigator.of(context).pop(true); // Fecha a tela
+      } else {
+        // Exibe erro de inserção
+        print('Erro ao salvar endereço');
+      }
+    }
+  },
+  child: const Text('Save'),
+)
+
+    ],
+  );
+}
+
 
   Widget _buildPaymentCard(BuildContext context) {
     return SizedBox(
@@ -485,20 +628,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextField(
-  controller: _cpfController,
-  keyboardType: TextInputType.number,
-  decoration: InputDecoration(labelText: 'CPF'),
-),TextFormField(
-              controller: _installmentsController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: 'Número de Parcelas'),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor, insira o número de parcelas';
-                }
-                return null;
-              },
-            ),
+          controller: _cpfController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: 'CPF'),
+        ),
+        TextFormField(
+          controller: _installmentsController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: 'Número de Parcelas'),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Por favor, insira o número de parcelas';
+            }
+            return null;
+          },
+        ),
 
         TextField(
           controller: _numberCardController,
@@ -523,7 +667,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 decoration: InputDecoration(labelText: 'CVV'),
               ),
             ),
-             
           ],
         ),
       ],

@@ -1,5 +1,5 @@
 class Address {
-   final int? userId;
+   final String? userId;
  // final int? productId;
   final String recipientName;
   final String street;
