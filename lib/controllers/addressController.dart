@@ -27,13 +27,17 @@ Future<Map<String, dynamic>?> insertAddress(Map<String, dynamic> addressData) as
 
 
 
-Future<bool> updateAddress(String userId, Map<String, dynamic> addressData) async {
+Future<bool> updateAddress(int addressId, Map<String, dynamic> addressData) async {
   try {
     // Realiza a atualização no Supabase
     final response = await _supabase
         .from('addresses')
         .update(addressData)
-        .eq('user_id', userId);
+        .eq('id', addressId)
+        .select()
+        .single();
+
+    print('Resposta do Supabase: $response');
 
     // Verifica se a resposta está nula ou mal formada
     if (response == null) {
@@ -41,18 +45,8 @@ Future<bool> updateAddress(String userId, Map<String, dynamic> addressData) asyn
       return false; // Retorna false se a resposta for nula
     }
 
-    // Imprime a resposta completa para depuração
-    print('Resposta do Supabase: ${response.data}');
-    print('Erro: ${response.error}');
-
-    // Verifica se houve um erro na resposta
-    if (response.error != null) {
-      print('Erro ao atualizar o endereço: ${response.error!.message}');
-      return false; // Retorna false se houve erro
-    }
-
     // Verifica se a resposta contém dados atualizados
-    if (response.data != null && response.data.isNotEmpty) {
+    if (response.isNotEmpty) {
       print('Endereço atualizado com sucesso!');
       return true; // Retorna true se a atualização foi bem-sucedida
     } else {
@@ -66,6 +60,7 @@ Future<bool> updateAddress(String userId, Map<String, dynamic> addressData) asyn
     return false; // Retorna false se ocorrer uma exceção
   }
 }
+
 
 
   Future<void> deleteAddress(int id) async {

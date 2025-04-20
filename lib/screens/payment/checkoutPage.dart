@@ -400,19 +400,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     Text(
                       _selectedAddress != null
                           ? '${_selectedAddress!['street']}, ${_selectedAddress!['number']}'
-                          : '${address.street}, ${address.number}',
+                          : '${address.street}, ${address.number}, ${address.complement} ,${address.bairro}',
                     ),
                     Text(
                       _selectedAddress != null
                           ? '${_selectedAddress!['city']}, ${_selectedAddress!['state']} ${_selectedAddress!['zip_code']}'
-                          : '${address.city}, ${address.state} , ${address.bairro}, ${address.zipCode}',
+                          : '${address.city}, ${address.state} ,  ${address.zipCode}',
                     ),
-                    Text(
-                      _selectedAddress != null
-                          ? _selectedAddress!['bairro'] ??
-                              'Bairro não informado'
-                          : address.bairro,
-                    ),
+                    // Text(
+                    //   _selectedAddress != null
+                    //       ? _selectedAddress!['bairro'] ??
+                    //           'Bairro não informado'
+                    //       : address.bairro,
+                    // ),
                     SizedBox(height: 6),
                   ],
                 ),
@@ -429,13 +429,28 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 child: const Text('Change'),
               ),
               TextButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return _buildAddressFormDialog(context);
-                    },
-                  );
+                onPressed: () async {
+                  try {
+                    final existingAddress = await _addressController
+                        .getUserAddresses(widget.userId);
+
+                    final id = existingAddress.first.id;
+
+                    if (id != null) {
+                      await _addressController.deleteAddress(id);
+                      Navigator.of(context).pop(); // Fecha o diálogo
+                      Navigator.of(
+                        context,
+                      ).pop(true); // Retorna true para indicar sucesso
+                    } else {
+                      print('ID do endereço não encontrado');
+                    }
+                  } catch (e) {
+                    print('Erro ao remover endereço: $e');
+                    Navigator.of(
+                      context,
+                    ).pop(); // Fecha o diálogo mesmo com erro
+                  }
                 },
                 child: const Text('remove'),
               ),
@@ -446,125 +461,145 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-Widget _buildAddressFormDialog(BuildContext context) {
-  return AlertDialog(
-    title: const Text('Edit Address'),
-    content: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TextField(
-          controller: _zipCodeController,
-          decoration: const InputDecoration(labelText: 'CEP'),
-          keyboardType: TextInputType.number,
-          onSubmitted: _findAddress,
-        ),
-        TextField(
-          controller: _recipientNameController,
-          decoration: const InputDecoration(labelText: 'Recipient Name'),
-        ),
-        TextField(
-          controller: _streetController,
-          decoration: const InputDecoration(labelText: 'Street'),
-          onChanged: (value) {
-            setState(() {
-              _selectedAddress?['street'] = value;
-            });
+  Widget _buildAddressFormDialog(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edit Address'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _zipCodeController,
+            decoration: const InputDecoration(labelText: 'CEP'),
+            keyboardType: TextInputType.number,
+            onSubmitted: _findAddress,
+          ),
+          TextField(
+            controller: _recipientNameController,
+            decoration: const InputDecoration(labelText: 'Recipient Name'),
+          ),
+          TextField(
+            controller: _streetController,
+            decoration: const InputDecoration(labelText: 'Street'),
+            onChanged: (value) {
+              setState(() {
+                _selectedAddress?['street'] = value;
+              });
+            },
+          ),
+          TextField(
+            controller: _numberController,
+            decoration: const InputDecoration(labelText: 'Number'),
+          ),
+          TextField(
+            controller: _complementController,
+            decoration: const InputDecoration(labelText: 'Complement'),
+          ),
+          TextField(
+            controller: _cityController,
+            decoration: const InputDecoration(labelText: 'City'),
+          ),
+          TextField(
+            controller: _stateController,
+            decoration: const InputDecoration(labelText: 'State'),
+          ),
+          TextField(
+            controller: _bairroController,
+            decoration: const InputDecoration(labelText: 'bairro'),
+          ),
+          TextField(
+            controller: _countryController,
+            decoration: const InputDecoration(labelText: 'Country'),
+          ),
+          TextField(
+            controller: _phoneController,
+            decoration: const InputDecoration(labelText: 'Phone'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(); // Fecha o dialog
           },
+          child: const Text('Cancel'),
         ),
-        TextField(
-          controller: _numberController,
-          decoration: const InputDecoration(labelText: 'Number'),
-        ),
-        TextField(
-          controller: _complementController,
-          decoration: const InputDecoration(labelText: 'Complement'),
-        ),
-        TextField(
-          controller: _cityController,
-          decoration: const InputDecoration(labelText: 'City'),
-        ),
-        TextField(
-          controller: _stateController,
-          decoration: const InputDecoration(labelText: 'State'),
-        ),
-        TextField(
-          controller: _bairroController,
-          decoration: const InputDecoration(labelText: 'bairro'),
-        ),
-        TextField(
-          controller: _countryController,
-          decoration: const InputDecoration(labelText: 'Country'),
-        ),
-        TextField(
-          controller: _phoneController,
-          decoration: const InputDecoration(labelText: 'Phone'),
+        ElevatedButton(
+          onPressed: () async {
+            // Coleta os dados dos controladores
+            final addressData = {
+              "user_id": widget.userId,
+              "recipient_name": _recipientNameController.text,
+              "street": _streetController.text,
+              "number": _numberController.text,
+              "complement": _complementController.text,
+              "city": _cityController.text,
+              "state": _stateController.text,
+              "zip_code": _zipCodeController.text,
+              "country": _countryController.text,
+              "bairro": _bairroController.text,
+              "phone": _phoneController.text,
+            };
+
+            // Verifica se já existe um endereço para este usuário
+            final existingAddress = await _addressController.getUserAddresses(
+              widget.userId,
+            );
+
+            if (existingAddress != null && existingAddress.isNotEmpty) {
+              // Se existir, chama o update
+              final addressId = existingAddress.first.id;
+              final updateSuccess = await _addressController.updateAddress(
+                addressId!,
+                addressData,
+              );
+
+              if (updateSuccess) {
+                // Recupera os endereços atualizados (apenas o primeiro, no caso de um único endereço)
+                List<Address> updatedAddresses = await _addressController
+                    .getUserAddresses(widget.userId);
+
+                if (updatedAddresses.isNotEmpty) {
+                  // Pega o primeiro endereço da lista e converte para Map<String, dynamic>
+                  Map<String, dynamic> updatedAddressMap =
+                      updatedAddresses.first.toJson();
+
+                  setState(() {
+                    _selectedAddress =
+                        updatedAddressMap; // Atualiza o único endereço
+                  });
+                }
+
+                Navigator.of(context).pop(true); // Fecha a tela
+              } else {
+                // Exibe erro de atualização
+                print('Erro ao atualizar endereço');
+              }
+            } else {
+              // Se não existir, chama o insert
+              final insertedAddress = await _addressController.insertAddress(
+                addressData,
+              );
+
+              // Verifica se a inserção foi bem-sucedida (verifica se o valor não é nulo)
+              if (insertedAddress != null) {
+                setState(() {
+                  // Se a inserção foi bem-sucedida, atualize a UI com o novo endereço
+                  _addressController.getUserAddresses(
+                    widget.userId,
+                  ); // Opcional, dependendo de como você usa os dados
+                });
+                Navigator.of(context).pop(true); // Fecha a tela
+              } else {
+                // Exibe erro de inserção
+                print('Erro ao salvar endereço');
+              }
+            }
+          },
+          child: const Text('Save'),
         ),
       ],
-    ),
-    actions: [
-      TextButton(
-        onPressed: () {
-          Navigator.of(context).pop(); // Fecha o dialog
-        },
-        child: const Text('Cancel'),
-      ),
-      ElevatedButton(
-  onPressed: () async {
-    // Coleta os dados dos controladores
-    final addressData = {
-      "user_id": widget.userId,
-      "recipient_name": _recipientNameController.text,
-      "street": _streetController.text,
-      "number": _numberController.text,
-      "complement": _complementController.text,
-      "city": _cityController.text,
-      "state": _stateController.text,
-      "zip_code": _zipCodeController.text,
-      "country": _countryController.text,
-      "bairro": _bairroController.text,
-      "phone": _phoneController.text,
-    };
-
-    // Verifica se já existe um endereço para este usuário
-    final existingAddress = await _addressController.getUserAddresses(widget.userId);
-
-    if (existingAddress != null && existingAddress.isNotEmpty) {
-      // Se existir, chama o update
-      final updateSuccess = await _addressController.updateAddress(widget.userId, addressData);
-      if (updateSuccess) {
-        setState(() {
-          // Se a atualização foi bem-sucedida, atualize a UI com o novo endereço
-          _addressController.getUserAddresses(widget.userId); // Opcional, dependendo de como você usa os dados
-        });
-        Navigator.of(context).pop(true); // Fecha a tela
-      } else {
-        // Exibe erro de atualização
-        print('Erro ao atualizar endereço');
-      }
-    } else {
-      // Se não existir, chama o insert
-      final Map<String, dynamic>? insertedAddress = await _addressController.insertAddress(addressData);
-
-      // Verifica se a inserção foi bem-sucedida (verifica se o valor não é nulo)
-      if (insertedAddress != null) {
-        setState(() {
-          // Se a inserção foi bem-sucedida, atualize a UI com o novo endereço
-          _addressController.getUserAddresses(widget.userId); // Opcional, dependendo de como você usa os dados
-        });
-        Navigator.of(context).pop(true); // Fecha a tela
-      } else {
-        // Exibe erro de inserção
-        print('Erro ao salvar endereço');
-      }
-    }
-  },
-  child: const Text('Save'),
-)
-
-    ],
-  );
-}
-
+    );
+  }
 
   Widget _buildPaymentCard(BuildContext context) {
     return SizedBox(

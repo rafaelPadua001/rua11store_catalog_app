@@ -1,5 +1,6 @@
 class Address {
-   final String? userId;
+  final int? id;
+  final String? userId;
  // final int? productId;
   final String recipientName;
   final String street;
@@ -13,6 +14,7 @@ class Address {
   final String phone;
 
   Address({
+    this.id,
       this.userId,
    // this.productId,
     required this.recipientName,
@@ -30,6 +32,7 @@ class Address {
   //convert to json
   Map<String, dynamic> toJson(){
     return{
+      if(id != null) 'id' : id,
       'user_id': userId,
     //  'product_id': productId,
       'recipient_name': recipientName,
@@ -47,6 +50,7 @@ class Address {
 
   factory Address.fromJson(Map<String,dynamic> json){
     return Address(
+      id: json['id'],
       userId: json['user_id'],
      // productId: json['product_id'],
       recipientName: json['recipient_name'] ?? '',
