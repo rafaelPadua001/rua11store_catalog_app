@@ -133,6 +133,7 @@ class _ProductScreenState extends State<ProductScreen> {
     };
 
     final deliveryData = {
+      'id': selectedDelivery?['id'],
       'name': selectedDelivery?['name'],
       'price': selectedDelivery?['price'],
       'type': selectedDelivery?['type'],

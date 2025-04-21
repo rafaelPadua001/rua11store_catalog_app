@@ -135,7 +135,11 @@ void _handlePayment() async {
       "state": _selectedAddress!["state"] ?? "",
       "country": _selectedAddress!["country"] ?? "",
       "zip_code": _selectedAddress!["zip_code"] ?? "",
-      "phone": _selectedAddress!["phone"] ?? ""
+      "phone": _selectedAddress!["phone"] ?? "",
+      "total_value": widget.delivery['price'] ?? "0.00",
+      "delivery_id": widget.delivery['id'],
+      "products": convertedProducts,
+      
     };
   } else if (_streetController.text.isNotEmpty) {
     // Se o usuário inseriu um endereço no formulário, usamos ele
@@ -150,6 +154,9 @@ void _handlePayment() async {
       "country": _countryController.text,
       "zip_code": _zipCodeController.text,
       "phone": _phoneController.text,
+      "total_value": widget.delivery['price'] ?? "0.00",
+      "delivery_id": widget.delivery['id'],
+      "products": convertedProducts,
     };
   }
 
