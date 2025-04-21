@@ -60,6 +60,7 @@ class PaymentController {
   }
 
   Future<bool> sendPayment(Payment payment) async {
+    print(payment);
     final url = Uri.parse(_baseUrl + '/payment/payment');
 
     try {

@@ -111,59 +111,44 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _bairroController.dispose();
     super.dispose();
   }
+void _handlePayment() async {
+  final convertedProducts = widget.products
+      .map<Map<String, dynamic>>(
+        (item) => item.map((key, value) => MapEntry(key.toString(), value)),
+      )
+      .toList();
+  final paymentController = PaymentController();
 
-  void _handlePayment() async {
-    final convertedProducts =
-        widget.products
-            .map<Map<String, dynamic>>(
-              (item) =>
-                  item.map((key, value) => MapEntry(key.toString(), value)),
-            )
-            .toList();
-    final paymentController = PaymentController();
+  // Determinar qual endereço usar
+  String address = 'qms 10 rua 11 casa 20'; // Endereço padrão
+  if (_selectedAddress != null) {
+    // Se _selectedAddress está disponível, formata o endereço
+    address = '${_selectedAddress!['street']}, ${_selectedAddress!['number']}, '
+        '${_selectedAddress!['complement'] ?? ''}, '
+        '${_selectedAddress!['bairro']}, '
+        '${_selectedAddress!['city']}, '
+        '${_selectedAddress!['state']}, '
+        '${_selectedAddress!['country']} - '
+        'CEP: ${_selectedAddress!['zip_code']}';
+  } else if (_streetController.text.isNotEmpty) {
+    // Se o usuário inseriu um endereço no formulário, usamos ele
+    address = '${_streetController.text}, ${_numberController.text}, '
+        '${_complementController.text}, '
+        '${_bairroController.text}, '
+        '${_cityController.text}, '
+        '${_stateController.text}, '
+        '${_countryController.text} - '
+        'CEP: ${_zipCodeController.text}';
+  }
 
-    String? token;
-    if (_selectedPayment == 'credit' || _selectedPayment == 'debit') {
-      final tempPayment = Payment(
-        zipCode: widget.zipCode!,
-        userId: widget.userId,
-        userEmail: widget.userEmail,
-        cpf: _cpfController.text,
-        address: 'qms 10 rua 11 casa 20',
-        paymentType: _selectedPayment,
-        subtotal: _subtotal,
-        shipping: _shipping,
-        total: _total,
-        products: convertedProducts,
-        numberCard:
-            _selectedPayment != 'Pix' ? _numberCardController.text : null,
-        nameCard: _selectedPayment != 'Pix' ? _nameCardController.text : null,
-        expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
-        cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
-        installments: int.tryParse(_installmentsController.text) ?? 1,
-      );
-      final expiryParts = (tempPayment.expiry ?? '').split('/');
-      final expirationMonth = int.tryParse(expiryParts[0]) ?? 0;
-      final expirationYear = int.tryParse('20${expiryParts[1]}') ?? 0;
-
-      token = await paymentController.generateCardToken(
-        cardNumber: tempPayment.numberCard ?? '',
-        expirationMonth: expirationMonth,
-        expirationYear: expirationYear,
-        securityCode: tempPayment.cvv ?? '',
-        cardholderName: tempPayment.nameCard ?? '',
-        docType: docType,
-        docNumber: _cpfController.text,
-      );
-    }
-
-    final payment = Payment(
-      cardToken: token,
+  String? token;
+  if (_selectedPayment == 'credit' || _selectedPayment == 'debit') {
+    final tempPayment = Payment(
       zipCode: widget.zipCode!,
-      userEmail: widget.userEmail,
       userId: widget.userId,
+      userEmail: widget.userEmail,
       cpf: _cpfController.text,
-      address: 'qms 10 rua 11 casa 20',
+      address: address, // Usando o endereço correto
       paymentType: _selectedPayment,
       subtotal: _subtotal,
       shipping: _shipping,
@@ -176,19 +161,56 @@ class _CheckoutPageState extends State<CheckoutPage> {
       installments: int.tryParse(_installmentsController.text) ?? 1,
     );
 
-    final controller = PaymentController();
-    final success = await controller.sendPayment(payment);
+    final expiryParts = (tempPayment.expiry ?? '').split('/');
+    final expirationMonth = int.tryParse(expiryParts[0]) ?? 0;
+    final expirationYear = int.tryParse('20${expiryParts[1]}') ?? 0;
 
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pagamento enviado com sucesso!')),
-      );
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Erro ao enviar pagamento')));
-    }
+    token = await paymentController.generateCardToken(
+      cardNumber: tempPayment.numberCard ?? '',
+      expirationMonth: expirationMonth,
+      expirationYear: expirationYear,
+      securityCode: tempPayment.cvv ?? '',
+      cardholderName: tempPayment.nameCard ?? '',
+      docType: docType,
+      docNumber: _cpfController.text,
+    );
   }
+
+  // Criar o pagamento com o token obtido
+  final payment = Payment(
+    cardToken: token,
+    zipCode: widget.zipCode!,
+    userEmail: widget.userEmail,
+    userId: widget.userId,
+    cpf: _cpfController.text,
+    address: address, // Usando o endereço correto
+    paymentType: _selectedPayment,
+    subtotal: _subtotal,
+    shipping: _shipping,
+    total: _total,
+    products: convertedProducts,
+    numberCard: _selectedPayment != 'Pix' ? _numberCardController.text : null,
+    nameCard: _selectedPayment != 'Pix' ? _nameCardController.text : null,
+    expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
+    cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
+    installments: int.tryParse(_installmentsController.text) ?? 1,
+  );
+
+  // Enviar o pagamento
+  final controller = PaymentController();
+  final success = await controller.sendPayment(payment);
+
+  if (success) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Pagamento enviado com sucesso!')),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Erro ao enviar pagamento')),
+    );
+  }
+}
+
 
   Future<void> _findAddress(String cep) async {
     final cleanedCep = cep.replaceAll(RegExp(r'\D'), '');
