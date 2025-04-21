@@ -2,7 +2,7 @@ class Payment {
   final String zipCode;
   final String userEmail;
   final String userId;
-  final String address;
+  final Map<String, dynamic> address; // <-- aqui
   final String paymentType;
   final double subtotal;
   final double shipping;
@@ -21,7 +21,7 @@ class Payment {
     required this.zipCode,
     required this.userEmail,
     required this.userId,
-    required this.address,
+    required this.address, // <-- aqui
     required this.paymentType,
     required this.subtotal,
     required this.shipping,
@@ -44,13 +44,12 @@ class Payment {
       'payer_email': userEmail,
       'userId': userId,
       'payer_cpf': cpf,
-      'address': address,
+      'address': address, // <-- aqui
       'paymentType': paymentType,
       'subtotal': subtotal.toStringAsFixed(2),
       'frete': shipping.toStringAsFixed(2),
       'total': total.toStringAsFixed(2),
       'products': products,
-      if(cardToken != null) 'card_token' : cardToken,
       if (paymentType == 'Crédito' || paymentType == 'Débito') ...{
         'cartao': {
           'numero': numberCard,
