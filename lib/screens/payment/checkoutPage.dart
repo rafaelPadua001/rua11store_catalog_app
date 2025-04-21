@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/models/adress.dart';
 import '../../controllers/PaymentController.dart';
 import '../../controllers/addressController.dart';
@@ -33,6 +34,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   double _subtotal = 0.0;
   double _shipping = 0.0;
   double _total = 0.0;
+  bool _isLoading = false;
   late TextEditingController _numberCardController;
   late TextEditingController _nameCardController;
   late TextEditingController _cardExpiryController;
@@ -112,6 +114,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
     super.dispose();
   }
 void _handlePayment() async {
+  setState((){
+    _isLoading = true;
+  });
   final convertedProducts =
       widget.products
           .map<Map<String, dynamic>>(
@@ -220,8 +225,16 @@ void _handlePayment() async {
   final success = await controller.sendPayment(payment);
 
   if (success) {
+    setState(() {
+      _isLoading = false;
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Pagamento enviado com sucesso!')),
+    );
+    await Future.delayed(const Duration(seconds: 2));
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => MyApp()), // substitua HomePage pela sua home real
     );
   } else {
     ScaffoldMessenger.of(
@@ -791,30 +804,33 @@ void _handlePayment() async {
   }
 
   Widget _buildElevatedButton() {
-    return SizedBox(
-      width: double.infinity, // ocupa toda a largura disponível
-      height: 60, // opcional, define uma altura padrão
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue, // cor azul
-          foregroundColor: Colors.white, // texto branco
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              8,
-            ), // bordas arredondadas (opcional)
-          ),
-        ),
-        onPressed: () {
-          _handlePayment();
-          // ScaffoldMessenger.of(context).showSnackBar(
-          //   const SnackBar(content: Text('Estamos trabalhando nisso')),
-          // );
-        },
-        child: const Text(
-          'Place Order Now',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  return SizedBox(
+    width: double.infinity,
+    height: 60,
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
         ),
       ),
-    );
-  }
+      onPressed: _isLoading ? null : _handlePayment,
+      child: _isLoading
+          ? const SizedBox(
+              height: 24,
+              width: 24,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2.5,
+              ),
+            )
+          : const Text(
+              'Place Order Now',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+    ),
+  );
+}
+
 }
