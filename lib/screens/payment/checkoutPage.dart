@@ -112,33 +112,45 @@ class _CheckoutPageState extends State<CheckoutPage> {
     super.dispose();
   }
 void _handlePayment() async {
-  final convertedProducts = widget.products
-      .map<Map<String, dynamic>>(
-        (item) => item.map((key, value) => MapEntry(key.toString(), value)),
-      )
-      .toList();
+  final convertedProducts =
+      widget.products
+          .map<Map<String, dynamic>>(
+            (item) => item.map((key, value) => MapEntry(key.toString(), value)),
+          )
+          .toList();
   final paymentController = PaymentController();
 
   // Determinar qual endereço usar
-  String address = 'qms 10 rua 11 casa 20'; // Endereço padrão
+  Map<String, dynamic> address = {}; // Inicializa como um mapa vazio
+
   if (_selectedAddress != null) {
     // Se _selectedAddress está disponível, formata o endereço
-    address = '${_selectedAddress!['street']}, ${_selectedAddress!['number']}, '
-        '${_selectedAddress!['complement'] ?? ''}, '
-        '${_selectedAddress!['bairro']}, '
-        '${_selectedAddress!['city']}, '
-        '${_selectedAddress!['state']}, '
-        '${_selectedAddress!['country']} - '
-        'CEP: ${_selectedAddress!['zip_code']}';
+    address = {
+      "recipient_name": _selectedAddress!["recipient_name"] ?? "",
+      "street": _selectedAddress!["street"] ?? "",
+      "number": _selectedAddress!["number"] ?? "",
+      "complement": _selectedAddress!["complement"] ?? "",
+      "neighborhood": _selectedAddress!["bairro"] ?? "",
+      "city": _selectedAddress!["city"] ?? "",
+      "state": _selectedAddress!["state"] ?? "",
+      "country": _selectedAddress!["country"] ?? "",
+      "zip_code": _selectedAddress!["zip_code"] ?? "",
+      "phone": _selectedAddress!["phone"] ?? ""
+    };
   } else if (_streetController.text.isNotEmpty) {
     // Se o usuário inseriu um endereço no formulário, usamos ele
-    address = '${_streetController.text}, ${_numberController.text}, '
-        '${_complementController.text}, '
-        '${_bairroController.text}, '
-        '${_cityController.text}, '
-        '${_stateController.text}, '
-        '${_countryController.text} - '
-        'CEP: ${_zipCodeController.text}';
+    address = {
+      "recipient_name": _recipientNameController.text,
+      "street": _streetController.text,
+      "number": _numberController.text,
+      "complement": _complementController.text,
+      "neighborhood": _bairroController.text,
+      "city": _cityController.text,
+      "state": _stateController.text,
+      "country": _countryController.text,
+      "zip_code": _zipCodeController.text,
+      "phone": _phoneController.text,
+    };
   }
 
   String? token;
@@ -205,9 +217,9 @@ void _handlePayment() async {
       const SnackBar(content: Text('Pagamento enviado com sucesso!')),
     );
   } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Erro ao enviar pagamento')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Erro ao enviar pagamento')));
   }
 }
 
