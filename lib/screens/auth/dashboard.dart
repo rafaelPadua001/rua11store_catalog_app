@@ -6,6 +6,7 @@ import 'package:rua11store_catalog_app/models/user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../user/profile_user.dart';
 import '../../widgets/orders_widget.dart';
+import '../../widgets/cart_widget.dart';
 
 
 class Dashboard extends StatefulWidget {
@@ -57,6 +58,9 @@ class _StateDashboard extends State<Dashboard> {
     setState(() {
       _selectedIndex = index;
     });
+    if(index == 1 && user != null){
+      _navigateToCart();
+    }
     if(index == 2 && user != null){
       _navigateToOrders();
     }
@@ -102,6 +106,23 @@ class _StateDashboard extends State<Dashboard> {
       );
     }
   }
+
+  Future<void> _navigateToCart() async {
+    try{
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CartWidget(),
+        ),
+      );
+    }
+    catch(e){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao navegar: ${e.toString()}')),
+      );
+    }
+  }
+
   Future<void> _handleLogout(BuildContext context) async {
     try {
       await Supabase.instance.client.auth.signOut();
