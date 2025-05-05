@@ -721,17 +721,22 @@ void _handlePayment() async {
           keyboardType: TextInputType.number,
           decoration: InputDecoration(labelText: 'CPF'),
         ),
-        TextFormField(
-          controller: _installmentsController,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: 'Número de Parcelas'),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor, insira o número de parcelas';
-            }
-            return null;
-          },
-        ),
+        _selectedPayment == 'credit'
+        ? TextFormField(
+            controller: _installmentsController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(labelText: 'Número de Parcelas'),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor, insira o número de parcelas';
+              }
+              return null;
+            },
+          )
+       
+          : SizedBox.shrink(), 
+        
+         
 
         TextField(
           controller: _numberCardController,
