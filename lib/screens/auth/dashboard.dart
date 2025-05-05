@@ -5,6 +5,7 @@ import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/models/user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../user/profile_user.dart';
+import '../../widgets/orders_widget.dart';
 
 
 class Dashboard extends StatefulWidget {
@@ -56,8 +57,11 @@ class _StateDashboard extends State<Dashboard> {
     setState(() {
       _selectedIndex = index;
     });
+    if(index == 2 && user != null){
+      _navigateToOrders();
+    }
+    if (index == 3 && user != null) {
 
-    if (index == 2 && user != null) {
       _navigateToProfile();
     }
     if (index == 4) {
@@ -81,7 +85,23 @@ class _StateDashboard extends State<Dashboard> {
       );
     }
   }
-
+  Future<void> _navigateToOrders() async {
+    try{
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OrdersWidget(
+            //user: user!,
+          ),
+        ),
+      );
+    }
+    catch(e){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao navegar: ${e.toString()}')),
+      );
+    }
+  }
   Future<void> _handleLogout(BuildContext context) async {
     try {
       await Supabase.instance.client.auth.signOut();
@@ -123,9 +143,14 @@ class _StateDashboard extends State<Dashboard> {
                 label: Text('Início'),
               ),
               NavigationRailDestination(
+                icon: Icon(Icons.shopping_cart_outlined),
+                selectedIcon: Icon(Icons.shopping_cart),
+                label: Text('Cart'),
+              ),
+              NavigationRailDestination(
                 icon: Icon(Icons.shopping_bag_outlined),
                 selectedIcon: Icon(Icons.shopping_bag),
-                label: Text('Produtos'),
+                label: Text('Orders'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.person_outlined),
