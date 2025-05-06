@@ -8,6 +8,8 @@ import 'controllers/productsController.dart';
 import 'package:provider/provider.dart';
 
 class CatalogPage extends StatefulWidget {
+  const CatalogPage({super.key});
+
   @override
   _CatalogPageState createState() => _CatalogPageState();
 }

@@ -14,12 +14,12 @@ class ProfileUserWidget extends StatefulWidget {
   final double borderWidth;
 
   const ProfileUserWidget({
-    Key? key,
+    super.key,
     required this.user,
     this.imageSize = 120.0,
     this.borderColor = Colors.white,
     this.borderWidth = 2.0,
-  }) : super(key: key);
+  });
 
   @override
   State<ProfileUserWidget> createState() => _ProfileUserWidgetState();
@@ -32,8 +32,6 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
   final TextEditingController _dateController = TextEditingController();
 
   DateTime? _selectedDate;
-
- 
 
   @override
   void initState() {
@@ -59,13 +57,12 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
   }
 
   Future<void> _loadProfile() async {
-    
     try {
       final profile = await _profileRepo.getProfile();
       if (profile != null && mounted) {
         setState(() {
           _currentUser = profile;
-           print(_currentUser);
+          print(_currentUser);
         });
       }
     } catch (e) {
@@ -182,7 +179,9 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                 onPressed: () async {
                   final newName = nameController.text.trim();
                   if (newName.isNotEmpty) {
-                    final updatedUser = _currentUser.copyWith(full_name: newName);
+                    final updatedUser = _currentUser.copyWith(
+                      full_name: newName,
+                    );
                     await _updateProfile(updatedUser);
                     if (!mounted) return;
                     Navigator.pop(context);
@@ -253,102 +252,111 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
     );
   }
 
- void _showEditAgeDialog() {
-  showDialog(
-    context: context,
-    builder: (context) {
-      // Local controller to handle empty state
-      final textController = TextEditingController(text: _dateController.text);
-      
-      return AlertDialog(
-        title: const Text('Editar Data de Nascimento'),
-        content: TextFormField(
-          controller: textController,
-          decoration: InputDecoration(
-            labelText: 'Data de Nascimento',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.calendar_today),
-            hintText: 'DD/MM/AAAA',
-          ),
-          readOnly: true,
-          onTap: () async {
-            final selectedDate = await showDatePicker(
-              context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime(1900),
-              lastDate: DateTime.now(),
-            );
-            
-            if (selectedDate != null) {
-              textController.text = DateFormat('dd/MM/yyyy').format(selectedDate);
-            }
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (textController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Por favor, selecione uma data válida'),
-                  ),
-                );
-                return;
-              }
+  void _showEditAgeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        // Local controller to handle empty state
+        final textController = TextEditingController(
+          text: _dateController.text,
+        );
 
-              try {
-                final birthDate = DateFormat('dd/MM/yyyy').parse(textController.text);
-                
-                // Verify age is at least 13 years
-                final age = DateTime.now().difference(birthDate).inDays ~/ 365;
-                if (age < 18) {
+        return AlertDialog(
+          title: const Text('Editar Data de Nascimento'),
+          content: TextFormField(
+            controller: textController,
+            decoration: InputDecoration(
+              labelText: 'Data de Nascimento',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.calendar_today),
+              hintText: 'DD/MM/AAAA',
+            ),
+            readOnly: true,
+            onTap: () async {
+              final selectedDate = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(1900),
+                lastDate: DateTime.now(),
+              );
+
+              if (selectedDate != null) {
+                textController.text = DateFormat(
+                  'dd/MM/yyyy',
+                ).format(selectedDate);
+              }
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (textController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Você deve ter pelo menos 83 anos'),
+                      content: Text('Por favor, selecione uma data válida'),
                     ),
                   );
                   return;
                 }
 
-                final updatedUser = _currentUser.copyWith(
-                  birthDate: birthDate,
-                );
-print('MEeeerda');
-                await _updateProfile(updatedUser);
-                
-                if (!mounted) return;
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Data de nascimento atualizada com sucesso'),
-                  ),
-                );
-              } on FormatException {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Formato de data inválido. Use DD/MM/AAAA'),
-                  ),
-                );
-              } catch (e) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Erro ao atualizar: ${e.toString()}'),
-                  ),
-                );
-              }
-            },
-            child: const Text('Salvar'),
-          ),
-        ],
-      );
-    },
-  );
-}
+                try {
+                  final birthDate = DateFormat(
+                    'dd/MM/yyyy',
+                  ).parse(textController.text);
+
+                  // Verify age is at least 13 years
+                  final age =
+                      DateTime.now().difference(birthDate).inDays ~/ 365;
+                  if (age < 18) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Você deve ter pelo menos 83 anos'),
+                      ),
+                    );
+                    return;
+                  }
+
+                  final updatedUser = _currentUser.copyWith(
+                    birthDate: birthDate,
+                  );
+                  print('MEeeerda');
+                  await _updateProfile(updatedUser);
+
+                  if (!mounted) return;
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Data de nascimento atualizada com sucesso',
+                      ),
+                    ),
+                  );
+                } on FormatException {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Formato de data inválido. Use DD/MM/AAAA'),
+                    ),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Erro ao atualizar: ${e.toString()}'),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -463,110 +471,104 @@ print('MEeeerda');
   }
 
   Widget _buildUserInfo() {
-  // Obtém o usuário autenticado do Supabase
-  final authUser = Supabase.instance.client.auth.currentUser;
-  
-  // Define o nome a ser exibido
-  final displayName = authUser?.userMetadata?['display_name']?.toString() ?? 
-                    // _currentUser.display_name ?? 
-                    _currentUser.full_name;
+    // Obtém o usuário autenticado do Supabase
+    final authUser = Supabase.instance.client.auth.currentUser;
 
-  // Define o email a ser exibido
-  final email = authUser?.email ?? _currentUser.email;
+    // Define o nome a ser exibido
+    final displayName =
+        authUser?.userMetadata?['display_name']?.toString() ??
+        // _currentUser.display_name ??
+        _currentUser.full_name;
 
-  return Column(
-    children: [
-      // Linha com nome e ícone de edição
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            displayName, // Usa o nome definido acima
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => _showEditNameDialog(),
-            child: const Icon(
-              Icons.edit_outlined,
-              size: 20,
-              color: Colors.blue,
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: 8),
-      // Linha com email e ícone de edição
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            email, // Usa o email definido acima
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => _showEditEmailDialog(),
-            child: const Icon(
-              Icons.edit_outlined,
-              size: 16,
-              color: Colors.blue,
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: 8),
-      _buildAgeUser(context),
-    ],
-  );
-}
+    // Define o email a ser exibido
+    final email = authUser?.email ?? _currentUser.email;
 
-  Widget _buildAgeUser(BuildContext context) {
-  // Função para calcular a idade a partir da data de nascimento
-  int? calculateAge(DateTime? birthDate) {
-    if (birthDate == null) return null;
-    
-    final now = DateTime.now();
-    int age = now.year - birthDate.year;
-    if (now.month < birthDate.month || 
-        (now.month == birthDate.month && now.day < birthDate.day)) {
-      age--;
-    }
-    return age;
+    return Column(
+      children: [
+        // Linha com nome e ícone de edição
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              displayName, // Usa o nome definido acima
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => _showEditNameDialog(),
+              child: const Icon(
+                Icons.edit_outlined,
+                size: 20,
+                color: Colors.blue,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Linha com email e ícone de edição
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              email, // Usa o email definido acima
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => _showEditEmailDialog(),
+              child: const Icon(
+                Icons.edit_outlined,
+                size: 16,
+                color: Colors.blue,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        _buildAgeUser(context),
+      ],
+    );
   }
 
-  final age = calculateAge(_currentUser.birthDate);
-  final ageText = age != null ? '$age anos' : '18+';
+  Widget _buildAgeUser(BuildContext context) {
+    // Função para calcular a idade a partir da data de nascimento
+    int? calculateAge(DateTime? birthDate) {
+      if (birthDate == null) return null;
 
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Text(
-        ageText,
-        style: const TextStyle(
-          fontSize: 16,
-          color: Colors.black54,
+      final now = DateTime.now();
+      int age = now.year - birthDate.year;
+      if (now.month < birthDate.month ||
+          (now.month == birthDate.month && now.day < birthDate.day)) {
+        age--;
+      }
+      return age;
+    }
+
+    final age = calculateAge(_currentUser.birthDate);
+    final ageText = age != null ? '$age anos' : '18+';
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          ageText,
+          style: const TextStyle(fontSize: 16, color: Colors.black54),
         ),
-      ),
-      const SizedBox(width: 8),
-      GestureDetector(
-        onTap: () => _showEditAgeDialog(),
-        child: const Icon(
-          Icons.edit_outlined,
-          size: 16,
-          color: Colors.blue,
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: () => _showEditAgeDialog(),
+          child: const Icon(Icons.edit_outlined, size: 16, color: Colors.blue),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   // Widget _buildEditButton(BuildContext context) {
   //   return ElevatedButton(

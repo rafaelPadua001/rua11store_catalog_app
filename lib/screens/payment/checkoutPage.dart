@@ -34,6 +34,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   double _subtotal = 0.0;
   double _shipping = 0.0;
   double _total = 0.0;
+  int _quantity = 1;
   bool _isLoading = false;
   late TextEditingController _numberCardController;
   late TextEditingController _nameCardController;
@@ -87,10 +88,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _zipCodeController = TextEditingController(text: widget.zipCode);
     _bairroController = TextEditingController();
 
-    _subtotal = widget.products.fold<double>(
-      0.0,
-      (sum, item) => sum + (double.tryParse(item['price'].toString()) ?? 0.0),
-    );
+    _subtotal = widget.products.fold<double>(0.0, (sum, item) {
+      final price = double.tryParse(item['price'].toString()) ?? 0.0;
+      _quantity = int.tryParse(item['quantity'].toString()) ?? 1;
+      return sum + (price * _quantity);
+    });
 
     _shipping = double.tryParse(widget.delivery['price'].toString()) ?? 0.0;
 
@@ -119,12 +121,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
       _isLoading = true;
     });
     final convertedProducts =
-        widget.products
-            .map<Map<String, dynamic>>(
-              (item) =>
-                  item.map((key, value) => MapEntry(key.toString(), value)),
-            )
-            .toList();
+        widget.products.map<Map<String, dynamic>>((item) {
+          return item.map((key, value) {
+            // Verificando se a chave é "price" e convertendo para double
+            if (key == 'price' && value is String) {
+              return MapEntry(key, double.tryParse(value) ?? 0.0);
+            }
+            // Retornando o valor como está para outras chaves
+            return MapEntry(key, value);
+          });
+        }).toList();
     final paymentController = PaymentController();
 
     // Determinar qual endereço usar
@@ -361,8 +367,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
             widget.products.map((p) {
               final imageUrl = p['image'];
               final name = p['name'];
-              final price = p['price'];
-              final quantity = p['quantity'];
+              final price = double.tryParse(p['price'].toString()) ?? 0.0;
+              final quantity = int.tryParse(p['quantity'].toString()) ?? 0;
+              final total = price * quantity;
 
               return Card(
                 margin: const EdgeInsets.all(12.0),
@@ -405,7 +412,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'R\$ $price',
+                            'R\$  ${total.toStringAsFixed(2)}',
                             style: const TextStyle(fontSize: 14),
                           ),
                           Text(
@@ -607,7 +614,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               widget.userId,
             );
 
-            if (existingAddress != null && existingAddress.isNotEmpty) {
+            if (existingAddress.isNotEmpty) {
               // Se existir, chama o update
               final addressId = existingAddress.first.id;
               final updateSuccess = await _addressController.updateAddress(
@@ -797,10 +804,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               const SizedBox(height: 12),
               Text('Subtotal: R\$ ${_subtotal.toStringAsFixed(2)}'),
-              Text('Shipping: R\$ ${_shipping}'),
+              Text('Shipping: R\$ $_shipping'),
               const SizedBox(height: 8),
               Text(
-                'Total: R\$ ${_total}',
+                'Total: R\$ ${_total.toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
