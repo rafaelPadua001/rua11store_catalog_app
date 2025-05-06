@@ -206,6 +206,12 @@
       "languageVersion": "3.6"
     },
     {
+      "name": "flutter_spinbox",
+      "rootUri": "file:///home/rafael/.pub-cache/hosted/pub.dev/flutter_spinbox-0.13.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.14"
+    },
+    {
       "name": "flutter_test",
       "rootUri": "file:///home/rafael/flutter/packages/flutter_test",
       "packageUri": "lib/",
@@ -758,7 +764,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2025-05-05T02:54:46.473058Z",
+  "generated": "2025-05-05T23:59:27.891607Z",
   "generator": "pub",
   "generatorVersion": "3.7.2",
   "flutterRoot": "file:///home/rafael/flutter",

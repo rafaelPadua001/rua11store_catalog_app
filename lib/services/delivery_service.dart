@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 class DeliveryService {
   final bool isLocal;
 
-  DeliveryService({this.isLocal = false});
+  DeliveryService({this.isLocal = true});
 
   Future<List> calculateDelivery({
     required String zipDestiny,

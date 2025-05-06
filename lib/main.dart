@@ -9,7 +9,6 @@ import 'widgets/layout/appbar.dart';
 import 'catalog_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -45,12 +44,10 @@ class MyApp extends StatelessWidget {
           primary: Color(0xFF5E4B6E),
           secondary: Color(0xFF5E4B6E),
           surface: Color(0xFFF5F5F5),
-          background: Color(0xFFF5F5F5),
           error: Colors.deepPurpleAccent,
           onPrimary: Colors.black,
           onSecondary: Colors.black,
           onSurface: Colors.black,
-          onBackground: Color(0xFF5E4B6E),
           onError: Colors.white,
           brightness: Brightness.light,
         ),
