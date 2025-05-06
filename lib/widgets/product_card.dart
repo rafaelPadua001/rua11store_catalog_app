@@ -16,9 +16,13 @@ class ProductCard extends StatefulWidget {
   final Map<String, dynamic>? company;
   final CartRepository cartRepository;
 
-  ProductCard({Key? key, required this.product, this.zipCode, this.company,  CartRepository? cartRepository})
-    : cartRepository = cartRepository ?? CartRepository(),
-      super(key: key);
+  ProductCard({
+    super.key,
+    required this.product,
+    this.zipCode,
+    this.company,
+    CartRepository? cartRepository,
+  }) : cartRepository = cartRepository ?? CartRepository();
 
   @override
   State<ProductCard> createState() => _ProductCardState();
@@ -30,7 +34,6 @@ class _ProductCardState extends State<ProductCard> {
   @override
   void initState() {
     super.initState();
-    
   }
 
   void _openWhatsApp() async {
@@ -87,7 +90,7 @@ class _ProductCardState extends State<ProductCard> {
         category: widget.product.categoryId.toString(),
       );
 
-       await widget.cartRepository.addItem(cartItem);
+      await widget.cartRepository.addItem(cartItem);
       // Recarrega os itens atualizados
       await widget.cartRepository.fetchCartItems(user.id);
 
@@ -122,100 +125,99 @@ class _ProductCardState extends State<ProductCard> {
             ? widget.product.image
             : baseUrl + widget.product.image;
     return GestureDetector(
-      onTap:(){
+      onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ProductScreen(product:widget.product)),
-          );
+            builder: (_) => ProductScreen(product: widget.product),
+          ),
+        );
       },
       child: Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      elevation: 1,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        elevation: 1,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(6),
+                ),
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.image_not_supported,
+                      size: 50,
+                      color: Colors.grey,
+                    );
+                  },
+                ),
               ),
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return const Center(child: CircularProgressIndicator());
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(
-                    Icons.image_not_supported,
-                    size: 50,
-                    color: Colors.grey,
-                  );
-                },
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                widget.product.name,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              widget.product.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2.0),
-            child: Text(
-              'R\$ ${widget.product.price}',
-              style: const TextStyle(color: Colors.green),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(2.0),
-            child: ElevatedButton.icon(
-              onPressed: _openWhatsApp,
-              icon: const Icon(Icons.phone, color: Colors.white),
-              label: const Text(
-                "WhatsApp",
-                style: TextStyle(color: Colors.white),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2.0),
+              child: Text(
+                'R\$ ${widget.product.price}',
+                style: const TextStyle(color: Colors.green),
               ),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(2.0),
-            child: ElevatedButton.icon(
-              onPressed: _isAddingToCart ? null : _addToCart,
-              icon:
-                  _isAddingToCart
-                      ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
+            Padding(
+              padding: const EdgeInsets.all(2.0),
+              child: ElevatedButton.icon(
+                onPressed: _openWhatsApp,
+                icon: const Icon(Icons.phone, color: Colors.white),
+                label: const Text(
+                  "WhatsApp",
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(2.0),
+              child: ElevatedButton.icon(
+                onPressed: _isAddingToCart ? null : _addToCart,
+                icon:
+                    _isAddingToCart
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : const Icon(
+                          Icons.add_shopping_cart,
                           color: Colors.white,
-                          strokeWidth: 2,
                         ),
-                      )
-                      : const Icon(
-                        Icons.add_shopping_cart,
-                        color: Colors.white,
-                      ),
-              label: const Text(
-                "Add cart",
-                style: TextStyle(color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                disabledBackgroundColor: Colors.blueAccent.withOpacity(0.5),
+                label: const Text(
+                  "Add cart",
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  disabledBackgroundColor: Colors.blueAccent.withOpacity(0.5),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
-
-    
   }
 }

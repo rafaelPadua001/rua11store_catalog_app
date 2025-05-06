@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinbox/flutter_spinbox.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:rua11store_catalog_app/screens/payment/checkoutPage.dart';
@@ -8,6 +9,7 @@ import '../../widgets/layout/bottomSheePaget.dart';
 import '../../data/cart/cart_repository.dart';
 import '../../models/cart.dart';
 import '../../data/cart/cart_notifier.dart';
+import 'package:flutter/services.dart';
 
 class ProductScreen extends StatefulWidget {
   final Product product;
@@ -26,6 +28,7 @@ class ProductScreen extends StatefulWidget {
 
 class _ProductScreenState extends State<ProductScreen> {
   final apiUrl = dotenv.env['API_URL'];
+  double quantity = 1;
   Map<String, dynamic>? selectedDelivery;
   String? selectedZipCode;
   bool _isAddingToCart = false;
@@ -54,13 +57,14 @@ class _ProductScreenState extends State<ProductScreen> {
     setState(() => _isAddingToCart = true);
 
     try {
+      print('Quantitdade: $quantity');
       final cartItem = CartItem(
         id: '',
         userId: user.id,
         productName: widget.product.name,
         price: widget.product.numericPrice,
         description: widget.product.description,
-        quantity: 1,
+        quantity: quantity.toInt(),
         width: widget.product.weight,
         height: widget.product.height,
         weight: widget.product.weight,
@@ -130,6 +134,7 @@ class _ProductScreenState extends State<ProductScreen> {
       'height': widget.product.height,
       'length': widget.product.length,
       'weight': widget.product.weight,
+      'quantity': quantity,
     };
 
     final deliveryData = {
@@ -153,18 +158,19 @@ class _ProductScreenState extends State<ProductScreen> {
       const SnackBar(content: Text('Compra iniciada com sucesso!')),
     );
 
-   Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => CheckoutPage(
-      userId: user.id,
-      userEmail: user.email.toString(),
-      products: [productData],
-      delivery: deliveryData,
-      zipCode: selectedZipCode,
-    ),
-  ),
-);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => CheckoutPage(
+              userId: user.id,
+              userEmail: user.email.toString(),
+              products: [productData],
+              delivery: deliveryData,
+              zipCode: selectedZipCode,
+            ),
+      ),
+    );
   }
 
   @override
@@ -199,6 +205,8 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   Widget _buildPriceCard() {
+    final unitPrice = double.tryParse(widget.product.price) ?? 0.0;
+    final totalPrice = unitPrice * quantity;
     return Card(
       elevation: 5,
       child: Padding(
@@ -206,7 +214,7 @@ class _ProductScreenState extends State<ProductScreen> {
         child: Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            'Price: R\$ ${double.parse(widget.product.price).toStringAsFixed(2)}',
+            'Total: R\$ ${totalPrice.toStringAsFixed(2)}',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ),
@@ -250,7 +258,7 @@ class _ProductScreenState extends State<ProductScreen> {
                             "weight": widget.product.weight,
                             "length": widget.product.length,
                             "secure_value": 0,
-                            "quantity": 1,
+                            "quantity": quantity,
                           },
                         ],
                       ),
@@ -325,6 +333,25 @@ class _ProductScreenState extends State<ProductScreen> {
                 tooltip: 'cart',
                 onPressed: _isAddingToCart ? null : _addToCart,
               ),
+              SizedBox(width: 8),
+              Container(
+                width: 200, // define uma largura fixa para o campo numérico
+                child: SpinBox(
+                  min: 1,
+                  max: 100,
+                  value: 1,
+                  onChanged: (value) {
+                    setState(() {
+                      quantity = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Quantidade:',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
               Expanded(
                 child: TextButton(
                   style: ElevatedButton.styleFrom(
@@ -335,9 +362,9 @@ class _ProductScreenState extends State<ProductScreen> {
                     minimumSize: Size(double.infinity, 50),
                   ),
                   onPressed: () async {
-                    await _buyNow(); 
+                    await _buyNow();
                   },
-                  
+
                   child: Text('Buy Now', style: TextStyle(color: Colors.white)),
                 ),
               ),

@@ -113,64 +113,101 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _bairroController.dispose();
     super.dispose();
   }
-void _handlePayment() async {
-  setState((){
-    _isLoading = true;
-  });
-  final convertedProducts =
-      widget.products
-          .map<Map<String, dynamic>>(
-            (item) => item.map((key, value) => MapEntry(key.toString(), value)),
-          )
-          .toList();
-  final paymentController = PaymentController();
 
-  // Determinar qual endereço usar
-  Map<String, dynamic> address = {}; // Inicializa como um mapa vazio
+  void _handlePayment() async {
+    setState(() {
+      _isLoading = true;
+    });
+    final convertedProducts =
+        widget.products
+            .map<Map<String, dynamic>>(
+              (item) =>
+                  item.map((key, value) => MapEntry(key.toString(), value)),
+            )
+            .toList();
+    final paymentController = PaymentController();
 
-  if (_selectedAddress != null) {
-    // Se _selectedAddress está disponível, formata o endereço
-    address = {
-      "recipient_name": _selectedAddress!["recipient_name"] ?? "",
-      "street": _selectedAddress!["street"] ?? "",
-      "number": _selectedAddress!["number"] ?? "",
-      "complement": _selectedAddress!["complement"] ?? "",
-      "bairro": _selectedAddress!["bairro"] ?? "",
-      "city": _selectedAddress!["city"] ?? "",
-      "state": _selectedAddress!["state"] ?? "",
-      "country": _selectedAddress!["country"] ?? "",
-      "zip_code": _selectedAddress!["zip_code"] ?? "",
-      "phone": _selectedAddress!["phone"] ?? "",
-      "total_value": widget.delivery['price'] ?? "0.00",
-      "delivery_id": widget.delivery['id'],
-      "products": convertedProducts,
-      
-    };
-  } else if (_streetController.text.isNotEmpty) {
-    // Se o usuário inseriu um endereço no formulário, usamos ele
-    address = {
-      "recipient_name": _recipientNameController.text,
-      "street": _streetController.text,
-      "number": _numberController.text,
-      "complement": _complementController.text,
-      "bairro": _bairroController.text,
-      "city": _cityController.text,
-      "state": _stateController.text,
-      "country": _countryController.text,
-      "zip_code": _zipCodeController.text,
-      "phone": _phoneController.text,
-      "total_value": widget.delivery['price'] ?? "0.00",
-      "delivery_id": widget.delivery['id'],
-      "products": convertedProducts,
-    };
-  }
+    // Determinar qual endereço usar
+    Map<String, dynamic> address = {}; // Inicializa como um mapa vazio
 
-  String? token;
-  if (_selectedPayment == 'credit' || _selectedPayment == 'debit') {
-    final tempPayment = Payment(
+    if (_selectedAddress != null) {
+      // Se _selectedAddress está disponível, formata o endereço
+      address = {
+        "recipient_name": _selectedAddress!["recipient_name"] ?? "",
+        "street": _selectedAddress!["street"] ?? "",
+        "number": _selectedAddress!["number"] ?? "",
+        "complement": _selectedAddress!["complement"] ?? "",
+        "bairro": _selectedAddress!["bairro"] ?? "",
+        "city": _selectedAddress!["city"] ?? "",
+        "state": _selectedAddress!["state"] ?? "",
+        "country": _selectedAddress!["country"] ?? "",
+        "zip_code": _selectedAddress!["zip_code"] ?? "",
+        "phone": _selectedAddress!["phone"] ?? "",
+        "total_value": widget.delivery['price'] ?? "0.00",
+        "delivery_id": widget.delivery['id'],
+        "products": convertedProducts,
+      };
+    } else if (_streetController.text.isNotEmpty) {
+      // Se o usuário inseriu um endereço no formulário, usamos ele
+      address = {
+        "recipient_name": _recipientNameController.text,
+        "street": _streetController.text,
+        "number": _numberController.text,
+        "complement": _complementController.text,
+        "bairro": _bairroController.text,
+        "city": _cityController.text,
+        "state": _stateController.text,
+        "country": _countryController.text,
+        "zip_code": _zipCodeController.text,
+        "phone": _phoneController.text,
+        "total_value": widget.delivery['price'] ?? "0.00",
+        "delivery_id": widget.delivery['id'],
+        "products": convertedProducts,
+      };
+    }
+
+    String? token;
+    if (_selectedPayment == 'credit' || _selectedPayment == 'debit') {
+      final tempPayment = Payment(
+        zipCode: widget.zipCode!,
+        userId: widget.userId,
+        userEmail: widget.userEmail,
+        cpf: _cpfController.text,
+        address: address, // Usando o endereço correto
+        paymentType: _selectedPayment,
+        subtotal: _subtotal,
+        shipping: _shipping,
+        total: _total,
+        products: convertedProducts,
+        numberCard:
+            _selectedPayment != 'Pix' ? _numberCardController.text : null,
+        nameCard: _selectedPayment != 'Pix' ? _nameCardController.text : null,
+        expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
+        cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
+        installments: int.tryParse(_installmentsController.text) ?? 1,
+      );
+
+      final expiryParts = (tempPayment.expiry ?? '').split('/');
+      final expirationMonth = int.tryParse(expiryParts[0]) ?? 0;
+      final expirationYear = int.tryParse('20${expiryParts[1]}') ?? 0;
+
+      token = await paymentController.generateCardToken(
+        cardNumber: tempPayment.numberCard ?? '',
+        expirationMonth: expirationMonth,
+        expirationYear: expirationYear,
+        securityCode: tempPayment.cvv ?? '',
+        cardholderName: tempPayment.nameCard ?? '',
+        docType: docType,
+        docNumber: _cpfController.text,
+      );
+    }
+
+    // Criar o pagamento com o token obtido
+    final payment = Payment(
+      cardToken: token,
       zipCode: widget.zipCode!,
-      userId: widget.userId,
       userEmail: widget.userEmail,
+      userId: widget.userId,
       cpf: _cpfController.text,
       address: address, // Usando o endereço correto
       paymentType: _selectedPayment,
@@ -185,64 +222,30 @@ void _handlePayment() async {
       installments: int.tryParse(_installmentsController.text) ?? 1,
     );
 
-    final expiryParts = (tempPayment.expiry ?? '').split('/');
-    final expirationMonth = int.tryParse(expiryParts[0]) ?? 0;
-    final expirationYear = int.tryParse('20${expiryParts[1]}') ?? 0;
+    // Enviar o pagamento
+    final controller = PaymentController();
+    final success = await controller.sendPayment(payment);
 
-    token = await paymentController.generateCardToken(
-      cardNumber: tempPayment.numberCard ?? '',
-      expirationMonth: expirationMonth,
-      expirationYear: expirationYear,
-      securityCode: tempPayment.cvv ?? '',
-      cardholderName: tempPayment.nameCard ?? '',
-      docType: docType,
-      docNumber: _cpfController.text,
-    );
+    if (success) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pagamento enviado com sucesso!')),
+      );
+      await Future.delayed(const Duration(seconds: 2));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MyApp(),
+        ), // substitua HomePage pela sua home real
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Erro ao enviar pagamento')));
+    }
   }
-
-  // Criar o pagamento com o token obtido
-  final payment = Payment(
-    cardToken: token,
-    zipCode: widget.zipCode!,
-    userEmail: widget.userEmail,
-    userId: widget.userId,
-    cpf: _cpfController.text,
-    address: address, // Usando o endereço correto
-    paymentType: _selectedPayment,
-    subtotal: _subtotal,
-    shipping: _shipping,
-    total: _total,
-    products: convertedProducts,
-    numberCard: _selectedPayment != 'Pix' ? _numberCardController.text : null,
-    nameCard: _selectedPayment != 'Pix' ? _nameCardController.text : null,
-    expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
-    cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
-    installments: int.tryParse(_installmentsController.text) ?? 1,
-  );
-
-  // Enviar o pagamento
-  final controller = PaymentController();
-  final success = await controller.sendPayment(payment);
-
-  if (success) {
-    setState(() {
-      _isLoading = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Pagamento enviado com sucesso!')),
-    );
-    await Future.delayed(const Duration(seconds: 2));
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => MyApp()), // substitua HomePage pela sua home real
-    );
-  } else {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Erro ao enviar pagamento')));
-  }
-}
-
 
   Future<void> _findAddress(String cep) async {
     final cleanedCep = cep.replaceAll(RegExp(r'\D'), '');
@@ -359,6 +362,7 @@ void _handlePayment() async {
               final imageUrl = p['image'];
               final name = p['name'];
               final price = p['price'];
+              final quantity = p['quantity'];
 
               return Card(
                 margin: const EdgeInsets.all(12.0),
@@ -402,6 +406,10 @@ void _handlePayment() async {
                           const SizedBox(height: 6),
                           Text(
                             'R\$ $price',
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          Text(
+                            'Quantity: $quantity',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ],
@@ -722,21 +730,18 @@ void _handlePayment() async {
           decoration: InputDecoration(labelText: 'CPF'),
         ),
         _selectedPayment == 'credit'
-        ? TextFormField(
-            controller: _installmentsController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: 'Número de Parcelas'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor, insira o número de parcelas';
-              }
-              return null;
-            },
-          )
-       
-          : SizedBox.shrink(), 
-        
-         
+            ? TextFormField(
+              controller: _installmentsController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: 'Número de Parcelas'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor, insira o número de parcelas';
+                }
+                return null;
+              },
+            )
+            : SizedBox.shrink(),
 
         TextField(
           controller: _numberCardController,
@@ -809,33 +814,31 @@ void _handlePayment() async {
   }
 
   Widget _buildElevatedButton() {
-  return SizedBox(
-    width: double.infinity,
-    height: 60,
-    child: ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
+        onPressed: _isLoading ? null : _handlePayment,
+        child:
+            _isLoading
+                ? const SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2.5,
+                  ),
+                )
+                : const Text(
+                  'Place Order Now',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
       ),
-      onPressed: _isLoading ? null : _handlePayment,
-      child: _isLoading
-          ? const SizedBox(
-              height: 24,
-              width: 24,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 2.5,
-              ),
-            )
-          : const Text(
-              'Place Order Now',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-    ),
-  );
-}
-
+    );
+  }
 }
