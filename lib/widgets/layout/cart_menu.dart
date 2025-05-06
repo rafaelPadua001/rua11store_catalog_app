@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinbox/flutter_spinbox.dart';
+import 'package:rua11store_catalog_app/screens/payment/checkoutPage.dart';
 import 'package:rua11store_catalog_app/services/delivery_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/cart/cart_repository.dart';
@@ -250,7 +252,7 @@ class _CartMenuState extends State<CartMenu> {
 
       for (var item in cartItems) {
         if (item.containsKey('price')) {
-          final price = item['price'];
+          final price = item['price'] * item['quantity'];
 
           if (price == null) continue;
 
@@ -321,22 +323,25 @@ class _CartMenuState extends State<CartMenu> {
                           background: Container(
                             color: Colors.red,
                             alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 20),
+                            padding: const EdgeInsets.only(right: 50),
                             child: const Icon(
                               Icons.delete,
                               color: Colors.white,
                             ),
                           ),
                           onDismissed: (direction) => _removeItem(index),
-                          child: ListTile(
-                            leading:
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: [
+                                // Imagem
                                 item['image_url'] != null
                                     ? ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
                                       child: Image.network(
                                         imageUrl,
-                                        width: 30,
-                                        height: 30,
+                                        width: 40,
+                                        height: 40,
                                         fit: BoxFit.cover,
                                         errorBuilder:
                                             (context, error, stackTrace) =>
@@ -344,29 +349,74 @@ class _CartMenuState extends State<CartMenu> {
                                       ),
                                     )
                                     : const Icon(Icons.image_not_supported),
-                            title: Text(
-                              item['product_name'] ?? 'Produto sem nome',
-                              style: TextStyle(fontSize: 10),
-                            ),
-                            subtitle: Text(
-                              'Qtd: ${item['quantity'] ?? 0}',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  _formatPrice(item['price']),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                const SizedBox(width: 6),
+
+                                // Informações do produto
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item['product_name'] ??
+                                            'Produto sem nome',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      SizedBox(
+                                        width: 120,
+                                        child: SpinBox(
+                                          min: 1,
+                                          max: 100,
+                                          value:
+                                              item['quantity']?.toDouble() ??
+                                              1.0,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              item['quantity'] = value.toInt();
+                                            });
+
+                                            _updateMenuContent();
+                                          },
+                                          decoration: const InputDecoration(
+                                            labelText: 'Quantidade:',
+                                            border: OutlineInputBorder(),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.remove_circle_outline,
-                                    color: Colors.red,
-                                  ),
-                                  onPressed: () => _removeItem(index),
+
+                                // Preço e botão excluir
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      _formatPrice(
+                                        (item['price'] is String
+                                                ? double.tryParse(
+                                                      item['price'],
+                                                    ) ??
+                                                    0.0
+                                                : item['price'] * 1.0) *
+                                            (item['quantity'] ?? 1),
+                                      ),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.remove_circle_outline,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () => _removeItem(index),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -418,8 +468,30 @@ class _CartMenuState extends State<CartMenu> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Compra finalizada com ${selectedOption!["company"]["name"]} - ${selectedOption!["name"]}, valor R\$ ${selectedOption!["price"].toStringAsFixed(2)}',
+                                    'Compra finalizada com ${selectedOption!["company"]["name"]} - ${selectedOption!["name"]}, valor R\$ ${selectedOption!["price"]}',
                                   ),
+                                ),
+                              );
+                              final user =
+                                  Supabase.instance.client.auth.currentUser;
+                              if (user == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Usuário não autenticado'),
+                                  ),
+                                );
+                                return;
+                              }
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => CheckoutPage(
+                                        userId: user.id,
+                                        userEmail: user.email ?? '',
+                                        products: cartItems,
+                                        delivery: selectedOption!,
+                                      ),
                                 ),
                               );
                             },
