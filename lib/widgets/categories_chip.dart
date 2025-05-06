@@ -5,9 +5,12 @@ class CategoriesChip extends StatelessWidget {
   final Categories categories;
   final VoidCallback onTap;
 
-  const CategoriesChip({Key? key, required this.categories, required this.onTap}) 
-    : super(key: key);
-  
+  const CategoriesChip({
+    super.key,
+    required this.categories,
+    required this.onTap,
+  });
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(

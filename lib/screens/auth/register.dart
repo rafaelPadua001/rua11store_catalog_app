@@ -5,6 +5,8 @@ import 'package:rua11store_catalog_app/screens/email/email_verification.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Register extends StatefulWidget {
+  const Register({super.key});
+
   @override
   _StateRegister createState() => _StateRegister();
 }
@@ -82,7 +84,8 @@ class _StateRegister extends State<Register> {
 
         navigator.pushReplacement(
           MaterialPageRoute(
-            builder: (_) => EmailVerificationScreen(email: _emailController.text),
+            builder:
+                (_) => EmailVerificationScreen(email: _emailController.text),
           ),
         );
         return;
@@ -101,32 +104,41 @@ class _StateRegister extends State<Register> {
     }
   }
 
-  Future<void> _completeRegistration(User user, {required DateTime birthDate}) async {
-  final supabase = Supabase.instance.client;
-  print(user);
-  // 1. Criar perfil na tabela profile_users
-  final profileResponse = await supabase.from('profile_users').insert({
-    'user_id': user.id,
-    'full_name': user.userMetadata?['display_name'] ?? _nameController.text, // Usando fullname
-    'email': user.email ?? user.userMetadata?['email'] ?? _emailController.text,
-    'birth_date': user.userMetadata?['birth_date'] ?? birthDate.toIso8601String(),
-    'created_at': DateTime.now().toIso8601String(),
-    'updated_at': DateTime.now().toIso8601String(),
-    'profile_complete': false,
-    'avatar_url': null,
-  });
+  Future<void> _completeRegistration(
+    User user, {
+    required DateTime birthDate,
+  }) async {
+    final supabase = Supabase.instance.client;
+    print(user);
+    // 1. Criar perfil na tabela profile_users
+    final profileResponse = await supabase.from('profile_users').insert({
+      'user_id': user.id,
+      'full_name':
+          user.userMetadata?['display_name'] ??
+          _nameController.text, // Usando fullname
+      'email':
+          user.email ?? user.userMetadata?['email'] ?? _emailController.text,
+      'birth_date':
+          user.userMetadata?['birth_date'] ?? birthDate.toIso8601String(),
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+      'profile_complete': false,
+      'avatar_url': null,
+    });
 
-  if (profileResponse.error != null) {
-    throw Exception('Falha ao criar perfil: ${profileResponse.error!.message}');
-  }
+    if (profileResponse.error != null) {
+      throw Exception(
+        'Falha ao criar perfil: ${profileResponse.error!.message}',
+      );
+    }
 
-  // 2. Navegar para a tela inicial
-  if (mounted) {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => MyApp()),
-    );
+    // 2. Navegar para a tela inicial
+    if (mounted) {
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => MyApp()));
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {

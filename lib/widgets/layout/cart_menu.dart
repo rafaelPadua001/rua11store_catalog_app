@@ -8,7 +8,7 @@ import 'zipcodeInput.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 
 class CartMenu extends StatefulWidget {
-  const CartMenu({Key? key}) : super(key: key);
+  const CartMenu({super.key});
 
   @override
   _CartMenuState createState() => _CartMenuState();
@@ -78,7 +78,7 @@ class _CartMenuState extends State<CartMenu> {
   Future<void> _removeItem(int index) async {
     if (_isDisposed || index < 0 || index >= cartItems.length) return;
 
-    final BuildContext? currentContext = context;
+    final BuildContext currentContext = context;
     if (currentContext == null) return;
 
     final item = cartItems[index];
@@ -133,7 +133,10 @@ class _CartMenuState extends State<CartMenu> {
         }).toList();
 
     try {
-      final result = await service.calculateDelivery(zipDestiny: zipcode, products: products);
+      final result = await service.calculateDelivery(
+        zipDestiny: zipcode,
+        products: products,
+      );
 
       setState(() {
         deliveryOptions = result;
@@ -205,36 +208,35 @@ class _CartMenuState extends State<CartMenu> {
     }
   }
 
-String _formatPrice(dynamic price) {
-  try {
-    if (price == null) return 'R\$ 0,00';
+  String _formatPrice(dynamic price) {
+    try {
+      if (price == null) return 'R\$ 0,00';
 
-    // Se for string
-    if (price is String) {
-      String cleaned = price.replaceAll(RegExp(r'[^0-9.,]'), '');
+      // Se for string
+      if (price is String) {
+        String cleaned = price.replaceAll(RegExp(r'[^0-9.,]'), '');
 
-      // Se tiver vírgula, trata como formato brasileiro
-      if (cleaned.contains(',')) {
-        cleaned = cleaned.replaceAll('.', '').replaceAll(',', '.');
+        // Se tiver vírgula, trata como formato brasileiro
+        if (cleaned.contains(',')) {
+          cleaned = cleaned.replaceAll('.', '').replaceAll(',', '.');
+        }
+
+        double value = double.tryParse(cleaned) ?? 0.0;
+        return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
       }
 
-      double value = double.tryParse(cleaned) ?? 0.0;
-      return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
-    }
+      // Se for num (int ou double), apenas formata com 2 casas decimais
+      if (price is num) {
+        double value = price.toDouble();
+        return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
+      }
 
-    // Se for num (int ou double), apenas formata com 2 casas decimais
-    if (price is num) {
-      double value = price.toDouble();
-      return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
+      return 'R\$ 0,00';
+    } catch (e) {
+      debugPrint('Erro ao formatar preço: $e');
+      return 'R\$ 0,00';
     }
-
-    return 'R\$ 0,00';
-  } catch (e) {
-    debugPrint('Erro ao formatar preço: $e');
-    return 'R\$ 0,00';
   }
-}
-
 
   String _formatCurrency(double value) {
     return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
@@ -242,12 +244,12 @@ String _formatPrice(dynamic price) {
 
   double _calculateSubtotal() {
     try {
-      if (cartItems == null || cartItems.isEmpty) return 0.0;
+      if (cartItems.isEmpty) return 0.0;
 
       double subtotal = 0.0;
 
       for (var item in cartItems) {
-        if (item is Map && item.containsKey('price')) {
+        if (item.containsKey('price')) {
           final price = item['price'];
 
           if (price == null) continue;
@@ -388,7 +390,7 @@ String _formatPrice(dynamic price) {
                     ),
 
                     // Wrap com Container para simular o Expanded
-                    Container(
+                    SizedBox(
                       height:
                           175, // ou qualquer altura apropriada que você deseja
                       child: _buildListView(deliveryOptions),
@@ -496,7 +498,7 @@ String _formatPrice(dynamic price) {
               "Error: ${item['error']}",
               style: TextStyle(color: Colors.red),
             ),
-            leading: Container(
+            leading: SizedBox(
               width: 40,
               height: 35,
               child: Image.network(
@@ -523,7 +525,7 @@ String _formatPrice(dynamic price) {
           child: Card(
             color: isSelected ? Colors.blue[50] : Colors.white,
             child: ListTile(
-              leading: Container(
+              leading: SizedBox(
                 width: 40,
                 height: 40,
                 child: Image.network(

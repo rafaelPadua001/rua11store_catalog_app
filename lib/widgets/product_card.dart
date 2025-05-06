@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:rua11store_catalog_app/data/cart/cart_notifier.dart';
-import 'package:rua11store_catalog_app/main.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/product.dart';
-import '../controllers/productsController.dart';
 import '../../data/cart/cart_repository.dart';
 import '../models/cart.dart';
-import 'package:provider/provider.dart';
 import '../screens/product/productScreen.dart';
 
 class ProductCard extends StatefulWidget {

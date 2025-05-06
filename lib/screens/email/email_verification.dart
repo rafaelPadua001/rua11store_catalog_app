@@ -10,8 +10,7 @@ import 'package:uuid/uuid.dart';
 class EmailVerificationScreen extends StatefulWidget {
   final String email;
 
-  const EmailVerificationScreen({Key? key, required this.email})
-    : super(key: key);
+  const EmailVerificationScreen({super.key, required this.email});
 
   @override
   _EmailVerificationScreenState createState() =>
@@ -63,9 +62,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     _timer = Timer.periodic(const Duration(seconds: 5), (timer) async {
       try {
         final session = Supabase.instance.client.auth.currentSession;
-        if (session != null && session.user?.emailConfirmedAt != null) {
+        if (session != null && session.user.emailConfirmedAt != null) {
           timer.cancel();
-          await _completeRegistration(session.user!.id);
+          await _completeRegistration(session.user.id);
           if (mounted) {
             Navigator.of(
               context,

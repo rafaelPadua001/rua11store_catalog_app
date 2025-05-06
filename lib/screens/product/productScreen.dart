@@ -16,11 +16,10 @@ class ProductScreen extends StatefulWidget {
   final CartRepository cartRepository;
 
   ProductScreen({
-    Key? key,
+    super.key,
     required this.product,
     CartRepository? cartRepository,
-  }) : cartRepository = cartRepository ?? CartRepository(),
-       super(key: key);
+  }) : cartRepository = cartRepository ?? CartRepository();
 
   @override
   State<ProductScreen> createState() => _ProductScreenState();
@@ -32,7 +31,7 @@ class _ProductScreenState extends State<ProductScreen> {
   Map<String, dynamic>? selectedDelivery;
   String? selectedZipCode;
   bool _isAddingToCart = false;
-  bool _isBuying = false;
+  final bool _isBuying = false;
 
   Future<User?> verifyLogged() async {
     final session = Supabase.instance.client.auth.currentSession;
@@ -334,7 +333,7 @@ class _ProductScreenState extends State<ProductScreen> {
                 onPressed: _isAddingToCart ? null : _addToCart,
               ),
               SizedBox(width: 8),
-              Container(
+              SizedBox(
                 width: 200, // define uma largura fixa para o campo numérico
                 child: SpinBox(
                   min: 1,

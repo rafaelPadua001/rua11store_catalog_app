@@ -17,15 +17,13 @@ class PaymentController {
     required String docType,
     required String docNumber,
   }) async {
-
-    if(publicKey == null){
+    if (publicKey == null) {
       print('chave publica (MP_PUBLIC_KEY) não configurada');
       return null;
     }
 
-
     final url = Uri.parse(
-      'https://api.mercadopago.com/v1/card_tokens?public_key=${publicKey}',
+      'https://api.mercadopago.com/v1/card_tokens?public_key=$publicKey',
     );
 
     final body = {
@@ -54,14 +52,14 @@ class PaymentController {
         return null;
       }
     } catch (e) {
-      print("Erro de rede $e"); 
+      print("Erro de rede $e");
       return null;
     }
   }
 
   Future<bool> sendPayment(Payment payment) async {
     print(payment);
-    final url = Uri.parse(_baseUrl + '/payment/payment');
+    final url = Uri.parse('$_baseUrl/payment/payment');
 
     try {
       final response = await http.post(
