@@ -12,7 +12,7 @@ import 'package:http/http.dart' as http;
 class CheckoutPage extends StatefulWidget {
   final String userId;
   final String userEmail;
-  final String? zipCode;
+  final String zipCode;
   final List<Map> products;
   final Map delivery;
 
@@ -22,7 +22,7 @@ class CheckoutPage extends StatefulWidget {
     required this.userEmail,
     required this.products,
     required this.delivery,
-    this.zipCode,
+    required this.zipCode,
   });
 
   @override
@@ -120,17 +120,22 @@ class _CheckoutPageState extends State<CheckoutPage> {
     setState(() {
       _isLoading = true;
     });
+
     final convertedProducts =
         widget.products.map<Map<String, dynamic>>((item) {
-          return item.map((key, value) {
-            // Verificando se a chave é "price" e convertendo para double
-            if (key == 'price' && value is String) {
-              return MapEntry(key, double.tryParse(value) ?? 0.0);
-            }
-            // Retornando o valor como está para outras chaves
-            return MapEntry(key, value);
-          });
+          final Map<String, dynamic> newItem = Map<String, dynamic>.from(item);
+          final price = newItem['price'];
+          if (price is String) {
+            newItem['price'] = double.tryParse(price) ?? 0.0;
+          } else if (price is int) {
+            newItem['price'] = price.toDouble();
+          } else if (price is! double) {
+            newItem['price'] = 0.0;
+          }
+
+          return newItem;
         }).toList();
+
     final paymentController = PaymentController();
 
     // Determinar qual endereço usar
@@ -199,7 +204,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
       token = await paymentController.generateCardToken(
         cardNumber: tempPayment.numberCard ?? '',
-        expirationMonth: expirationMonth,
+        expirationMonth: expirationMonth ?? 0,
         expirationYear: expirationYear,
         securityCode: tempPayment.cvv ?? '',
         cardholderName: tempPayment.nameCard ?? '',
@@ -211,7 +216,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     // Criar o pagamento com o token obtido
     final payment = Payment(
       cardToken: token,
-      zipCode: widget.zipCode!,
+      zipCode: widget.zipCode ?? "default_value",
       userEmail: widget.userEmail,
       userId: widget.userId,
       cpf: _cpfController.text,
@@ -261,7 +266,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print(data);
+
         if (data != null && !data.containsKey('error')) {
           setState(() {
             _streetController.text = data['logradouro'] ?? '';
@@ -360,81 +365,75 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   Widget _buildProductsList() {
     final apiUrl = dotenv.env['API_URL'] ?? '';
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children:
-            widget.products.map((p) {
-              final imageUrl = p['image'];
-              final name = p['name'];
-              final price = double.tryParse(p['price'].toString()) ?? 0.0;
-              final quantity = int.tryParse(p['quantity'].toString()) ?? 0;
-              final total = price * quantity;
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: widget.products.length,
+      itemBuilder: (context, index) {
+        final p = widget.products[index];
+        final imageUrl = p['image'] ?? p['image_url'] ?? '';
+        final name = p['name'] ?? p['product_name'] ?? 'Sem nome';
+        final price = double.tryParse(p['price'].toString()) ?? 0.0;
+        final quantity = int.tryParse(p['quantity'].toString()) ?? 0;
+        final total = price * quantity;
 
-              return Card(
-                margin: const EdgeInsets.all(12.0),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+        return Card(
+          margin: const EdgeInsets.all(12.0),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child:
+                      imageUrl.isNotEmpty
+                          ? Image.network(
+                            apiUrl + imageUrl,
+                            height: 80,
+                            width: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (context, error, stackTrace) =>
+                                    const Icon(Icons.broken_image, size: 80),
+                          )
+                          : const Icon(Icons.image_not_supported, size: 80),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child:
-                            imageUrl != null
-                                ? Image.network(
-                                  apiUrl + imageUrl,
-                                  height: 80,
-                                  width: 80,
-                                  fit: BoxFit.cover,
-                                  errorBuilder:
-                                      (context, error, stackTrace) =>
-                                          const Icon(
-                                            Icons.broken_image,
-                                            size: 80,
-                                          ),
-                                )
-                                : const Icon(
-                                  Icons.image_not_supported,
-                                  size: 80,
-                                ),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name ?? 'Sem nome',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'R\$  ${total.toStringAsFixed(2)}',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          Text(
-                            'Quantity: $quantity',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ],
+                      const SizedBox(height: 6),
+                      Text(
+                        'R\$ ${total.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 14),
                       ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          print('Remover ${p['name']}');
-                          // Lógica para remover item
-                        },
+                      Text(
+                        'Quantidade: $quantity',
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ],
                   ),
                 ),
-              );
-            }).toList(),
-      ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    print('Remover $name');
+                    // lógica de remoção aqui
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

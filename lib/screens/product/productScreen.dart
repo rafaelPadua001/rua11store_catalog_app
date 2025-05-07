@@ -37,8 +37,6 @@ class _ProductScreenState extends State<ProductScreen> {
     final session = Supabase.instance.client.auth.currentSession;
     final user = session?.user;
 
-    print('Usuário retornado: $user');
-
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Faça login para adicionar ao carrinho')),
@@ -105,7 +103,6 @@ class _ProductScreenState extends State<ProductScreen> {
 
   Future<void> _buyNow() async {
     final user = await verifyLogged();
-    print('Usuário retornado: $user');
 
     if (user == null) {
       print('Usuário é nulo, encerrando _buyNow');
@@ -121,8 +118,6 @@ class _ProductScreenState extends State<ProductScreen> {
       );
       return;
     }
-
-    print('Iniciando processo de compra...');
 
     final productData = {
       'id': widget.product.id,
@@ -151,7 +146,6 @@ class _ProductScreenState extends State<ProductScreen> {
     };
 
     debugPrint('Enviando para API: $payload');
-    print('Compra iniciada');
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Compra iniciada com sucesso!')),
@@ -166,7 +160,7 @@ class _ProductScreenState extends State<ProductScreen> {
               userEmail: user.email.toString(),
               products: [productData],
               delivery: deliveryData,
-              zipCode: selectedZipCode,
+              zipCode: selectedZipCode.toString(),
             ),
       ),
     );
