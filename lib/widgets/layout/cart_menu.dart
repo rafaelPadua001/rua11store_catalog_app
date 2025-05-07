@@ -65,7 +65,6 @@ class _CartMenuState extends State<CartMenu> {
       setState(() {
         cartItems = _cartRepository.items.map((item) => item.toJson()).toList();
         cartItemCount.value = cartItems.length;
-        print(cartItems);
         isLoading = false;
       });
     } catch (e) {
@@ -129,7 +128,7 @@ class _CartMenuState extends State<CartMenu> {
             "height": item['height'],
             "weight": item['weight'],
             "length": item['length'] ?? 1,
-            "quantity": item['quantity'] ?? 1,
+            "quantity": int.tryParse(item['quantity']?.toString() ?? '1') ?? 1,
             "secure_value": item['price'], // valor para seguro, opcional
           };
         }).toList();
@@ -480,6 +479,7 @@ class _CartMenuState extends State<CartMenu> {
                                     content: Text('Usuário não autenticado'),
                                   ),
                                 );
+
                                 return;
                               }
                               Navigator.push(
@@ -491,6 +491,7 @@ class _CartMenuState extends State<CartMenu> {
                                         userEmail: user.email ?? '',
                                         products: cartItems,
                                         delivery: selectedOption!,
+                                        zipCode: this._zipController.text,
                                       ),
                                 ),
                               );
