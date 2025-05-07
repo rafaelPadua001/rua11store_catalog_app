@@ -77,6 +77,7 @@ class _ProductCardState extends State<ProductCard> {
       final cartItem = CartItem(
         id: '',
         userId: user.id,
+        productId: widget.product.id,
         productName: widget.product.name,
         price: widget.product.numericPrice,
         description: widget.product.description,
