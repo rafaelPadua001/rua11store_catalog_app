@@ -1,6 +1,7 @@
 class CartItem {
   final String id;
   final String userId;
+  final int productId;
   final String productName;
   final double price;
   final String description;
@@ -16,6 +17,7 @@ class CartItem {
   CartItem({
     required this.id,
     required this.userId,
+    required this.productId,
     required this.productName,
     required this.price,
     required this.description,
@@ -33,6 +35,7 @@ class CartItem {
     return CartItem(
       id: json['id'],
       userId: json['user_id'],
+      productId: json['product_id'],
       productName: json['product_name'],
       price: (json['price'] as num).toDouble() / 100,
       description: json['description'],
@@ -43,9 +46,10 @@ class CartItem {
       length: (json['length'] as num?)?.toDouble() ?? 0.0,
       imageUrl: json['image_url'],
       category: json['category'], // Novo campo
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at'])
-          : null,
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.parse(json['created_at'])
+              : null,
     );
   }
 
@@ -53,6 +57,7 @@ class CartItem {
     return {
       'id': id,
       'user_id': userId,
+      'product_id': productId,
       'product_name': productName,
       'price': price,
       'description': description,
