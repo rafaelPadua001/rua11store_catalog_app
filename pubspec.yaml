@@ -45,6 +45,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   flutter_masked_text2: ^0.9.1
   flutter_spinbox: ^0.13.1
+  font_awesome_flutter: ^10.8.0
 
 dev_dependencies:
   flutter_test:

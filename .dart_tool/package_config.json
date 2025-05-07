@@ -224,6 +224,12 @@
       "languageVersion": "3.7"
     },
     {
+      "name": "font_awesome_flutter",
+      "rootUri": "file:///home/rafael/.pub-cache/hosted/pub.dev/font_awesome_flutter-10.8.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "functions_client",
       "rootUri": "file:///home/rafael/.pub-cache/hosted/pub.dev/functions_client-2.4.1",
       "packageUri": "lib/",
@@ -764,7 +770,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2025-05-07T18:43:09.601093Z",
+  "generated": "2025-05-07T19:18:55.835605Z",
   "generator": "pub",
   "generatorVersion": "3.7.2",
   "flutterRoot": "file:///home/rafael/flutter",

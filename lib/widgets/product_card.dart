@@ -6,6 +6,8 @@ import '../models/product.dart';
 import '../../data/cart/cart_repository.dart';
 import '../models/cart.dart';
 import '../screens/product/productScreen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ProductCard extends StatefulWidget {
   final Product product;
@@ -34,9 +36,9 @@ class _ProductCardState extends State<ProductCard> {
   }
 
   void _openWhatsApp() async {
-    final String phone = widget.product.phone
-        .replaceAll("+", "")
-        .replaceAll(" ", "");
+    final String phone =
+        dotenv.env['PHONE_NUMBER'] ??
+        ''.replaceAll("+", "").replaceAll(" ", "");
     final Uri whatsappUri = Uri.parse(
       "whatsapp://send?phone=$phone&text=${Uri.encodeComponent("Olá! Tenho interesse em ${widget.product.name}")}",
     );
@@ -169,48 +171,44 @@ class _ProductCardState extends State<ProductCard> {
               padding: const EdgeInsets.symmetric(horizontal: 2.0),
               child: Text(
                 'R\$ ${widget.product.price}',
-                style: const TextStyle(color: Colors.green),
+                style: const TextStyle(color: Colors.black),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(2.0),
-              child: ElevatedButton.icon(
-                onPressed: _openWhatsApp,
-                icon: const Icon(Icons.phone, color: Colors.white),
-                label: const Text(
-                  "WhatsApp",
-                  style: TextStyle(color: Colors.white),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  onPressed: _openWhatsApp,
+                  icon: const FaIcon(
+                    FontAwesomeIcons.whatsapp,
+                    color: Colors.white,
+                  ),
+                  style: IconButton.styleFrom(backgroundColor: Colors.green),
                 ),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(2.0),
-              child: ElevatedButton.icon(
-                onPressed: _isAddingToCart ? null : _addToCart,
-                icon:
-                    _isAddingToCart
-                        ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
+                const SizedBox(width: 8), // espaçamento entre os botões
+                IconButton(
+                  onPressed: _isAddingToCart ? null : _addToCart,
+                  icon:
+                      _isAddingToCart
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : const Icon(
+                            Icons.add_shopping_cart,
                             color: Colors.white,
-                            strokeWidth: 2,
                           ),
-                        )
-                        : const Icon(
-                          Icons.add_shopping_cart,
-                          color: Colors.white,
-                        ),
-                label: const Text(
-                  "Add cart",
-                  style: TextStyle(color: Colors.white),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.deepPurpleAccent,
+                    disabledBackgroundColor: Colors.deepPurpleAccent
+                        .withOpacity(0.5),
+                  ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  disabledBackgroundColor: Colors.blueAccent.withOpacity(0.5),
-                ),
-              ),
+              ],
             ),
           ],
         ),
