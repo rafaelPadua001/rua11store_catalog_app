@@ -5,7 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class PaymentController {
   final _baseUrl = dotenv.env['API_URL'] ?? '';
-  // final _baseUrl = dotenv.env['API_URL_LOCAL'] ?? '';
+  //final _baseUrl = dotenv.env['API_URL_LOCAL'] ?? '';
   final publicKey = dotenv.env['MP_PUBLIC_KEY'];
 
   Future<String?> generateCardToken({
@@ -58,7 +58,6 @@ class PaymentController {
   }
 
   Future<bool> sendPayment(Payment payment) async {
-    print(payment);
     final url = Uri.parse('$_baseUrl/payment/payment');
 
     try {
