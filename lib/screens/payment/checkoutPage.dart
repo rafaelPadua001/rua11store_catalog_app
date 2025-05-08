@@ -2,12 +2,14 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/models/adress.dart';
 import '../../controllers/PaymentController.dart';
 import '../../controllers/addressController.dart';
 import '../../models/payment.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
 
 class CheckoutPage extends StatefulWidget {
   final String userId;
@@ -41,7 +43,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
   late TextEditingController _cardExpiryController;
   late TextEditingController _cardCVVController;
 
-  final TextEditingController _cpfController = TextEditingController();
+  int? _selectedInstallment;
+
+  final TextEditingController _cpfController = MaskedTextController(
+    mask: '000.000.000-00',
+  );
   final docType = 'CPF';
   late TextEditingController _installmentsController = TextEditingController();
   final TextEditingController _recipientNameController = TextEditingController(
@@ -95,13 +101,33 @@ class _CheckoutPageState extends State<CheckoutPage> {
     });
 
     _shipping = double.tryParse(widget.delivery['price'].toString()) ?? 0.0;
-
-    _total = _subtotal + _shipping;
+    int _installments = int.tryParse(_installmentsController.text) ?? 1;
+    _total = (_subtotal + _shipping) / _installments;
 
     if (widget.zipCode != null) {
       _findAddress(widget.zipCode!);
     }
     _addressesFuture = _addressController.getUserAddresses(widget.userId);
+
+    _cardExpiryController.addListener(() {
+      String text = _cardExpiryController.text;
+
+      // Remove qualquer caractere não numérico e barra
+      text = text.replaceAll(RegExp(r'[^0-9]'), '');
+
+      if (text.length >= 2) {
+        // Adiciona a barra após os dois primeiros dígitos
+        text = text.substring(0, 2) + '/' + text.substring(2);
+      }
+
+      // Evita loop de atualização
+      if (text != _cardExpiryController.text) {
+        _cardExpiryController.value = TextEditingValue(
+          text: text,
+          selection: TextSelection.collapsed(offset: text.length),
+        );
+      }
+    });
   }
 
   @override
@@ -178,6 +204,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
 
     String? token;
+    String cleanedCardNumber = _numberCardController.text.replaceAll(
+      RegExp(r'[\s\-.]'),
+      '',
+    );
     if (_selectedPayment == 'credit' || _selectedPayment == 'debit') {
       final tempPayment = Payment(
         zipCode: widget.zipCode!,
@@ -190,8 +220,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         shipping: _shipping,
         total: _total,
         products: convertedProducts,
-        numberCard:
-            _selectedPayment != 'Pix' ? _numberCardController.text : null,
+        numberCard: _selectedPayment != 'Pix' ? cleanedCardNumber : null,
         nameCard: _selectedPayment != 'Pix' ? _nameCardController.text : null,
         expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
         cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
@@ -736,22 +765,44 @@ class _CheckoutPageState extends State<CheckoutPage> {
           decoration: InputDecoration(labelText: 'CPF'),
         ),
         _selectedPayment == 'credit'
-            ? TextFormField(
-              controller: _installmentsController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: 'Número de Parcelas'),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor, insira o número de parcelas';
-                }
-                return null;
-              },
+            ? Container(
+              height: 60, // Tamanho fixo ou mínimo
+              child: DropdownButtonFormField<int>(
+                value: _selectedInstallment,
+                decoration: InputDecoration(
+                  labelText: 'Número de Parcelas',
+                  isDense: true,
+                ),
+                items:
+                    List.generate(4, (index) => index + 1)
+                        .map(
+                          (number) => DropdownMenuItem<int>(
+                            value: number,
+                            child: Text('$number'),
+                          ),
+                        )
+                        .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedInstallment = value!;
+                    _installmentsController.text = value.toString();
+                  });
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return 'Por favor, selecione o número de parcelas';
+                  }
+                  return null;
+                },
+              ),
             )
             : SizedBox.shrink(),
 
         TextField(
           controller: _numberCardController,
           decoration: InputDecoration(labelText: 'Número do Cartão'),
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),
         TextField(
           controller: _nameCardController,
@@ -762,7 +813,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
             Expanded(
               child: TextField(
                 controller: _cardExpiryController,
-                decoration: InputDecoration(labelText: 'Validade'),
+                decoration: InputDecoration(labelText: 'Validade MM/AA'),
+                keyboardType: TextInputType.number,
               ),
             ),
             SizedBox(width: 5),
@@ -789,6 +841,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildTotalCard(BuildContext context) {
+    int installments =
+        int.tryParse(_installmentsController.text) ??
+        1; // Valor padrão de 1 se não for válido
+    double totalInstallments = (_subtotal + _shipping) / installments;
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
@@ -805,8 +861,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
               Text('Subtotal: R\$ ${_subtotal.toStringAsFixed(2)}'),
               Text('Shipping: R\$ $_shipping'),
               const SizedBox(height: 8),
+
               Text(
-                'Total: R\$ ${_total.toStringAsFixed(2)}',
+                _selectedInstallment == null
+                    ? 'Total: R\$ ${_total.toStringAsFixed(2)}'
+                    : 'Total: R\$ ${(totalInstallments * _selectedInstallment!).toStringAsFixed(2)} '
+                        'x $_selectedInstallment = R\$ ${totalInstallments.toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
