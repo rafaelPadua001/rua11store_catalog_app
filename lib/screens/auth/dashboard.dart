@@ -5,9 +5,12 @@ import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/models/user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../user/profile_user.dart';
-
+import '../../widgets/orders_widget.dart';
+import '../../widgets/cart_widget.dart';
 
 class Dashboard extends StatefulWidget {
+  const Dashboard({super.key});
+
   @override
   _StateDashboard createState() => _StateDashboard();
 }
@@ -47,7 +50,9 @@ class _StateDashboard extends State<Dashboard> {
         isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao carregar dados do usuário: ${e.toString()}')),
+        SnackBar(
+          content: Text('Erro ao carregar dados do usuário: ${e.toString()}'),
+        ),
       );
     }
   }
@@ -56,8 +61,13 @@ class _StateDashboard extends State<Dashboard> {
     setState(() {
       _selectedIndex = index;
     });
-
+    if (index == 1 && user != null) {
+      _navigateToCart();
+    }
     if (index == 2 && user != null) {
+      _navigateToOrders();
+    }
+    if (index == 3 && user != null) {
       _navigateToProfile();
     }
     if (index == 4) {
@@ -69,11 +79,38 @@ class _StateDashboard extends State<Dashboard> {
     try {
       await Navigator.push(
         context,
+        MaterialPageRoute(builder: (context) => ProfileUserWidget(user: user!)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao navegar: ${e.toString()}')),
+      );
+    }
+  }
+
+  Future<void> _navigateToOrders() async {
+    try {
+      await Navigator.push(
+        context,
         MaterialPageRoute(
-          builder: (context) => ProfileUserWidget(
-            user: user!,
-          ),
+          builder:
+              (context) => OrdersWidget(
+                //user: user!,
+              ),
         ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao navegar: ${e.toString()}')),
+      );
+    }
+  }
+
+  Future<void> _navigateToCart() async {
+    try {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => CartWidget()),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -103,9 +140,7 @@ class _StateDashboard extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -123,9 +158,14 @@ class _StateDashboard extends State<Dashboard> {
                 label: Text('Início'),
               ),
               NavigationRailDestination(
+                icon: Icon(Icons.shopping_cart_outlined),
+                selectedIcon: Icon(Icons.shopping_cart),
+                label: Text('Cart'),
+              ),
+              NavigationRailDestination(
                 icon: Icon(Icons.shopping_bag_outlined),
                 selectedIcon: Icon(Icons.shopping_bag),
-                label: Text('Produtos'),
+                label: Text('Orders'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.person_outlined),
@@ -145,7 +185,11 @@ class _StateDashboard extends State<Dashboard> {
             ],
           ),
           VerticalDivider(thickness: 0, width: 0.1),
-          Expanded(child: _widgetOptions.elementAt(_selectedIndex < _widgetOptions.length ? _selectedIndex : 0)),
+          Expanded(
+            child: _widgetOptions.elementAt(
+              _selectedIndex < _widgetOptions.length ? _selectedIndex : 0,
+            ),
+          ),
         ],
       ),
     );

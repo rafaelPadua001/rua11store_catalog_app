@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 
 class ZipcodeInputWidget extends StatelessWidget {
   final TextEditingController zipController;
@@ -35,9 +34,9 @@ class ZipcodeInputWidget extends StatelessWidget {
             onPressed: () {
               final zipcode = zipController.text.trim();
               if (zipcode.isEmpty || zipcode.length < 8) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('CEP inválido')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('CEP inválido')));
                 return;
               }
               onSearch(zipcode);

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:rua11store_catalog_app/main.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'register.dart'; 
+import 'register.dart';
 
 class Login extends StatefulWidget {
+  const Login({super.key});
+
   @override
   _StateLogin createState() => _StateLogin();
 }
@@ -14,41 +16,40 @@ class _StateLogin extends State<Login> {
   final _formKey = GlobalKey<FormState>();
 
   Future<void> _login() async {
-  if (_formKey.currentState!.validate()) {
-    String email = _emailController.text;
-    String password = _passwordController.text;
+    if (_formKey.currentState!.validate()) {
+      String email = _emailController.text;
+      String password = _passwordController.text;
 
-    try {
-      // Tenta fazer login
-      await Supabase.instance.client.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
+      try {
+        // Tenta fazer login
+        await Supabase.instance.client.auth.signInWithPassword(
+          email: email,
+          password: password,
+        );
 
-      // Se chegou aqui, o login foi bem-sucedido
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login bem-sucedido!')),
-      );
-      
-      // Redireciona para a tela principal
-     Navigator.push(
+        // Se chegou aqui, o login foi bem-sucedido
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Login bem-sucedido!')));
+
+        // Redireciona para a tela principal
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => MyApp()),
-        );// Altere para a sua rota principal
-
-    } on AuthException catch (e) {
-      // Erros específicos de autenticação
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro de login: ${e.message}')),
-      );
-    } catch (e) {
-      // Outros erros inesperados
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro: ${e.toString()}')),
-      );
+        ); // Altere para a sua rota principal
+      } on AuthException catch (e) {
+        // Erros específicos de autenticação
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro de login: ${e.message}')));
+      } catch (e) {
+        // Outros erros inesperados
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro: ${e.toString()}')));
+      }
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -135,14 +136,8 @@ class _StateLogin extends State<Login> {
                   SizedBox(height: 8),
                   ElevatedButton.icon(
                     onPressed: _login,
-                    icon: Icon(
-                      Icons.login,
-                      color: Colors.white,
-                    ),
-                    label: Text(
-                      'Login',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    icon: Icon(Icons.login, color: Colors.white),
+                    label: Text('Login', style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(double.infinity, 50),
                       backgroundColor: Colors.deepPurpleAccent,
