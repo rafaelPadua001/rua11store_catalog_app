@@ -6,10 +6,10 @@ class CustomNavigationRail extends StatefulWidget {
   final ValueChanged<int> onDestinationSelected;
 
   const CustomNavigationRail({
-    Key? key,
+    super.key,
     required this.currentIndex,
     required this.onDestinationSelected,
-  }) : super(key: key);
+  });
 
   @override
   State<CustomNavigationRail> createState() => _CustomNavigationRailState();
@@ -73,9 +73,9 @@ class _CustomNavigationRailState extends State<CustomNavigationRail> {
                 await _supabase.auth.signOut();
                 // Navegar para tela de login após logout
                 Navigator.pushNamedAndRemoveUntil(
-                  context, 
-                  '/login', 
-                  (route) => false
+                  context,
+                  '/login',
+                  (route) => false,
                 );
               },
             ),

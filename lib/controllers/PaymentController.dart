@@ -23,7 +23,7 @@ class PaymentController {
     }
 
     final url = Uri.parse(
-      'https://api.mercadopago.com/v1/card_tokens?public_key=${publicKey}',
+      'https://api.mercadopago.com/v1/card_tokens?public_key=$publicKey',
     );
 
     final body = {
@@ -58,8 +58,7 @@ class PaymentController {
   }
 
   Future<bool> sendPayment(Payment payment) async {
-    print(payment);
-    final url = Uri.parse(_baseUrl + '/payment/payment');
+    final url = Uri.parse('$_baseUrl/payment/payment');
 
     try {
       final response = await http.post(

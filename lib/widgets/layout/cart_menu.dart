@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinbox/flutter_spinbox.dart';
+import 'package:rua11store_catalog_app/screens/payment/checkoutPage.dart';
 import 'package:rua11store_catalog_app/services/delivery_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/cart/cart_repository.dart';
@@ -8,7 +10,7 @@ import 'zipcodeInput.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 
 class CartMenu extends StatefulWidget {
-  const CartMenu({Key? key}) : super(key: key);
+  const CartMenu({super.key});
 
   @override
   _CartMenuState createState() => _CartMenuState();
@@ -63,7 +65,6 @@ class _CartMenuState extends State<CartMenu> {
       setState(() {
         cartItems = _cartRepository.items.map((item) => item.toJson()).toList();
         cartItemCount.value = cartItems.length;
-        print(cartItems);
         isLoading = false;
       });
     } catch (e) {
@@ -78,7 +79,7 @@ class _CartMenuState extends State<CartMenu> {
   Future<void> _removeItem(int index) async {
     if (_isDisposed || index < 0 || index >= cartItems.length) return;
 
-    final BuildContext? currentContext = context;
+    final BuildContext currentContext = context;
     if (currentContext == null) return;
 
     final item = cartItems[index];
@@ -127,13 +128,16 @@ class _CartMenuState extends State<CartMenu> {
             "height": item['height'],
             "weight": item['weight'],
             "length": item['length'] ?? 1,
-            "quantity": item['quantity'] ?? 1,
+            "quantity": int.tryParse(item['quantity']?.toString() ?? '1') ?? 1,
             "secure_value": item['price'], // valor para seguro, opcional
           };
         }).toList();
 
     try {
-      final result = await service.calculateDelivery(zipDestiny: zipcode, products: products);
+      final result = await service.calculateDelivery(
+        zipDestiny: zipcode,
+        products: products,
+      );
 
       setState(() {
         deliveryOptions = result;
@@ -205,36 +209,35 @@ class _CartMenuState extends State<CartMenu> {
     }
   }
 
-String _formatPrice(dynamic price) {
-  try {
-    if (price == null) return 'R\$ 0,00';
+  String _formatPrice(dynamic price) {
+    try {
+      if (price == null) return 'R\$ 0,00';
 
-    // Se for string
-    if (price is String) {
-      String cleaned = price.replaceAll(RegExp(r'[^0-9.,]'), '');
+      // Se for string
+      if (price is String) {
+        String cleaned = price.replaceAll(RegExp(r'[^0-9.,]'), '');
 
-      // Se tiver vírgula, trata como formato brasileiro
-      if (cleaned.contains(',')) {
-        cleaned = cleaned.replaceAll('.', '').replaceAll(',', '.');
+        // Se tiver vírgula, trata como formato brasileiro
+        if (cleaned.contains(',')) {
+          cleaned = cleaned.replaceAll('.', '').replaceAll(',', '.');
+        }
+
+        double value = double.tryParse(cleaned) ?? 0.0;
+        return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
       }
 
-      double value = double.tryParse(cleaned) ?? 0.0;
-      return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
-    }
+      // Se for num (int ou double), apenas formata com 2 casas decimais
+      if (price is num) {
+        double value = price.toDouble();
+        return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
+      }
 
-    // Se for num (int ou double), apenas formata com 2 casas decimais
-    if (price is num) {
-      double value = price.toDouble();
-      return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
+      return 'R\$ 0,00';
+    } catch (e) {
+      debugPrint('Erro ao formatar preço: $e');
+      return 'R\$ 0,00';
     }
-
-    return 'R\$ 0,00';
-  } catch (e) {
-    debugPrint('Erro ao formatar preço: $e');
-    return 'R\$ 0,00';
   }
-}
-
 
   String _formatCurrency(double value) {
     return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
@@ -242,13 +245,13 @@ String _formatPrice(dynamic price) {
 
   double _calculateSubtotal() {
     try {
-      if (cartItems == null || cartItems.isEmpty) return 0.0;
+      if (cartItems.isEmpty) return 0.0;
 
       double subtotal = 0.0;
 
       for (var item in cartItems) {
-        if (item is Map && item.containsKey('price')) {
-          final price = item['price'];
+        if (item.containsKey('price')) {
+          final price = item['price'] * item['quantity'];
 
           if (price == null) continue;
 
@@ -319,22 +322,25 @@ String _formatPrice(dynamic price) {
                           background: Container(
                             color: Colors.red,
                             alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 20),
+                            padding: const EdgeInsets.only(right: 50),
                             child: const Icon(
                               Icons.delete,
                               color: Colors.white,
                             ),
                           ),
                           onDismissed: (direction) => _removeItem(index),
-                          child: ListTile(
-                            leading:
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: [
+                                // Imagem
                                 item['image_url'] != null
                                     ? ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
                                       child: Image.network(
                                         imageUrl,
-                                        width: 30,
-                                        height: 30,
+                                        width: 40,
+                                        height: 40,
                                         fit: BoxFit.cover,
                                         errorBuilder:
                                             (context, error, stackTrace) =>
@@ -342,29 +348,74 @@ String _formatPrice(dynamic price) {
                                       ),
                                     )
                                     : const Icon(Icons.image_not_supported),
-                            title: Text(
-                              item['product_name'] ?? 'Produto sem nome',
-                              style: TextStyle(fontSize: 10),
-                            ),
-                            subtitle: Text(
-                              'Qtd: ${item['quantity'] ?? 0}',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  _formatPrice(item['price']),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                const SizedBox(width: 6),
+
+                                // Informações do produto
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item['product_name'] ??
+                                            'Produto sem nome',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      SizedBox(
+                                        width: 120,
+                                        child: SpinBox(
+                                          min: 1,
+                                          max: 100,
+                                          value:
+                                              item['quantity']?.toDouble() ??
+                                              1.0,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              item['quantity'] = value.toInt();
+                                            });
+
+                                            _updateMenuContent();
+                                          },
+                                          decoration: const InputDecoration(
+                                            labelText: 'Quantidade:',
+                                            border: OutlineInputBorder(),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.remove_circle_outline,
-                                    color: Colors.red,
-                                  ),
-                                  onPressed: () => _removeItem(index),
+
+                                // Preço e botão excluir
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      _formatPrice(
+                                        (item['price'] is String
+                                                ? double.tryParse(
+                                                      item['price'],
+                                                    ) ??
+                                                    0.0
+                                                : item['price'] * 1.0) *
+                                            (item['quantity'] ?? 1),
+                                      ),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.remove_circle_outline,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () => _removeItem(index),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -388,7 +439,7 @@ String _formatPrice(dynamic price) {
                     ),
 
                     // Wrap com Container para simular o Expanded
-                    Container(
+                    SizedBox(
                       height:
                           175, // ou qualquer altura apropriada que você deseja
                       child: _buildListView(deliveryOptions),
@@ -416,8 +467,32 @@ String _formatPrice(dynamic price) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Compra finalizada com ${selectedOption!["company"]["name"]} - ${selectedOption!["name"]}, valor R\$ ${selectedOption!["price"].toStringAsFixed(2)}',
+                                    'Compra finalizada com ${selectedOption!["company"]["name"]} - ${selectedOption!["name"]}, valor R\$ ${selectedOption!["price"]}',
                                   ),
+                                ),
+                              );
+                              final user =
+                                  Supabase.instance.client.auth.currentUser;
+                              if (user == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Usuário não autenticado'),
+                                  ),
+                                );
+
+                                return;
+                              }
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => CheckoutPage(
+                                        userId: user.id,
+                                        userEmail: user.email ?? '',
+                                        products: cartItems,
+                                        delivery: selectedOption!,
+                                        zipCode: this._zipController.text,
+                                      ),
                                 ),
                               );
                             },
@@ -496,7 +571,7 @@ String _formatPrice(dynamic price) {
               "Error: ${item['error']}",
               style: TextStyle(color: Colors.red),
             ),
-            leading: Container(
+            leading: SizedBox(
               width: 40,
               height: 35,
               child: Image.network(
@@ -523,7 +598,7 @@ String _formatPrice(dynamic price) {
           child: Card(
             color: isSelected ? Colors.blue[50] : Colors.white,
             child: ListTile(
-              leading: Container(
+              leading: SizedBox(
                 width: 40,
                 height: 40,
                 child: Image.network(

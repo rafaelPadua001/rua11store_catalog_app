@@ -2,17 +2,19 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/models/adress.dart';
 import '../../controllers/PaymentController.dart';
 import '../../controllers/addressController.dart';
 import '../../models/payment.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
 
 class CheckoutPage extends StatefulWidget {
   final String userId;
   final String userEmail;
-  final String? zipCode;
+  final String zipCode;
   final List<Map> products;
   final Map delivery;
 
@@ -22,7 +24,7 @@ class CheckoutPage extends StatefulWidget {
     required this.userEmail,
     required this.products,
     required this.delivery,
-    this.zipCode,
+    required this.zipCode,
   });
 
   @override
@@ -34,13 +36,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
   double _subtotal = 0.0;
   double _shipping = 0.0;
   double _total = 0.0;
+  int _quantity = 1;
   bool _isLoading = false;
   late TextEditingController _numberCardController;
   late TextEditingController _nameCardController;
   late TextEditingController _cardExpiryController;
   late TextEditingController _cardCVVController;
 
-  final TextEditingController _cpfController = TextEditingController();
+  int? _selectedInstallment;
+
+  final TextEditingController _cpfController = MaskedTextController(
+    mask: '000.000.000-00',
+  );
   final docType = 'CPF';
   late TextEditingController _installmentsController = TextEditingController();
   final TextEditingController _recipientNameController = TextEditingController(
@@ -87,19 +94,40 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _zipCodeController = TextEditingController(text: widget.zipCode);
     _bairroController = TextEditingController();
 
-    _subtotal = widget.products.fold<double>(
-      0.0,
-      (sum, item) => sum + (double.tryParse(item['price'].toString()) ?? 0.0),
-    );
+    _subtotal = widget.products.fold<double>(0.0, (sum, item) {
+      final price = double.tryParse(item['price'].toString()) ?? 0.0;
+      _quantity = int.tryParse(item['quantity'].toString()) ?? 1;
+      return sum + (price * _quantity);
+    });
 
     _shipping = double.tryParse(widget.delivery['price'].toString()) ?? 0.0;
-
-    _total = _subtotal + _shipping;
+    int _installments = int.tryParse(_installmentsController.text) ?? 1;
+    _total = (_subtotal + _shipping) / _installments;
 
     if (widget.zipCode != null) {
       _findAddress(widget.zipCode!);
     }
     _addressesFuture = _addressController.getUserAddresses(widget.userId);
+
+    _cardExpiryController.addListener(() {
+      String text = _cardExpiryController.text;
+
+      // Remove qualquer caractere não numérico e barra
+      text = text.replaceAll(RegExp(r'[^0-9]'), '');
+
+      if (text.length >= 2) {
+        // Adiciona a barra após os dois primeiros dígitos
+        text = text.substring(0, 2) + '/' + text.substring(2);
+      }
+
+      // Evita loop de atualização
+      if (text != _cardExpiryController.text) {
+        _cardExpiryController.value = TextEditingValue(
+          text: text,
+          selection: TextSelection.collapsed(offset: text.length),
+        );
+      }
+    });
   }
 
   @override
@@ -113,64 +141,113 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _bairroController.dispose();
     super.dispose();
   }
-void _handlePayment() async {
-  setState((){
-    _isLoading = true;
-  });
-  final convertedProducts =
-      widget.products
-          .map<Map<String, dynamic>>(
-            (item) => item.map((key, value) => MapEntry(key.toString(), value)),
-          )
-          .toList();
-  final paymentController = PaymentController();
 
-  // Determinar qual endereço usar
-  Map<String, dynamic> address = {}; // Inicializa como um mapa vazio
+  void _handlePayment() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-  if (_selectedAddress != null) {
-    // Se _selectedAddress está disponível, formata o endereço
-    address = {
-      "recipient_name": _selectedAddress!["recipient_name"] ?? "",
-      "street": _selectedAddress!["street"] ?? "",
-      "number": _selectedAddress!["number"] ?? "",
-      "complement": _selectedAddress!["complement"] ?? "",
-      "bairro": _selectedAddress!["bairro"] ?? "",
-      "city": _selectedAddress!["city"] ?? "",
-      "state": _selectedAddress!["state"] ?? "",
-      "country": _selectedAddress!["country"] ?? "",
-      "zip_code": _selectedAddress!["zip_code"] ?? "",
-      "phone": _selectedAddress!["phone"] ?? "",
-      "total_value": widget.delivery['price'] ?? "0.00",
-      "delivery_id": widget.delivery['id'],
-      "products": convertedProducts,
-      
-    };
-  } else if (_streetController.text.isNotEmpty) {
-    // Se o usuário inseriu um endereço no formulário, usamos ele
-    address = {
-      "recipient_name": _recipientNameController.text,
-      "street": _streetController.text,
-      "number": _numberController.text,
-      "complement": _complementController.text,
-      "bairro": _bairroController.text,
-      "city": _cityController.text,
-      "state": _stateController.text,
-      "country": _countryController.text,
-      "zip_code": _zipCodeController.text,
-      "phone": _phoneController.text,
-      "total_value": widget.delivery['price'] ?? "0.00",
-      "delivery_id": widget.delivery['id'],
-      "products": convertedProducts,
-    };
-  }
+    final convertedProducts =
+        widget.products.map<Map<String, dynamic>>((item) {
+          final Map<String, dynamic> newItem = Map<String, dynamic>.from(item);
+          final price = newItem['price'];
+          if (price is String) {
+            newItem['price'] = double.tryParse(price) ?? 0.0;
+          } else if (price is int) {
+            newItem['price'] = price.toDouble();
+          } else if (price is! double) {
+            newItem['price'] = 0.0;
+          }
 
-  String? token;
-  if (_selectedPayment == 'credit' || _selectedPayment == 'debit') {
-    final tempPayment = Payment(
-      zipCode: widget.zipCode!,
-      userId: widget.userId,
+          return newItem;
+        }).toList();
+
+    final paymentController = PaymentController();
+
+    // Determinar qual endereço usar
+    Map<String, dynamic> address = {}; // Inicializa como um mapa vazio
+
+    if (_selectedAddress != null) {
+      // Se _selectedAddress está disponível, formata o endereço
+      address = {
+        "recipient_name": _selectedAddress!["recipient_name"] ?? "",
+        "street": _selectedAddress!["street"] ?? "",
+        "number": _selectedAddress!["number"] ?? "",
+        "complement": _selectedAddress!["complement"] ?? "",
+        "bairro": _selectedAddress!["bairro"] ?? "",
+        "city": _selectedAddress!["city"] ?? "",
+        "state": _selectedAddress!["state"] ?? "",
+        "country": _selectedAddress!["country"] ?? "",
+        "zip_code": _selectedAddress!["zip_code"] ?? "",
+        "phone": _selectedAddress!["phone"] ?? "",
+        "total_value": widget.delivery['price'] ?? "0.00",
+        "delivery_id": widget.delivery['id'],
+        "products": convertedProducts,
+      };
+    } else if (_streetController.text.isNotEmpty) {
+      // Se o usuário inseriu um endereço no formulário, usamos ele
+      address = {
+        "recipient_name": _recipientNameController.text,
+        "street": _streetController.text,
+        "number": _numberController.text,
+        "complement": _complementController.text,
+        "bairro": _bairroController.text,
+        "city": _cityController.text,
+        "state": _stateController.text,
+        "country": _countryController.text,
+        "zip_code": _zipCodeController.text,
+        "phone": _phoneController.text,
+        "total_value": widget.delivery['price'] ?? "0.00",
+        "delivery_id": widget.delivery['id'],
+        "products": convertedProducts,
+      };
+    }
+
+    String? token;
+    String cleanedCardNumber = _numberCardController.text.replaceAll(
+      RegExp(r'[\s\-.]'),
+      '',
+    );
+    if (_selectedPayment == 'credit' || _selectedPayment == 'debit') {
+      final tempPayment = Payment(
+        zipCode: widget.zipCode!,
+        userId: widget.userId,
+        userEmail: widget.userEmail,
+        cpf: _cpfController.text,
+        address: address, // Usando o endereço correto
+        paymentType: _selectedPayment,
+        subtotal: _subtotal,
+        shipping: _shipping,
+        total: _total,
+        products: convertedProducts,
+        numberCard: _selectedPayment != 'Pix' ? cleanedCardNumber : null,
+        nameCard: _selectedPayment != 'Pix' ? _nameCardController.text : null,
+        expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
+        cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
+        installments: int.tryParse(_installmentsController.text) ?? 1,
+      );
+
+      final expiryParts = (tempPayment.expiry ?? '').split('/');
+      final expirationMonth = int.tryParse(expiryParts[0]) ?? 0;
+      final expirationYear = int.tryParse('20${expiryParts[1]}') ?? 0;
+
+      token = await paymentController.generateCardToken(
+        cardNumber: tempPayment.numberCard ?? '',
+        expirationMonth: expirationMonth ?? 0,
+        expirationYear: expirationYear,
+        securityCode: tempPayment.cvv ?? '',
+        cardholderName: tempPayment.nameCard ?? '',
+        docType: docType,
+        docNumber: _cpfController.text,
+      );
+    }
+
+    // Criar o pagamento com o token obtido
+    final payment = Payment(
+      cardToken: token,
+      zipCode: widget.zipCode ?? "default_value",
       userEmail: widget.userEmail,
+      userId: widget.userId,
       cpf: _cpfController.text,
       address: address, // Usando o endereço correto
       paymentType: _selectedPayment,
@@ -185,64 +262,30 @@ void _handlePayment() async {
       installments: int.tryParse(_installmentsController.text) ?? 1,
     );
 
-    final expiryParts = (tempPayment.expiry ?? '').split('/');
-    final expirationMonth = int.tryParse(expiryParts[0]) ?? 0;
-    final expirationYear = int.tryParse('20${expiryParts[1]}') ?? 0;
+    // Enviar o pagamento
+    final controller = PaymentController();
+    final success = await controller.sendPayment(payment);
 
-    token = await paymentController.generateCardToken(
-      cardNumber: tempPayment.numberCard ?? '',
-      expirationMonth: expirationMonth,
-      expirationYear: expirationYear,
-      securityCode: tempPayment.cvv ?? '',
-      cardholderName: tempPayment.nameCard ?? '',
-      docType: docType,
-      docNumber: _cpfController.text,
-    );
+    if (success) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pagamento enviado com sucesso!')),
+      );
+      await Future.delayed(const Duration(seconds: 2));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MyApp(),
+        ), // substitua HomePage pela sua home real
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Erro ao enviar pagamento')));
+    }
   }
-
-  // Criar o pagamento com o token obtido
-  final payment = Payment(
-    cardToken: token,
-    zipCode: widget.zipCode!,
-    userEmail: widget.userEmail,
-    userId: widget.userId,
-    cpf: _cpfController.text,
-    address: address, // Usando o endereço correto
-    paymentType: _selectedPayment,
-    subtotal: _subtotal,
-    shipping: _shipping,
-    total: _total,
-    products: convertedProducts,
-    numberCard: _selectedPayment != 'Pix' ? _numberCardController.text : null,
-    nameCard: _selectedPayment != 'Pix' ? _nameCardController.text : null,
-    expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
-    cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
-    installments: int.tryParse(_installmentsController.text) ?? 1,
-  );
-
-  // Enviar o pagamento
-  final controller = PaymentController();
-  final success = await controller.sendPayment(payment);
-
-  if (success) {
-    setState(() {
-      _isLoading = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Pagamento enviado com sucesso!')),
-    );
-    await Future.delayed(const Duration(seconds: 2));
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => MyApp()), // substitua HomePage pela sua home real
-    );
-  } else {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Erro ao enviar pagamento')));
-  }
-}
-
 
   Future<void> _findAddress(String cep) async {
     final cleanedCep = cep.replaceAll(RegExp(r'\D'), '');
@@ -252,7 +295,7 @@ void _handlePayment() async {
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print(data);
+
         if (data != null && !data.containsKey('error')) {
           setState(() {
             _streetController.text = data['logradouro'] ?? '';
@@ -351,75 +394,75 @@ void _handlePayment() async {
 
   Widget _buildProductsList() {
     final apiUrl = dotenv.env['API_URL'] ?? '';
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children:
-            widget.products.map((p) {
-              final imageUrl = p['image'];
-              final name = p['name'];
-              final price = p['price'];
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: widget.products.length,
+      itemBuilder: (context, index) {
+        final p = widget.products[index];
+        final imageUrl = p['image'] ?? p['image_url'] ?? '';
+        final name = p['name'] ?? p['product_name'] ?? 'Sem nome';
+        final price = double.tryParse(p['price'].toString()) ?? 0.0;
+        final quantity = int.tryParse(p['quantity'].toString()) ?? 0;
+        final total = price * quantity;
 
-              return Card(
-                margin: const EdgeInsets.all(12.0),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+        return Card(
+          margin: const EdgeInsets.all(12.0),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child:
+                      imageUrl.isNotEmpty
+                          ? Image.network(
+                            apiUrl + imageUrl,
+                            height: 80,
+                            width: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (context, error, stackTrace) =>
+                                    const Icon(Icons.broken_image, size: 80),
+                          )
+                          : const Icon(Icons.image_not_supported, size: 80),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child:
-                            imageUrl != null
-                                ? Image.network(
-                                  apiUrl + imageUrl,
-                                  height: 80,
-                                  width: 80,
-                                  fit: BoxFit.cover,
-                                  errorBuilder:
-                                      (context, error, stackTrace) =>
-                                          const Icon(
-                                            Icons.broken_image,
-                                            size: 80,
-                                          ),
-                                )
-                                : const Icon(
-                                  Icons.image_not_supported,
-                                  size: 80,
-                                ),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name ?? 'Sem nome',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'R\$ $price',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ],
+                      const SizedBox(height: 6),
+                      Text(
+                        'R\$ ${total.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 14),
                       ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          print('Remover ${p['name']}');
-                          // Lógica para remover item
-                        },
+                      Text(
+                        'Quantidade: $quantity',
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ],
                   ),
                 ),
-              );
-            }).toList(),
-      ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    print('Remover $name');
+                    // lógica de remoção aqui
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -599,7 +642,7 @@ void _handlePayment() async {
               widget.userId,
             );
 
-            if (existingAddress != null && existingAddress.isNotEmpty) {
+            if (existingAddress.isNotEmpty) {
               // Se existir, chama o update
               final addressId = existingAddress.first.id;
               final updateSuccess = await _addressController.updateAddress(
@@ -722,25 +765,44 @@ void _handlePayment() async {
           decoration: InputDecoration(labelText: 'CPF'),
         ),
         _selectedPayment == 'credit'
-        ? TextFormField(
-            controller: _installmentsController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: 'Número de Parcelas'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor, insira o número de parcelas';
-              }
-              return null;
-            },
-          )
-       
-          : SizedBox.shrink(), 
-        
-         
+            ? Container(
+              height: 60, // Tamanho fixo ou mínimo
+              child: DropdownButtonFormField<int>(
+                value: _selectedInstallment,
+                decoration: InputDecoration(
+                  labelText: 'Número de Parcelas',
+                  isDense: true,
+                ),
+                items:
+                    List.generate(4, (index) => index + 1)
+                        .map(
+                          (number) => DropdownMenuItem<int>(
+                            value: number,
+                            child: Text('$number'),
+                          ),
+                        )
+                        .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedInstallment = value!;
+                    _installmentsController.text = value.toString();
+                  });
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return 'Por favor, selecione o número de parcelas';
+                  }
+                  return null;
+                },
+              ),
+            )
+            : SizedBox.shrink(),
 
         TextField(
           controller: _numberCardController,
           decoration: InputDecoration(labelText: 'Número do Cartão'),
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),
         TextField(
           controller: _nameCardController,
@@ -751,7 +813,8 @@ void _handlePayment() async {
             Expanded(
               child: TextField(
                 controller: _cardExpiryController,
-                decoration: InputDecoration(labelText: 'Validade'),
+                decoration: InputDecoration(labelText: 'Validade MM/AA'),
+                keyboardType: TextInputType.number,
               ),
             ),
             SizedBox(width: 5),
@@ -778,6 +841,10 @@ void _handlePayment() async {
   }
 
   Widget _buildTotalCard(BuildContext context) {
+    int installments =
+        int.tryParse(_installmentsController.text) ??
+        1; // Valor padrão de 1 se não for válido
+    double totalInstallments = (_subtotal + _shipping) / installments;
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
@@ -792,10 +859,14 @@ void _handlePayment() async {
               ),
               const SizedBox(height: 12),
               Text('Subtotal: R\$ ${_subtotal.toStringAsFixed(2)}'),
-              Text('Shipping: R\$ ${_shipping}'),
+              Text('Shipping: R\$ $_shipping'),
               const SizedBox(height: 8),
+
               Text(
-                'Total: R\$ ${_total}',
+                _selectedInstallment == null
+                    ? 'Total: R\$ ${_total.toStringAsFixed(2)}'
+                    : 'Total: R\$ ${(totalInstallments * _selectedInstallment!).toStringAsFixed(2)} '
+                        'x $_selectedInstallment = R\$ ${totalInstallments.toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -809,33 +880,31 @@ void _handlePayment() async {
   }
 
   Widget _buildElevatedButton() {
-  return SizedBox(
-    width: double.infinity,
-    height: 60,
-    child: ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
+        onPressed: _isLoading ? null : _handlePayment,
+        child:
+            _isLoading
+                ? const SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2.5,
+                  ),
+                )
+                : const Text(
+                  'Place Order Now',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
       ),
-      onPressed: _isLoading ? null : _handlePayment,
-      child: _isLoading
-          ? const SizedBox(
-              height: 24,
-              width: 24,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 2.5,
-              ),
-            )
-          : const Text(
-              'Place Order Now',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-    ),
-  );
-}
-
+    );
+  }
 }
