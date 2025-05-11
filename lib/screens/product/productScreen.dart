@@ -26,7 +26,8 @@ class ProductScreen extends StatefulWidget {
 }
 
 class _ProductScreenState extends State<ProductScreen> {
-  final apiUrl = dotenv.env['API_URL'];
+  //final apiUrl = dotenv.env['API_URL'];
+  final apiUrl = dotenv.env['API_URL_LOCAL'];
   double quantity = 1;
   Map<String, dynamic>? selectedDelivery;
   String? selectedZipCode;
@@ -54,7 +55,6 @@ class _ProductScreenState extends State<ProductScreen> {
     setState(() => _isAddingToCart = true);
 
     try {
-      print('Quantitdade: $quantity');
       final cartItem = CartItem(
         id: '',
         userId: user.id,
@@ -129,6 +129,7 @@ class _ProductScreenState extends State<ProductScreen> {
       'height': widget.product.height,
       'length': widget.product.length,
       'weight': widget.product.weight,
+      'stock_quantity': widget.product.quantity,
       'quantity': quantity,
     };
 
@@ -329,13 +330,27 @@ class _ProductScreenState extends State<ProductScreen> {
               ),
               SizedBox(width: 8),
               SizedBox(
-                width: 200, // define uma largura fixa para o campo numérico
+                width: 135,
                 child: SpinBox(
                   min: 1,
-                  max: 100,
+                  max:
+                      (widget.product.stockQuantity >= 1)
+                          ? widget.product.stockQuantity.toDouble()
+                          : 1.0,
                   value: 1,
                   onChanged: (value) {
                     setState(() {
+                      print(widget.product.stockQuantity);
+                      print(value);
+                      if (value >= widget.product.stockQuantity) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Você atingiu o estoque máximo disponível.',
+                            ),
+                          ),
+                        );
+                      }
                       quantity = value;
                     });
                   },
@@ -345,7 +360,7 @@ class _ProductScreenState extends State<ProductScreen> {
                   ),
                 ),
               ),
-              SizedBox(width: 8),
+              SizedBox(width: 6),
               Expanded(
                 child: TextButton(
                   style: ElevatedButton.styleFrom(

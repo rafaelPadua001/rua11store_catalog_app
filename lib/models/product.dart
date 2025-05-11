@@ -14,6 +14,7 @@ class Product {
   final int? subcategoryId;
   final int? parentId;
   final int userId;
+  final int stockQuantity;
 
   Product({
     required this.id,
@@ -31,6 +32,7 @@ class Product {
     this.subcategoryId, // Não precisa de `required` pois pode ser `null`
     this.parentId,
     required this.userId,
+    required this.stockQuantity,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -38,10 +40,14 @@ class Product {
       id: json['id'] != null ? int.tryParse(json['id'].toString()) ?? 0 : 0,
       name: json['name']?.toString() ?? 'Nome não disponível',
       description: json['description']?.toString() ?? 'Sem descrição',
-      image: json['image_path']?.toString() ?? '', // Removido caminho local
+      image: json['image_path']?.toString() ?? '',
       quantity:
           json['quantity'] != null
               ? int.tryParse(json['quantity'].toString()) ?? 0
+              : 0,
+      stockQuantity:
+          json['stock_quantity'] != null
+              ? int.tryParse(json['stock_quantity'].toString()) ?? 0
               : 0,
       price: json['price']?.toString() ?? '0',
       width:

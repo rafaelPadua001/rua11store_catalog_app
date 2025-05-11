@@ -281,6 +281,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ), // substitua HomePage pela sua home real
       );
     } else {
+      _isLoading = false;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Erro ao enviar pagamento')));
