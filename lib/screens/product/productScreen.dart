@@ -340,8 +340,6 @@ class _ProductScreenState extends State<ProductScreen> {
                   value: 1,
                   onChanged: (value) {
                     setState(() {
-                      print(widget.product.stockQuantity);
-                      print(value);
                       if (value >= widget.product.stockQuantity) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
