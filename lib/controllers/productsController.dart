@@ -14,14 +14,16 @@ class ProductsController extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final url = Uri.parse('https://rua11storecatalogapi-production.up.railway.app/products');
+    final url = Uri.parse(
+      'https://rua11storecatalogapi-production.up.railway.app/products',
+    );
 
     try {
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        
+
         _products = data.map((json) => Product.fromJson((json))).toList();
         print(_products);
       } else {
