@@ -5,7 +5,7 @@ class CartItem {
   final String productName;
   final double price;
   final String description;
-  final int quantity;
+  int quantity;
   final double width;
   final double height;
   final double weight;

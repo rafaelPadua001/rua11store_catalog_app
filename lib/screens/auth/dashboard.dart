@@ -5,7 +5,7 @@ import 'package:rua11store_catalog_app/models/user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../user/profile_user.dart';
 import '../../widgets/orders_widget.dart';
-import '../../widgets/cart_widget.dart';
+import '../cart/cart_widget.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -109,7 +109,7 @@ class _StateDashboard extends State<Dashboard> {
     try {
       await Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => CartWidget()),
+        MaterialPageRoute(builder: (context) => CartWidget(userId: user!.id)),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
