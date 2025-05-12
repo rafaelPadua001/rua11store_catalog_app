@@ -25,9 +25,6 @@ class _OrdersWidgetState extends State<OrdersWidget> {
 
   Future<List<Order>> fetchOrders() async {
     final user = await Supabase.instance.client.auth.getUser();
-    if (user == null) {
-      throw Exception('Usuário não autenticado');
-    }
     final response = await http.get(
       Uri.parse('$apiUrl/order/get-order/${user.user!.id}'),
     );
