@@ -70,4 +70,22 @@ class CartItem {
       'category': category, // Novo campo
     };
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'product_id': productId,
+      'product_name': productName,
+      'price': price,
+      'description': description,
+      'quantity': quantity,
+      'width': width,
+      'height': height,
+      'weight': weight,
+      'length': length,
+      'image_url': imageUrl,
+      'category': category, // Novo campo
+    };
+  }
 }

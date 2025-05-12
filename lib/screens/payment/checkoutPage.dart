@@ -399,8 +399,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
       itemCount: widget.products.length,
       itemBuilder: (context, index) {
         final p = widget.products[index];
+        print(p);
         final imageUrl = p['image'] ?? p['image_url'] ?? '';
-        final name = p['name'] ?? p['product_name'] ?? 'Sem nome';
+        final name =
+            p['name'] ?? p['product_name'] ?? p['productName'] ?? 'Sem nome';
         final price = double.tryParse(p['price'].toString()) ?? 0.0;
         final quantity = int.tryParse(p['quantity'].toString()) ?? 0;
         final total = price * quantity;
