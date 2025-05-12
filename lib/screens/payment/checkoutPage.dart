@@ -104,7 +104,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     int installments = int.tryParse(_installmentsController.text) ?? 1;
     _total = (_subtotal + _shipping) / installments;
 
-    _findAddress(widget.zipCode!);
+    _findAddress(widget.zipCode);
     _addressesFuture = _addressController.getUserAddresses(widget.userId);
 
     _cardExpiryController.addListener(() {

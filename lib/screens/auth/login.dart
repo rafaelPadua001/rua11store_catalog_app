@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/screens/auth/dashboard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'register.dart';
