@@ -4,7 +4,7 @@ import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/models/user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../user/profile_user.dart';
-import '../../widgets/orders_widget.dart';
+import '../orders/orders_widget.dart';
 import '../cart/cart_widget.dart';
 
 class Dashboard extends StatefulWidget {

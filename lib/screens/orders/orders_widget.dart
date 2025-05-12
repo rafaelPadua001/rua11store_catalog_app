@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 
-class OrdersWidget extends StatelessWidget {
+class OrdersWidget extends StatefulWidget {
   const OrdersWidget({super.key});
 
+  @override
+  State<OrdersWidget> createState() => _OrdersWidgetState();
+}
+
+class _OrdersWidgetState extends State<OrdersWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
