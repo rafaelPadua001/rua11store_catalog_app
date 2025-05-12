@@ -24,8 +24,8 @@ class ProductScreen extends StatefulWidget {
 }
 
 class _ProductScreenState extends State<ProductScreen> {
-  //final apiUrl = dotenv.env['API_URL'];
-  final apiUrl = dotenv.env['API_URL_LOCAL'];
+  final apiUrl = dotenv.env['API_URL'];
+  //final apiUrl = dotenv.env['API_URL_LOCAL'];
   double quantity = 1;
   Map<String, dynamic>? selectedDelivery;
   String? selectedZipCode;
