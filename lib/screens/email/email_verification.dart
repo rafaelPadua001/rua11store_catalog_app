@@ -2,10 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:rua11store_catalog_app/data/user_profile/user_profile_repository.dart';
 import 'package:rua11store_catalog_app/main.dart';
-import 'package:rua11store_catalog_app/models/user.dart';
 import 'package:rua11store_catalog_app/screens/auth/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   final String email;

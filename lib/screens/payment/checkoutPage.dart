@@ -101,12 +101,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
     });
 
     _shipping = double.tryParse(widget.delivery['price'].toString()) ?? 0.0;
-    int _installments = int.tryParse(_installmentsController.text) ?? 1;
-    _total = (_subtotal + _shipping) / _installments;
+    int installments = int.tryParse(_installmentsController.text) ?? 1;
+    _total = (_subtotal + _shipping) / installments;
 
-    if (widget.zipCode != null) {
-      _findAddress(widget.zipCode!);
-    }
+    _findAddress(widget.zipCode!);
     _addressesFuture = _addressController.getUserAddresses(widget.userId);
 
     _cardExpiryController.addListener(() {
@@ -117,7 +115,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
       if (text.length >= 2) {
         // Adiciona a barra após os dois primeiros dígitos
-        text = text.substring(0, 2) + '/' + text.substring(2);
+        text = '${text.substring(0, 2)}/${text.substring(2)}';
       }
 
       // Evita loop de atualização
@@ -210,7 +208,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
     if (_selectedPayment == 'credit' || _selectedPayment == 'debit') {
       final tempPayment = Payment(
-        zipCode: widget.zipCode!,
+        zipCode: widget.zipCode,
         userId: widget.userId,
         userEmail: widget.userEmail,
         cpf: _cpfController.text,
@@ -766,7 +764,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           decoration: InputDecoration(labelText: 'CPF'),
         ),
         _selectedPayment == 'credit'
-            ? Container(
+            ? SizedBox(
               height: 60, // Tamanho fixo ou mínimo
               child: DropdownButtonFormField<int>(
                 value: _selectedInstallment,

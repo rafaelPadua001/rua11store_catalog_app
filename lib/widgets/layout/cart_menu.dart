@@ -80,7 +80,6 @@ class _CartMenuState extends State<CartMenu> {
     if (_isDisposed || index < 0 || index >= cartItems.length) return;
 
     final BuildContext currentContext = context;
-    if (currentContext == null) return;
 
     final item = cartItems[index];
     final itemId = item['id']?.toString();
@@ -491,7 +490,7 @@ class _CartMenuState extends State<CartMenu> {
                                         userEmail: user.email ?? '',
                                         products: cartItems,
                                         delivery: selectedOption!,
-                                        zipCode: this._zipController.text,
+                                        zipCode: _zipController.text,
                                       ),
                                 ),
                               );

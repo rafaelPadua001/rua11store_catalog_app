@@ -12,7 +12,7 @@ class BottomSheetPage extends StatefulWidget {
   // final double weight;
 
   const BottomSheetPage({
-    Key? key,
+    super.key,
     required this.products,
     // required this.width,
     // required this.height,
@@ -117,7 +117,7 @@ class _BottomSheetState extends State<BottomSheetPage> {
               "Error: ${item['error']}",
               style: TextStyle(color: Colors.red),
             ),
-            leading: Container(
+            leading: SizedBox(
               width: 40,
               height: 40,
               child: Image.network(
@@ -155,7 +155,7 @@ class _BottomSheetState extends State<BottomSheetPage> {
           child: Card(
             color: isSelected ? Colors.blue[50] : Colors.white,
             child: ListTile(
-              leading: Container(
+              leading: SizedBox(
                 width: 40,
                 height: 40,
                 child: Image.network(
