@@ -64,7 +64,7 @@ class _CartWidgetState extends State<CartWidget> {
         final price = item.price;
         final quantity = item.quantity;
 
-        if (price == null || quantity == null) continue;
+        if (quantity == null) continue;
 
         subtotal += price * quantity;
       }
@@ -90,7 +90,7 @@ class _CartWidgetState extends State<CartWidget> {
             "height": item.height,
             "weight": item.weight,
             "length": item.length ?? 1,
-            "quantity": int.tryParse(item.quantity?.toString() ?? '1') ?? 1,
+            "quantity": int.tryParse(item.quantity.toString() ?? '1') ?? 1,
             "secure_value": item.price, // valor para seguro, opcional
           };
         }).toList();
