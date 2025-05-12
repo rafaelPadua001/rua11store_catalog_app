@@ -12,7 +12,7 @@ class CartRepository extends ChangeNotifier {
   CartRepository({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
 
-  Future<void> fetchCartItems(String userId) async {
+  Future<List<CartItem>> fetchCartItems(String userId) async {
     try {
       final response = await _client
           .from('cart')
@@ -20,10 +20,13 @@ class CartRepository extends ChangeNotifier {
           .eq('user_id', userId)
           .order('created_at', ascending: false);
 
-      _items =
+      final items =
           (response as List).map((item) => CartItem.fromJson(item)).toList();
 
+      _items = items;
       notifyListeners();
+
+      return items; // <-- esta linha é essencial
     } catch (e) {
       print('Erro ao buscar itens do carrinho: $e');
       rethrow;
