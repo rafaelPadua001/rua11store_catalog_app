@@ -69,7 +69,7 @@ class _StateDashboard extends State<Dashboard> {
     if (index == 3 && user != null) {
       _navigateToProfile();
     }
-    if (index == 4) {
+    if (index == 5) {
       _handleLogout(context);
     }
   }
