@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinbox/flutter_spinbox.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:provider/provider.dart';
 import 'package:rua11store_catalog_app/screens/payment/checkoutPage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/product.dart';
@@ -9,7 +8,6 @@ import '../../widgets/layout/bottomSheePaget.dart';
 import '../../data/cart/cart_repository.dart';
 import '../../models/cart.dart';
 import '../../data/cart/cart_notifier.dart';
-import 'package:flutter/services.dart';
 
 class ProductScreen extends StatefulWidget {
   final Product product;

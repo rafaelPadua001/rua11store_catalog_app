@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:rua11store_catalog_app/data/user_profile/user_profile_repository.dart';
 import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/models/user.dart';
