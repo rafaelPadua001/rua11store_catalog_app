@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rua11store_catalog_app/main.dart';
+import 'package:rua11store_catalog_app/screens/auth/dashboard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'register.dart';
 
@@ -35,7 +36,7 @@ class _StateLogin extends State<Login> {
         // Redireciona para a tela principal
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MyApp()),
+          MaterialPageRoute(builder: (context) => Dashboard()),
         ); // Altere para a sua rota principal
       } on AuthException catch (e) {
         // Erros específicos de autenticação
