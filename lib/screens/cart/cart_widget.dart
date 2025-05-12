@@ -4,6 +4,7 @@ import 'package:rua11store_catalog_app/models/cart.dart';
 import 'package:rua11store_catalog_app/screens/payment/checkoutPage.dart';
 import '../../data/cart/cart_repository.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../widgets/layout/zipcodeInput.dart';
 
 class CartWidget extends StatefulWidget {
   final String userId;
@@ -141,21 +142,24 @@ Widget _buildCardAddress(BuildContext context) {
   return ElevatedButton(
     onPressed: () {
       print('caculate shipping + payment');
-      // Navigator.push(
-      //   context,
-      //   Material(
-      //     PageRoute(
-      //       builder:
-      //           (context) => CheckoutPage(
-      //             userId: userId,
-      //             userEmail: userEmail,
-      //             products: products,
-      //             delivery: delivery,
-      //             zipCode: zipCode,
-      //           ),
-      //     ),
-      //   ),
-      // );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => ZipcodeInputWidget(
+                zipController: TextEditingController(),
+                onSearch: (zipcode) {
+                  print('CEP buscado: $zipcode');
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) => CheckoutPage(zipcode: zipcode),
+                  //   ),
+                  // );
+                },
+              ),
+        ),
+      );
     },
     child: Text('caculate shiping + payment'),
   );
