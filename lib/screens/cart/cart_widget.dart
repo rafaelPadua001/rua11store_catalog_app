@@ -64,8 +64,6 @@ class _CartWidgetState extends State<CartWidget> {
         final price = item.price;
         final quantity = item.quantity;
 
-        if (quantity == null) continue;
-
         subtotal += price * quantity;
       }
 

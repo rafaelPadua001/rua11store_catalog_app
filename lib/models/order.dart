@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'order_items.dart';
 
 class Order {
