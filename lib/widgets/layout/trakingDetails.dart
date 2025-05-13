@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class TrackingDetails extends StatelessWidget {
   final dynamic item; // Pode ser substituído por um tipo específico
