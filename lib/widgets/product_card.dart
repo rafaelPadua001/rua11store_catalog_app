@@ -144,23 +144,35 @@ class _ProductCardState extends State<ProductCard> {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(6),
                 ),
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const Center(child: CircularProgressIndicator());
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Icons.image_not_supported,
-                      size: 50,
-                      color: Colors.grey,
-                    );
-                  },
+                child: Container(
+                  constraints: const BoxConstraints(
+                    maxHeight: 100,
+                    maxWidth:
+                        double
+                            .infinity, // Ajuste esse valor conforme necessário
+                  ),
+                  child: Image.network(
+                    imageUrl,
+                    width: 40,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(child: CircularProgressIndicator());
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color: Colors.grey,
+                          size: 50,
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
+
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
