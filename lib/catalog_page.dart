@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rua11store_catalog_app/models/categories.dart';
 import 'package:rua11store_catalog_app/widgets/categories_chip.dart';
+import 'package:rua11store_catalog_app/widgets/layout/category_product.dart';
 import 'controllers/categoriesController.dart';
 import 'models/product.dart';
 import 'widgets/product_card.dart';
@@ -17,7 +18,7 @@ class CatalogPage extends StatefulWidget {
 class _CatalogPageState extends State<CatalogPage> {
   final TextEditingController _searchController = TextEditingController();
   String searchQuery = "";
-  String selectedCategory = "";
+  String selectedCategory_id = "";
   final List<Product> products = [];
   final List<Categories> categories = [];
 
@@ -43,15 +44,6 @@ class _CatalogPageState extends State<CatalogPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredProducts =
-        products.where((product) {
-          return product.name.toLowerCase().contains(
-                searchQuery.toLowerCase(),
-              ) &&
-              (selectedCategory.isEmpty ||
-                  product.categoryId == selectedCategory);
-        }).toList();
-
     return Scaffold(
       // appBar: AppBar(title: Text("Catálogo de Produtos")),
       body: Column(
@@ -98,8 +90,33 @@ class _CatalogPageState extends State<CatalogPage> {
                                 categories: category,
                                 onTap: () {
                                   setState(() {
-                                    selectedCategory = category.name;
+                                    selectedCategory_id =
+                                        category.id.toString();
                                   });
+
+                                  final productsFromProvider =
+                                      Provider.of<ProductsController>(
+                                        context,
+                                        listen: false,
+                                      ).products;
+
+                                  // Filtra só os produtos da categoria selecionada
+                                  final filteredProducts =
+                                      productsFromProvider.where((product) {
+                                        return product.categoryId.toString() ==
+                                            selectedCategory_id;
+                                      }).toList();
+
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => CategoryProduct(
+                                            category: selectedCategory_id,
+                                            items: filteredProducts,
+                                          ),
+                                    ),
+                                  );
                                 },
                               ),
                             ),
@@ -123,8 +140,8 @@ class _CatalogPageState extends State<CatalogPage> {
                         return product.name.toLowerCase().contains(
                               searchQuery.toLowerCase(),
                             ) &&
-                            (selectedCategory.isEmpty ||
-                                product.categoryId == selectedCategory);
+                            (selectedCategory_id.isEmpty ||
+                                product.categoryId == selectedCategory_id);
                       }).toList();
 
                   return GridView.builder(

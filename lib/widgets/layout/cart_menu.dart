@@ -53,9 +53,13 @@ class _CartMenuState extends State<CartMenu> {
       if (user == null) {
         if (_isDisposed) return;
         setState(() => isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Faça login para ver seu carrinho')),
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Faça login para ver seu carrinho')),
+            );
+          }
+        });
         return;
       }
 
@@ -70,9 +74,15 @@ class _CartMenuState extends State<CartMenu> {
     } catch (e) {
       if (_isDisposed) return;
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao carregar carrinho: ${e.toString()}')),
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao carregar carrinho: ${e.toString()}'),
+            ),
+          );
+        }
+      });
     }
   }
 
