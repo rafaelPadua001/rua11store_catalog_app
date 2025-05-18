@@ -87,62 +87,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _showAgeDialog(); // chama o alerta ao iniciar o app
-  }
-
-  void _showAgeDialog() {
-    Future.delayed(Duration.zero, () {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder:
-            (context) => AlertDialog(
-              title: const Text('Confirmação de Idade'),
-              content: const Text('Você tem 18 anos ou mais?'),
-              actions: [
-                TextButton(
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.red, // Cor do texto
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Fecha o diálogo
-                    showDialog(
-                      context: context,
-                      builder:
-                          (context) => AlertDialog(
-                            title: const Text('Acesso Negado'),
-                            content: const Text(
-                              'Você precisa ter 18 anos ou mais para acessar este conteúdo.',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  // Navigator.of(context).pop();
-                                  // Opcional: Fechar o app
-                                  // SystemNavigator.pop(); // Para Android
-                                },
-                                child: const Text('Fechar'),
-                              ),
-                            ],
-                          ),
-                    );
-                  },
-                  child: const Text('Não'),
-                ),
-
-                TextButton(
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.green, // Cor do texto
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Fecha o diálogo
-                  },
-                  child: const Text('Sim'),
-                ),
-              ],
-            ),
-      );
-    });
   }
 
   void _incrementCounter() {
