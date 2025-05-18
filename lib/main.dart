@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:rua11store_catalog_app/widgets/AgeCheckDialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/supabase_config.dart';
 import 'controllers/categoriesController.dart';
@@ -106,26 +107,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   onPressed: () {
                     Navigator.of(context).pop(); // Fecha o diálogo
-                    showDialog(
-                      context: context,
-                      builder:
-                          (context) => AlertDialog(
-                            title: const Text('Acesso Negado'),
-                            content: const Text(
-                              'Você precisa ter 18 anos ou mais para acessar este conteúdo.',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  // Navigator.of(context).pop();
-                                  // Opcional: Fechar o app
-                                  // SystemNavigator.pop(); // Para Android
-                                },
-                                child: const Text('Fechar'),
-                              ),
-                            ],
-                          ),
-                    );
+                    AgeCheckDialog();
                   },
                   child: const Text('Não'),
                 ),
