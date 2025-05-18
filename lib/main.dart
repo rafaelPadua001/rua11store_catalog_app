@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:rua11store_catalog_app/widgets/AgeCheckDialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/supabase_config.dart';
 import 'controllers/categoriesController.dart';
@@ -88,43 +87,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _showAgeDialog(); // chama o alerta ao iniciar o app
-  }
-
-  void _showAgeDialog() {
-    Future.delayed(Duration.zero, () {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder:
-            (context) => AlertDialog(
-              title: const Text('Confirmação de Idade'),
-              content: const Text('Você tem 18 anos ou mais?'),
-              actions: [
-                TextButton(
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.red, // Cor do texto
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Fecha o diálogo
-                    AgeCheckDialog();
-                  },
-                  child: const Text('Não'),
-                ),
-
-                TextButton(
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.green, // Cor do texto
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Fecha o diálogo
-                  },
-                  child: const Text('Sim'),
-                ),
-              ],
-            ),
-      );
-    });
   }
 
   void _incrementCounter() {

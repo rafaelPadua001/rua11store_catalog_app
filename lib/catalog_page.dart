@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rua11store_catalog_app/models/categories.dart';
+import 'package:rua11store_catalog_app/widgets/AgeCheckDialog.dart';
 import 'package:rua11store_catalog_app/widgets/categories_chip.dart';
 import 'package:rua11store_catalog_app/widgets/layout/category_product.dart';
 import 'controllers/categoriesController.dart';
@@ -7,6 +8,8 @@ import 'models/product.dart';
 import 'widgets/product_card.dart';
 import 'controllers/productsController.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:html' as html;
 
 class CatalogPage extends StatefulWidget {
   const CatalogPage({super.key});
@@ -25,6 +28,7 @@ class _CatalogPageState extends State<CatalogPage> {
   @override
   void initState() {
     super.initState();
+    _showAgeDialog();
     Future.microtask(
       () =>
           Provider.of<Categoriescontroller>(
@@ -42,10 +46,28 @@ class _CatalogPageState extends State<CatalogPage> {
     );
   }
 
+  void _showAgeDialog() async {
+    final prefs = await SharedPreferences.getInstance();
+    final ageConfirmed = prefs.getBool('ageConfirmed') ?? false;
+
+    if (!ageConfirmed) {
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (context) => AgeCheckDialog(),
+      );
+
+      if (result == true) {
+        await prefs.setBool('ageConfirmed', true);
+      } else {
+        //encerra o app
+        html.window.location.href = 'https://www.google.com';
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(title: Text("Catálogo de Produtos")),
       body: Column(
         children: [
           Padding(
