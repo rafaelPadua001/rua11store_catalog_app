@@ -263,9 +263,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     // Enviar o pagamento
     final controller = PaymentController();
-    final success = await controller.sendPayment(payment);
-    print(success);
-    if (success) {
+    final response = await controller.sendPayment(payment);
+
+    print('Success ${response['status']}');
+    if (response['status'] == "approved") {
       setState(() {
         _isLoading = false;
       });
@@ -276,14 +277,22 @@ class _CheckoutPageState extends State<CheckoutPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => PaymentResult(),
+          builder: (context) => PaymentResult(response: response),
         ), // substitua HomePage pela sua home real
       );
     } else {
-      _isLoading = false;
+      _isLoading = true;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Erro ao enviar pagamento')));
+
+      await Future.delayed(const Duration(seconds: 2));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PaymentResult(response: response),
+        ), // substitua HomePage pela sua home real
+      );
     }
   }
 
