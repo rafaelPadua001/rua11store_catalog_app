@@ -2,6 +2,7 @@ class Payment {
   final String zipCode;
   final String userEmail;
   final String userId;
+  final String? paymentMethodId;
   final Map<String, dynamic> address; // <-- aqui
   final String paymentType;
   final double subtotal;
@@ -21,6 +22,7 @@ class Payment {
     required this.zipCode,
     required this.userEmail,
     required this.userId,
+    required this.paymentMethodId,
     required this.address, // <-- aqui
     required this.paymentType,
     required this.subtotal,
@@ -43,6 +45,7 @@ class Payment {
       'zipCode': zipCode,
       'payer_email': userEmail,
       'userId': userId,
+      'payment_method_id': paymentMethodId,
       'payer_cpf': cpf,
       'address': address, // <-- aqui
       'paymentType': paymentType,

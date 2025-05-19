@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/models/adress.dart';
+import 'package:rua11store_catalog_app/models/cardbrand.dart';
 import 'package:rua11store_catalog_app/screens/payment/payment_result.dart';
 import '../../controllers/PaymentController.dart';
 import '../../controllers/addressController.dart';
@@ -34,6 +35,7 @@ class CheckoutPage extends StatefulWidget {
 
 class _CheckoutPageState extends State<CheckoutPage> {
   String _selectedPayment = 'Crédito'; // valor padrão
+  String? _selectedPaymentMethodId;
   double _subtotal = 0.0;
   double _shipping = 0.0;
   double _total = 0.0;
@@ -44,8 +46,23 @@ class _CheckoutPageState extends State<CheckoutPage> {
   late TextEditingController _cardExpiryController;
   late TextEditingController _cardCVVController;
 
-  int? _selectedInstallment;
+  final List<CardBrand> cardBrands = [
+    CardBrand(
+      name: 'Mastercard',
+      paymentMethodId: 'master',
+      imageUrl:
+          'https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png',
+    ),
+    CardBrand(
+      name: 'Visa',
+      paymentMethodId: 'visa',
+      imageUrl:
+          'https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg',
+    ),
+  ];
 
+  int? _selectedInstallment;
+  CardBrand? selectedBrand;
   final TextEditingController _cpfController = MaskedTextController(
     mask: '000.000.000-00',
   );
@@ -224,6 +241,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
         cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
         installments: int.tryParse(_installmentsController.text) ?? 1,
+        paymentMethodId: _selectedPaymentMethodId,
       );
 
       final expiryParts = (tempPayment.expiry ?? '').split('/');
@@ -248,7 +266,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       userEmail: widget.userEmail,
       userId: widget.userId,
       cpf: _cpfController.text,
-      address: address, // Usando o endereço correto
+      address: address,
       paymentType: _selectedPayment,
       subtotal: _subtotal,
       shipping: _shipping,
@@ -259,6 +277,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
       cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
       installments: int.tryParse(_installmentsController.text) ?? 1,
+      paymentMethodId: _selectedPaymentMethodId, // <-- aqui
     );
 
     // Enviar o pagamento
@@ -808,6 +827,29 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
             )
             : SizedBox.shrink(),
+        DropdownButtonFormField<String>(
+          decoration: InputDecoration(
+            labelText: 'Forma de Pagamento',
+            border: OutlineInputBorder(),
+          ),
+          value: _selectedPaymentMethodId,
+          onChanged: (String? newValue) {
+            setState(() {
+              _selectedPaymentMethodId = newValue;
+            });
+          },
+          items: [
+            DropdownMenuItem(value: 'visa', child: Text('Visa')),
+            DropdownMenuItem(value: 'master', child: Text('Mastercard')),
+            DropdownMenuItem(value: 'amex', child: Text('American Express')),
+          ],
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Selecione um método de pagamento';
+            }
+            return null;
+          },
+        ),
 
         TextField(
           controller: _numberCardController,
@@ -815,6 +857,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),
+
         TextField(
           controller: _nameCardController,
           decoration: InputDecoration(labelText: 'Nome no Cartão'),
