@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/models/adress.dart';
+import 'package:rua11store_catalog_app/screens/payment/payment_result.dart';
 import '../../controllers/PaymentController.dart';
 import '../../controllers/addressController.dart';
 import '../../models/payment.dart';
@@ -263,7 +264,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     // Enviar o pagamento
     final controller = PaymentController();
     final success = await controller.sendPayment(payment);
-
+    print(success);
     if (success) {
       setState(() {
         _isLoading = false;
@@ -275,7 +276,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => MyApp(),
+          builder: (context) => PaymentResult(),
         ), // substitua HomePage pela sua home real
       );
     } else {
