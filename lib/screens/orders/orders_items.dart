@@ -9,11 +9,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class OrderItemsWidget extends StatelessWidget {
   final List<OrderItem> items;
-  final String deliveryId;
-  final apiUrl = dotenv.env['API_URL'];
+  final String? deliveryId;
+  final apiUrl = dotenv.env['API_URL_LOCAL'];
   late final OrdersController controller;
 
-  OrderItemsWidget({super.key, required this.items, required this.deliveryId}) {
+  OrderItemsWidget({super.key, required this.items, this.deliveryId}) {
     controller = OrdersController(
       onTrack: (data) async {
         final url = Uri.parse('$apiUrl/melhorEnvio/shipmentTracking');
@@ -58,6 +58,7 @@ class OrderItemsWidget extends StatelessWidget {
     } catch (e) {
       print('Erro de conexão $e');
     }
+    return null;
   }
 
   @override
@@ -66,28 +67,46 @@ class OrderItemsWidget extends StatelessWidget {
       appBar: AppBar(title: const Text('Itens do Pedido')),
       body: Column(
         children: [
-          TextButton(
-            onPressed: () async {
-              final data = {'order_id': deliveryId};
-              final trackingInfo = await handleTracking(data);
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child:
+                deliveryId != null
+                    ? TextButton.icon(
+                      icon: const Icon(Icons.local_shipping),
+                      label: const Text('Rastrear pedido'),
+                      onPressed: () async {
+                        final data = {'order_id': deliveryId!};
+                        final trackingInfo = await handleTracking(data);
 
-              if (trackingInfo != null) {
-                showModalBottomSheet(
-                  context: context,
-                  builder: (context) => TrackingDetails(item: trackingInfo),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Acompanhar pedido')),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Erro ao rastrear pedido')),
-                );
-              }
-              //await controller.trackOrder(data);
-              // ação do botão aqui
-            },
-            child: const Text('rastrear pedido'),
+                        if (trackingInfo != null) {
+                          showModalBottomSheet(
+                            context: context,
+                            builder:
+                                (context) =>
+                                    TrackingDetails(item: trackingInfo),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Acompanhar pedido')),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Erro ao rastrear pedido'),
+                            ),
+                          );
+                        }
+                      },
+                    )
+                    : Row(
+                      children: const [
+                        Icon(Icons.info_outline, color: Colors.grey),
+                        SizedBox(width: 8),
+                        Text(
+                          'Envio ainda não liberado',
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                      ],
+                    ),
           ),
           Expanded(
             child: ListView.builder(
