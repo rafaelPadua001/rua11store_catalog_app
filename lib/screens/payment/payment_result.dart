@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class PaymentResult extends StatefulWidget {
   final Map<String, dynamic> response;
 
-  const PaymentResult({Key? key, required this.response}) : super(key: key);
+  const PaymentResult({super.key, required this.response});
 
   @override
   State<PaymentResult> createState() => _PaymentResultState();

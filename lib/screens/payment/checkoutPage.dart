@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
-import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/models/adress.dart';
 import 'package:rua11store_catalog_app/models/cardbrand.dart';
 import 'package:rua11store_catalog_app/screens/payment/payment_result.dart';

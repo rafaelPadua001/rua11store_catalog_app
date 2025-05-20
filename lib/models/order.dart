@@ -9,6 +9,7 @@ class Order {
   final int paymentId;
   final String shipmentInfo;
   final List<OrderItem> items;
+  final String deliveryId;
 
   Order({
     required this.orderId,
@@ -19,6 +20,7 @@ class Order {
     required this.paymentId,
     required this.shipmentInfo,
     required this.items,
+    required this.deliveryId,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -30,6 +32,7 @@ class Order {
       orderTotal: (json['order_total'] as num).toDouble(),
       paymentId: json['payment_id'],
       shipmentInfo: json['shipment_info'],
+      deliveryId: json['delivery_id'],
       items:
           (json['items'] as List<dynamic>)
               .map((item) => OrderItem.fromJson(item))
@@ -46,6 +49,7 @@ class Order {
       'order_total': orderTotal,
       'payment_id': paymentId,
       'shipment_info': shipmentInfo,
+      'delivery_id': deliveryId,
       'items': items.map((item) => item.toJson()).toList(),
     };
   }

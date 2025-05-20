@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 
 class TrackingDetails extends StatelessWidget {
-  final dynamic item; // Pode ser substituído por um tipo específico
+  final Map<String, dynamic>
+  item; // Pode ser substituído por um tipo específico
 
   const TrackingDetails({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
     // Exemplo de dados (substitua conforme sua estrutura real)
-    // final trackingCode = item.trackingCode ?? 'Não informado';
-    // final carrier = item.carrier ?? 'Transportadora não informada';
-    // final status = item.status ?? 'Status desconhecido';
-    // final estimatedDelivery = item.estimatedDelivery ?? 'Data não informada';
-    // final trackingUrl = item.trackingUrl ?? '';
-
+    final firstEntry = item.entries.first;
+    final trackingData = firstEntry.value as Map<String, dynamic>;
+    final trackingCode = trackingData['tracking'] ?? 'Sem código';
+    final status = trackingData['status'] ?? 'Sem código';
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Wrap(
@@ -31,7 +30,7 @@ class TrackingDetails extends StatelessWidget {
           ),
           ListTile(
             title: const Text('Código de Rastreio'),
-            subtitle: Text('trackingCode'),
+            subtitle: Text(trackingCode),
           ),
           ListTile(
             title: const Text('Transportadora'),
@@ -39,31 +38,14 @@ class TrackingDetails extends StatelessWidget {
           ),
           ListTile(
             title: const Text('Status do Pedido'),
-            subtitle: Text('status'),
+            subtitle: Text(status),
           ),
           ListTile(
             title: const Text('Previsão de Entrega'),
-            subtitle: Text('estimatedDelivery'),
+            subtitle: Text(
+              trackingData['forecast_date'] ?? 'Data não disponível',
+            ),
           ),
-          // if (trackingUrl.isNotEmpty)
-          //   Center(
-          //     child: ElevatedButton.icon(
-          //       onPressed: () async {
-          //         final uri = Uri.parse(trackingUrl);
-          //         if (await canLaunchUrl(uri)) {
-          //           await launchUrl(uri, mode: LaunchMode.externalApplication);
-          //         } else {
-          //           ScaffoldMessenger.of(context).showSnackBar(
-          //             const SnackBar(
-          //               content: Text('Não foi possível abrir o link'),
-          //             ),
-          //           );
-          //         }
-          //       },
-          //       icon: const Icon(Icons.open_in_new),
-          //       label: const Text('Abrir rastreamento'),
-          //     ),
-          //   ),
         ],
       ),
     );

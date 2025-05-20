@@ -14,7 +14,8 @@ class OrdersWidget extends StatefulWidget {
 }
 
 class _OrdersWidgetState extends State<OrdersWidget> {
-  final apiUrl = dotenv.env['API_URL'];
+  //final apiUrl = dotenv.env['API_URL'];
+  final apiUrl = dotenv.env['API_URL_LOCAL'];
   late Future<List<Order>> ordersFuture;
 
   @override
@@ -65,7 +66,10 @@ class _OrdersWidgetState extends State<OrdersWidget> {
                       context,
                       MaterialPageRoute(
                         builder:
-                            (context) => OrderItemsWidget(items: order.items),
+                            (context) => OrderItemsWidget(
+                              items: order.items,
+                              deliveryId: order.deliveryId,
+                            ),
                       ),
                     );
                   },
