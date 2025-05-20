@@ -135,8 +135,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
       // Remove qualquer caractere não numérico e barra
       text = text.replaceAll(RegExp(r'[^0-9]'), '');
-      if (text.length > 6) {
-        text = text.substring(0, 6);
+      if (text.length > 4) {
+        text = text.substring(0, 4);
       }
 
       if (text.length >= 2) {
@@ -368,6 +368,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pagamento aprovado com sucesso!')),
       );
+      await Future.delayed(const Duration(seconds: 2));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PaymentResult(response: response),
+        ),
+      );
+    } else if (response['status'] == 'in_process') {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Pagamento pendente!')));
       await Future.delayed(const Duration(seconds: 2));
       Navigator.pushReplacement(
         context,
