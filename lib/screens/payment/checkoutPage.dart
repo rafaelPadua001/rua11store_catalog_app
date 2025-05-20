@@ -33,7 +33,7 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
-  String _selectedPayment = 'Crédito'; // valor padrão
+  String _selectedPayment = 'credit'; // valor padrão
   String? _selectedPaymentMethodId;
   double _subtotal = 0.0;
   double _shipping = 0.0;
@@ -57,6 +57,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
       paymentMethodId: 'visa',
       imageUrl:
           'https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg',
+    ),
+    CardBrand(
+      name: 'Elo',
+      paymentMethodId: 'elo',
+      imageUrl:
+          'https://upload.wikimedia.org/wikipedia/commons/5/5e/Elo_logo.png',
     ),
   ];
 
@@ -236,7 +242,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
         total: _total,
         products: convertedProducts,
         numberCard: _selectedPayment != 'Pix' ? cleanedCardNumber : null,
-        nameCard: _selectedPayment != 'Pix' ? _nameCardController.text : null,
+        nameCard:
+            _selectedPayment != 'Pix'
+                ? _nameCardController.text.toLowerCase()
+                : null,
         expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
         cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
         installments: int.tryParse(_installmentsController.text) ?? 1,
@@ -793,61 +802,95 @@ class _CheckoutPageState extends State<CheckoutPage> {
           keyboardType: TextInputType.number,
           decoration: InputDecoration(labelText: 'CPF'),
         ),
-        _selectedPayment == 'credit'
-            ? SizedBox(
-              height: 60, // Tamanho fixo ou mínimo
-              child: DropdownButtonFormField<int>(
-                value: _selectedInstallment,
-                decoration: InputDecoration(
-                  labelText: 'Número de Parcelas',
-                  isDense: true,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_selectedPayment == 'credit') ...[
+              // Número de Parcelas
+              SizedBox(
+                height: 60,
+                child: DropdownButtonFormField<int>(
+                  value: _selectedInstallment,
+                  decoration: InputDecoration(
+                    labelText: 'Número de Parcelas',
+                    isDense: true,
+                  ),
+                  items:
+                      List.generate(4, (index) => index + 1)
+                          .map(
+                            (number) => DropdownMenuItem<int>(
+                              value: number,
+                              child: Text('$number'),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedInstallment = value!;
+                      _installmentsController.text = value.toString();
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Por favor, selecione o número de parcelas';
+                    }
+                    return null;
+                  },
                 ),
-                items:
-                    List.generate(4, (index) => index + 1)
-                        .map(
-                          (number) => DropdownMenuItem<int>(
-                            value: number,
-                            child: Text('$number'),
-                          ),
-                        )
-                        .toList(),
-                onChanged: (value) {
+              ),
+              SizedBox(height: 16),
+              // Cartões de Crédito
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Forma de Pagamento',
+                  border: OutlineInputBorder(),
+                ),
+                value: _selectedPaymentMethodId,
+                onChanged: (String? newValue) {
                   setState(() {
-                    _selectedInstallment = value!;
-                    _installmentsController.text = value.toString();
+                    _selectedPaymentMethodId = newValue;
                   });
                 },
+                items: const [
+                  DropdownMenuItem(value: 'visa', child: Text('Visa')),
+                  DropdownMenuItem(value: 'master', child: Text('Mastercard')),
+                  DropdownMenuItem(
+                    value: 'amex',
+                    child: Text('American Express'),
+                  ),
+                ],
                 validator: (value) {
-                  if (value == null) {
-                    return 'Por favor, selecione o número de parcelas';
+                  if (value == null || value.isEmpty) {
+                    return 'Selecione um método de pagamento';
                   }
                   return null;
                 },
               ),
-            )
-            : SizedBox.shrink(),
-        DropdownButtonFormField<String>(
-          decoration: InputDecoration(
-            labelText: 'Forma de Pagamento',
-            border: OutlineInputBorder(),
-          ),
-          value: _selectedPaymentMethodId,
-          onChanged: (String? newValue) {
-            setState(() {
-              _selectedPaymentMethodId = newValue;
-            });
-          },
-          items: [
-            DropdownMenuItem(value: 'visa', child: Text('Visa')),
-            DropdownMenuItem(value: 'master', child: Text('Mastercard')),
-            DropdownMenuItem(value: 'amex', child: Text('American Express')),
+            ] else if (_selectedPayment == 'debit') ...[
+              // Cartão de Débito
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Forma de Pagamento (Débito)',
+                  border: OutlineInputBorder(),
+                ),
+                value: _selectedPaymentMethodId,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedPaymentMethodId = newValue;
+                  });
+                },
+                items: const [
+                  DropdownMenuItem(value: 'elo', child: Text('Elo')),
+                ],
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Selecione um método de pagamento';
+                  }
+                  return null;
+                },
+              ),
+            ],
           ],
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Selecione um método de pagamento';
-            }
-            return null;
-          },
         ),
 
         TextField(
