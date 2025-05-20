@@ -10,7 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class OrderItemsWidget extends StatelessWidget {
   final List<OrderItem> items;
   final String? deliveryId;
-  final apiUrl = dotenv.env['API_URL_LOCAL'];
+  final apiUrl = dotenv.env['API_URL'];
   late final OrdersController controller;
 
   OrderItemsWidget({super.key, required this.items, this.deliveryId}) {
