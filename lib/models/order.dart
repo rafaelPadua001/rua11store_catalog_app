@@ -9,7 +9,7 @@ class Order {
   final int paymentId;
   final String shipmentInfo;
   final List<OrderItem> items;
-  final String deliveryId;
+  final String? deliveryId;
 
   Order({
     required this.orderId,
@@ -20,7 +20,7 @@ class Order {
     required this.paymentId,
     required this.shipmentInfo,
     required this.items,
-    required this.deliveryId,
+    this.deliveryId,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
