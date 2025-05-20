@@ -293,32 +293,96 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final response = await controller.sendPayment(payment);
 
     print('Success ${response['status']}');
-    if (response['status'] == "approved") {
-      setState(() {
-        _isLoading = false;
-      });
+    if (_selectedPayment.toLowerCase() == 'pix' &&
+        response.containsKey('qr_code') &&
+        response.containsKey('qr_code_base64')) {
+      // Exibe o QR code e código copia-e-cola na mesma tela
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Pagamento via Pix'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 200,
+                  height: 200,
+                  child: Image.memory(
+                    base64Decode(response['qr_code_base64']),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: SelectableText(
+                        response['qr_code'],
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy),
+                      tooltip: 'Copiar código Pix',
+                      onPressed: () {
+                        Clipboard.setData(
+                          ClipboardData(text: response['qr_code']),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Código Pix copiado para a área de transferência',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 5),
+                const Text(
+                  "Escaneie o QR Code ou copie o código acima para pagar.",
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text("Fechar"),
+              ),
+            ],
+          );
+        },
+      );
+    } else if (response['status'] == "approved") {
+      // Pagamento comum (cartão aprovado)
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pagamento enviado com sucesso!')),
+        const SnackBar(content: Text('Pagamento aprovado com sucesso!')),
       );
       await Future.delayed(const Duration(seconds: 2));
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => PaymentResult(response: response),
-        ), // substitua HomePage pela sua home real
+        ),
       );
     } else {
-      _isLoading = true;
+      // Falha no pagamento
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Erro ao enviar pagamento')));
-
       await Future.delayed(const Duration(seconds: 2));
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => PaymentResult(response: response),
-        ), // substitua HomePage pela sua home real
+        ),
       );
     }
   }
