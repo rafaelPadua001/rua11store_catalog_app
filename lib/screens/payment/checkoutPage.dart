@@ -33,7 +33,7 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
-  String _selectedPayment = 'Crédito'; // valor padrão
+  String _selectedPayment = 'credit'; // valor padrão
   String? _selectedPaymentMethodId;
   double _subtotal = 0.0;
   double _shipping = 0.0;
@@ -57,6 +57,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
       paymentMethodId: 'visa',
       imageUrl:
           'https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg',
+    ),
+    CardBrand(
+      name: 'Elo',
+      paymentMethodId: 'elo',
+      imageUrl:
+          'https://upload.wikimedia.org/wikipedia/commons/5/5e/Elo_logo.png',
     ),
   ];
 
@@ -236,7 +242,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
         total: _total,
         products: convertedProducts,
         numberCard: _selectedPayment != 'Pix' ? cleanedCardNumber : null,
-        nameCard: _selectedPayment != 'Pix' ? _nameCardController.text : null,
+        nameCard:
+            _selectedPayment != 'Pix'
+                ? _nameCardController.text.toLowerCase()
+                : null,
         expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
         cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
         installments: int.tryParse(_installmentsController.text) ?? 1,
@@ -284,32 +293,96 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final response = await controller.sendPayment(payment);
 
     print('Success ${response['status']}');
-    if (response['status'] == "approved") {
-      setState(() {
-        _isLoading = false;
-      });
+    if (_selectedPayment.toLowerCase() == 'pix' &&
+        response.containsKey('qr_code') &&
+        response.containsKey('qr_code_base64')) {
+      // Exibe o QR code e código copia-e-cola na mesma tela
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Pagamento via Pix'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 200,
+                  height: 200,
+                  child: Image.memory(
+                    base64Decode(response['qr_code_base64']),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: SelectableText(
+                        response['qr_code'],
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy),
+                      tooltip: 'Copiar código Pix',
+                      onPressed: () {
+                        Clipboard.setData(
+                          ClipboardData(text: response['qr_code']),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Código Pix copiado para a área de transferência',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 5),
+                const Text(
+                  "Escaneie o QR Code ou copie o código acima para pagar.",
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text("Fechar"),
+              ),
+            ],
+          );
+        },
+      );
+    } else if (response['status'] == "approved") {
+      // Pagamento comum (cartão aprovado)
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pagamento enviado com sucesso!')),
+        const SnackBar(content: Text('Pagamento aprovado com sucesso!')),
       );
       await Future.delayed(const Duration(seconds: 2));
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => PaymentResult(response: response),
-        ), // substitua HomePage pela sua home real
+        ),
       );
     } else {
-      _isLoading = true;
+      // Falha no pagamento
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Erro ao enviar pagamento')));
-
       await Future.delayed(const Duration(seconds: 2));
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => PaymentResult(response: response),
-        ), // substitua HomePage pela sua home real
+        ),
       );
     }
   }
@@ -793,61 +866,95 @@ class _CheckoutPageState extends State<CheckoutPage> {
           keyboardType: TextInputType.number,
           decoration: InputDecoration(labelText: 'CPF'),
         ),
-        _selectedPayment == 'credit'
-            ? SizedBox(
-              height: 60, // Tamanho fixo ou mínimo
-              child: DropdownButtonFormField<int>(
-                value: _selectedInstallment,
-                decoration: InputDecoration(
-                  labelText: 'Número de Parcelas',
-                  isDense: true,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_selectedPayment == 'credit') ...[
+              // Número de Parcelas
+              SizedBox(
+                height: 60,
+                child: DropdownButtonFormField<int>(
+                  value: _selectedInstallment,
+                  decoration: InputDecoration(
+                    labelText: 'Número de Parcelas',
+                    isDense: true,
+                  ),
+                  items:
+                      List.generate(4, (index) => index + 1)
+                          .map(
+                            (number) => DropdownMenuItem<int>(
+                              value: number,
+                              child: Text('$number'),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedInstallment = value!;
+                      _installmentsController.text = value.toString();
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Por favor, selecione o número de parcelas';
+                    }
+                    return null;
+                  },
                 ),
-                items:
-                    List.generate(4, (index) => index + 1)
-                        .map(
-                          (number) => DropdownMenuItem<int>(
-                            value: number,
-                            child: Text('$number'),
-                          ),
-                        )
-                        .toList(),
-                onChanged: (value) {
+              ),
+              SizedBox(height: 16),
+              // Cartões de Crédito
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Forma de Pagamento',
+                  border: OutlineInputBorder(),
+                ),
+                value: _selectedPaymentMethodId,
+                onChanged: (String? newValue) {
                   setState(() {
-                    _selectedInstallment = value!;
-                    _installmentsController.text = value.toString();
+                    _selectedPaymentMethodId = newValue;
                   });
                 },
+                items: const [
+                  DropdownMenuItem(value: 'visa', child: Text('Visa')),
+                  DropdownMenuItem(value: 'master', child: Text('Mastercard')),
+                  DropdownMenuItem(
+                    value: 'amex',
+                    child: Text('American Express'),
+                  ),
+                ],
                 validator: (value) {
-                  if (value == null) {
-                    return 'Por favor, selecione o número de parcelas';
+                  if (value == null || value.isEmpty) {
+                    return 'Selecione um método de pagamento';
                   }
                   return null;
                 },
               ),
-            )
-            : SizedBox.shrink(),
-        DropdownButtonFormField<String>(
-          decoration: InputDecoration(
-            labelText: 'Forma de Pagamento',
-            border: OutlineInputBorder(),
-          ),
-          value: _selectedPaymentMethodId,
-          onChanged: (String? newValue) {
-            setState(() {
-              _selectedPaymentMethodId = newValue;
-            });
-          },
-          items: [
-            DropdownMenuItem(value: 'visa', child: Text('Visa')),
-            DropdownMenuItem(value: 'master', child: Text('Mastercard')),
-            DropdownMenuItem(value: 'amex', child: Text('American Express')),
+            ] else if (_selectedPayment == 'debit') ...[
+              // Cartão de Débito
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Forma de Pagamento (Débito)',
+                  border: OutlineInputBorder(),
+                ),
+                value: _selectedPaymentMethodId,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedPaymentMethodId = newValue;
+                  });
+                },
+                items: const [
+                  DropdownMenuItem(value: 'elo', child: Text('Elo')),
+                ],
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Selecione um método de pagamento';
+                  }
+                  return null;
+                },
+              ),
+            ],
           ],
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Selecione um método de pagamento';
-            }
-            return null;
-          },
         ),
 
         TextField(
