@@ -1,31 +1,91 @@
 import 'package:flutter/material.dart';
+import 'package:rua11store_catalog_app/controllers/ordersController.dart';
 import 'package:rua11store_catalog_app/widgets/layout/trakingDetails.dart';
 import '../../models/order_items.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class OrderItemsWidget extends StatelessWidget {
   final List<OrderItem> items;
+  final String deliveryId;
+  final apiUrl = dotenv.env['API_URL_LOCAL'];
+  late final OrdersController controller;
 
-  const OrderItemsWidget({super.key, required this.items});
+  OrderItemsWidget({super.key, required this.items, required this.deliveryId}) {
+    controller = OrdersController(
+      onTrack: (data) async {
+        final url = Uri.parse('$apiUrl/melhorEnvio/shipmentTracking');
+        try {
+          final response = await http.post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(data),
+          );
+          if (response.statusCode == 200) {
+            final responseData = jsonDecode(response.body);
+            print('Rastreamento: $responseData');
+          } else {
+            print('Erro: ${response.body}');
+          }
+        } catch (e) {
+          print('Erro de conexão $e');
+        }
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>?> handleTracking(
+    Map<String, dynamic> data,
+  ) async {
+    final url = Uri.parse('$apiUrl/melhorEnvio/shipmentTracking');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print('Rastreamento: $responseData');
+        return responseData;
+      } else {
+        print('Erro: ${response.body}');
+      }
+    } catch (e) {
+      print('Erro de conexão $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final apiUrl = dotenv.env['API_URL'];
     return Scaffold(
       appBar: AppBar(title: const Text('Itens do Pedido')),
       body: Column(
         children: [
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              final data = {'order_id': deliveryId};
+              final trackingInfo = await handleTracking(data);
+
+              if (trackingInfo != null) {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) => TrackingDetails(item: trackingInfo),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Acompanhar pedido')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Erro ao rastrear pedido')),
+                );
+              }
+              //await controller.trackOrder(data);
               // ação do botão aqui
-              print('Botão pressionado');
-              showModalBottomSheet(
-                context: context,
-                builder: (context) => TrackingDetails(item: items),
-              );
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Acompanhar pedido')),
-              );
             },
             child: const Text('rastrear pedido'),
           ),
