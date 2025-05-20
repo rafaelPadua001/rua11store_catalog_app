@@ -135,6 +135,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
       // Remove qualquer caractere não numérico e barra
       text = text.replaceAll(RegExp(r'[^0-9]'), '');
+      if (text.length > 6) {
+        text = text.substring(0, 6);
+      }
 
       if (text.length >= 2) {
         // Adiciona a barra após os dois primeiros dígitos
@@ -981,7 +984,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
             Expanded(
               child: TextField(
                 controller: _cardCVVController,
-                decoration: InputDecoration(labelText: 'CVV'),
+                decoration: InputDecoration(labelText: '*CVV'),
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(3), // Limita a 3 caracteres
+                  FilteringTextInputFormatter
+                      .digitsOnly, // Permite apenas números
+                ],
               ),
             ),
           ],
