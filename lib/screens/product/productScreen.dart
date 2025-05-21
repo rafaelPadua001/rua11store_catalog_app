@@ -119,7 +119,7 @@ class _ProductScreenState extends State<ProductScreen> {
     }
 
     final productData = {
-      'id': widget.product.id,
+      'product_id': widget.product.id,
       'name': widget.product.name,
       'image': widget.product.image,
       'price': widget.product.price,
