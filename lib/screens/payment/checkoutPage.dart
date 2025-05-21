@@ -174,6 +174,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final convertedProducts =
         widget.products.map<Map<String, dynamic>>((item) {
           final Map<String, dynamic> newItem = Map<String, dynamic>.from(item);
+          if (newItem.containsKey('product_id')) {
+            newItem['id'] = newItem['product_id'];
+            //newItem.remove('product_id');
+          }
+
           final price = newItem['price'];
           if (price is String) {
             newItem['price'] = double.tryParse(price) ?? 0.0;
