@@ -158,6 +158,7 @@ class _ProductScreenState extends State<ProductScreen> {
             (context) => CheckoutPage(
               userId: user.id,
               userEmail: user.email.toString(),
+              userName: user.userMetadata?['display_name'] ?? '',
               products: [productData],
               delivery: deliveryData,
               zipCode: selectedZipCode.toString(),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../controllers/addressController.dart';
+import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 
 class AddressForm extends StatefulWidget {
   const AddressForm({super.key});
@@ -23,11 +24,15 @@ class _AddressFormState extends State<AddressForm> {
   final TextEditingController _bairroController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _stateController = TextEditingController();
-  final TextEditingController _zipCodeController = TextEditingController();
+  final TextEditingController _zipCodeController = MaskedTextController(
+    mask: '00000-000',
+  );
   final TextEditingController _countryController = TextEditingController();
 
   // Novo controlador para o telefone
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _phoneController = MaskedTextController(
+    mask: '(00) 00000-0000',
+  );
 
   bool _loading = true;
 
@@ -114,12 +119,19 @@ class _AddressFormState extends State<AddressForm> {
               result['id'].toString(),
             ); // armazena id após inserção
           });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('endereço cadastrado com sucesso')),
+          );
         }
       } else {
         // Atualizar endereço existente
         final result = await addressController.updateAddress(
           _addressId!,
           address,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('endereço atualizado com sucesso')),
         );
       }
     }
