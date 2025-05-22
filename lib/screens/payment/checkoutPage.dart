@@ -68,39 +68,22 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   int? _selectedInstallment;
   CardBrand? selectedBrand;
-  final TextEditingController _cpfController = MaskedTextController(
+  TextEditingController _cpfController = MaskedTextController(
     mask: '000.000.000-00',
   );
   final docType = 'CPF';
   late TextEditingController _installmentsController = TextEditingController();
-  final TextEditingController _recipientNameController = TextEditingController(
-    text: "João da Silva",
-  );
-  final TextEditingController _streetController = TextEditingController(
-    text: "Rua das Laranjeiras",
-  );
-  final TextEditingController _numberController = TextEditingController(
-    text: "456",
-  );
-  final TextEditingController _complementController = TextEditingController(
-    text: "Casa dos fundos",
-  );
-  final TextEditingController _cityController = TextEditingController(
-    text: "Rio de Janeiro",
-  );
-  final TextEditingController _stateController = TextEditingController(
-    text: "RJ",
-  );
+  TextEditingController _recipientNameController = TextEditingController();
+
+  TextEditingController _streetController = TextEditingController();
+  TextEditingController _numberController = TextEditingController();
+  TextEditingController _complementController = TextEditingController();
+  TextEditingController _cityController = TextEditingController();
+  TextEditingController _stateController = TextEditingController();
   late TextEditingController _zipCodeController = TextEditingController();
-  final TextEditingController _countryController = TextEditingController(
-    text: "Brasil",
-  );
-  late TextEditingController _bairroController = TextEditingController(
-    text: 'Bairro ...',
-  );
-  final TextEditingController _phoneController = TextEditingController(
-    text: "(21) 99999-9999",
-  );
+  TextEditingController _countryController = TextEditingController();
+  late TextEditingController _bairroController = TextEditingController();
+  TextEditingController _phoneController = TextEditingController();
   late Future<List<Address>> _addressesFuture;
 
   final _addressController = AddressController();
@@ -109,42 +92,72 @@ class _CheckoutPageState extends State<CheckoutPage> {
   @override
   void initState() {
     super.initState();
+
     _numberCardController = TextEditingController();
     _nameCardController = TextEditingController();
     _cardExpiryController = TextEditingController();
     _cardCVVController = TextEditingController();
     _installmentsController = TextEditingController();
+
     _zipCodeController = TextEditingController(text: widget.zipCode);
     _bairroController = TextEditingController();
 
+    _recipientNameController = TextEditingController();
+    _streetController = TextEditingController();
+    _numberController = TextEditingController();
+    _complementController = TextEditingController();
+    _cityController = TextEditingController();
+    _stateController = TextEditingController();
+    _countryController = TextEditingController();
+    _phoneController = TextEditingController();
+
     _subtotal = widget.products.fold<double>(0.0, (sum, item) {
       final price = double.tryParse(item['price'].toString()) ?? 0.0;
-      _quantity = int.tryParse(item['quantity'].toString()) ?? 1;
-      return sum + (price * _quantity);
+      final quantity = int.tryParse(item['quantity'].toString()) ?? 1;
+      return sum + (price * quantity);
     });
 
     _shipping = double.tryParse(widget.delivery['price'].toString()) ?? 0.0;
     int installments = int.tryParse(_installmentsController.text) ?? 1;
     _total = (_subtotal + _shipping) / installments;
 
-    _findAddress(widget.zipCode);
+    // 1) busca os endereços e depois seta o primeiro endereço como selecionado
     _addressesFuture = _addressController.getUserAddresses(widget.userId);
+
+    _addressesFuture.then((addresses) {
+      if (addresses.isNotEmpty) {
+        setState(() {
+          _selectedAddress = addresses.first.toMap();
+
+          _recipientNameController.text =
+              _selectedAddress?['recipient_name'] ?? '';
+          _streetController.text = _selectedAddress?['street'] ?? '';
+          _numberController.text = _selectedAddress?['number'] ?? '';
+          _complementController.text = _selectedAddress?['complement'] ?? '';
+          _bairroController.text = _selectedAddress?['bairro'] ?? '';
+          _cityController.text = _selectedAddress?['city'] ?? '';
+          _stateController.text = _selectedAddress?['state'] ?? '';
+          _zipCodeController.text = _selectedAddress?['zip_code'] ?? '';
+          _countryController.text = _selectedAddress?['country'] ?? '';
+          _phoneController.text = _selectedAddress?['phone'] ?? '';
+        });
+      }
+    });
+
+    _findAddress(widget.zipCode);
 
     _cardExpiryController.addListener(() {
       String text = _cardExpiryController.text;
 
-      // Remove qualquer caractere não numérico e barra
       text = text.replaceAll(RegExp(r'[^0-9]'), '');
       if (text.length > 4) {
         text = text.substring(0, 4);
       }
 
       if (text.length >= 2) {
-        // Adiciona a barra após os dois primeiros dígitos
         text = '${text.substring(0, 2)}/${text.substring(2)}';
       }
 
-      // Evita loop de atualização
       if (text != _cardExpiryController.text) {
         _cardExpiryController.value = TextEditingValue(
           text: text,
@@ -198,6 +211,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     if (_selectedAddress != null) {
       // Se _selectedAddress está disponível, formata o endereço
+
       address = {
         "recipient_name": _selectedAddress!["recipient_name"] ?? "",
         "street": _selectedAddress!["street"] ?? "",
@@ -300,7 +314,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final controller = PaymentController();
     final response = await controller.sendPayment(payment);
 
-    print('Success ${response['status']}');
+    // print('Success ${response['status']}');
     if (_selectedPayment.toLowerCase() == 'pix' &&
         response.containsKey('qr_code') &&
         response.containsKey('qr_code_base64')) {
@@ -519,7 +533,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       itemCount: widget.products.length,
       itemBuilder: (context, index) {
         final p = widget.products[index];
-        print(p);
+        // print(p);
         final imageUrl = p['image'] ?? p['image_url'] ?? '';
         final name =
             p['name'] ?? p['product_name'] ?? p['productName'] ?? 'Sem nome';
