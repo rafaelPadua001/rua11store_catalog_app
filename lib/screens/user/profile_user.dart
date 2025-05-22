@@ -6,6 +6,7 @@ import '../../data/user_profile/user_profile_repository.dart';
 import '../../models/user.dart';
 import 'dart:io';
 import 'package:intl/intl.dart';
+import '../../widgets/layout/addressForm.dart';
 
 class ProfileUserWidget extends StatefulWidget {
   final UserModel user;
@@ -532,6 +533,8 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
         ),
         const SizedBox(height: 8),
         _buildAgeUser(context),
+        const SizedBox(height: 8),
+        _buildAddressAccordion(context),
       ],
     );
   }
@@ -565,6 +568,27 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
         GestureDetector(
           onTap: () => _showEditAgeDialog(),
           child: const Icon(Icons.edit_outlined, size: 16, color: Colors.blue),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddressAccordion(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16.0),
+      shrinkWrap: true, // útil se for usado dentro de outro scroll
+      physics:
+          const NeverScrollableScrollPhysics(), // evita conflito de rolagem
+      children: [
+        ExpansionTile(
+          initiallyExpanded: false,
+          title: const Text(
+            'Endereço',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          children: const [
+            Padding(padding: EdgeInsets.all(16.0), child: AddressForm()),
+          ],
         ),
       ],
     );

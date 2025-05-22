@@ -1,7 +1,7 @@
 class Address {
   final int? id;
   final String? userId;
- // final int? productId;
+  // final int? productId;
   final String recipientName;
   final String street;
   final String number;
@@ -15,8 +15,8 @@ class Address {
 
   Address({
     this.id,
-      this.userId,
-   // this.productId,
+    this.userId,
+    // this.productId,
     required this.recipientName,
     required this.street,
     required this.number,
@@ -29,12 +29,27 @@ class Address {
     required this.phone,
   });
 
+  Map<String, dynamic> toMap() {
+    return {
+      'recipient_name': recipientName,
+      'street': street,
+      'number': number,
+      'complement': complement,
+      'bairro': bairro,
+      'city': city,
+      'state': state,
+      'zip_code': zipCode,
+      'country': country,
+      'phone': phone,
+    };
+  }
+
   //convert to json
-  Map<String, dynamic> toJson(){
-    return{
-      if(id != null) 'id' : id,
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) 'id': id,
       'user_id': userId,
-    //  'product_id': productId,
+      //  'product_id': productId,
       'recipient_name': recipientName,
       'street': street,
       'number': number,
@@ -48,11 +63,11 @@ class Address {
     };
   }
 
-  factory Address.fromJson(Map<String,dynamic> json){
+  factory Address.fromJson(Map<String, dynamic> json) {
     return Address(
       id: json['id'],
       userId: json['user_id'],
-     // productId: json['product_id'],
+      // productId: json['product_id'],
       recipientName: json['recipient_name'] ?? '',
       street: json['street'] ?? '',
       number: json['number'] ?? '',
