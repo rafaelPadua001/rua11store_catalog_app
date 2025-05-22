@@ -15,6 +15,7 @@ import 'package:flutter/services.dart';
 class CheckoutPage extends StatefulWidget {
   final String userId;
   final String userEmail;
+  final String userName;
   final String zipCode;
   final List<Map> products;
   final Map delivery;
@@ -23,6 +24,7 @@ class CheckoutPage extends StatefulWidget {
     super.key,
     required this.userId,
     required this.userEmail,
+    this.userName = '',
     required this.products,
     required this.delivery,
     required this.zipCode,
@@ -99,7 +101,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _cardCVVController = TextEditingController();
     _installmentsController = TextEditingController();
 
-    _zipCodeController = TextEditingController(text: widget.zipCode);
+    _zipCodeController = MaskedTextController(
+      mask: '00000-000',
+      text: widget.zipCode,
+    );
+
     _bairroController = TextEditingController();
 
     _recipientNameController = TextEditingController();
@@ -109,7 +115,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _cityController = TextEditingController();
     _stateController = TextEditingController();
     _countryController = TextEditingController();
-    _phoneController = TextEditingController();
+    _phoneController = MaskedTextController(mask: '(00) 00000-0000');
 
     _subtotal = widget.products.fold<double>(0.0, (sum, item) {
       final price = double.tryParse(item['price'].toString()) ?? 0.0;
@@ -130,7 +136,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           _selectedAddress = addresses.first.toMap();
 
           _recipientNameController.text =
-              _selectedAddress?['recipient_name'] ?? '';
+              _selectedAddress?['recipient_name'] ? widget.userName : '';
           _streetController.text = _selectedAddress?['street'] ?? '';
           _numberController.text = _selectedAddress?['number'] ?? '';
           _complementController.text = _selectedAddress?['complement'] ?? '';
@@ -211,7 +217,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     if (_selectedAddress != null) {
       // Se _selectedAddress está disponível, formata o endereço
-
       address = {
         "recipient_name": _selectedAddress!["recipient_name"] ?? "",
         "street": _selectedAddress!["street"] ?? "",
@@ -227,7 +232,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         "delivery_id": widget.delivery['id'],
         "products": convertedProducts,
       };
-    } else if (_streetController.text.isNotEmpty) {
+    } else if (_numberController.text.isNotEmpty) {
       // Se o usuário inseriu um endereço no formulário, usamos ele
       address = {
         "recipient_name": _recipientNameController.text,
@@ -244,6 +249,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
         "delivery_id": widget.delivery['id'],
         "products": convertedProducts,
       };
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Você deve inserir um endereço de entrega válido',
+          ),
+        ),
+      );
+
+      _isLoading = false;
     }
 
     String? token;
@@ -707,7 +722,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
           ),
           TextField(
             controller: _recipientNameController,
-            decoration: const InputDecoration(labelText: 'Recipient Name'),
+            decoration: InputDecoration(
+              labelText: 'Recipient name ex(${widget.userName})',
+              hintText: widget.userName.isNotEmpty ? widget.userName : '',
+            ),
           ),
           TextField(
             controller: _streetController,
@@ -721,6 +739,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
           TextField(
             controller: _numberController,
             decoration: const InputDecoration(labelText: 'Number'),
+            onChanged: (value) {
+              setState(() {
+                _selectedAddress?['recipient_name'] = value;
+              });
+            },
           ),
           TextField(
             controller: _complementController,
@@ -757,6 +780,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ),
         ElevatedButton(
           onPressed: () async {
+            if (_recipientNameController.text.trim().isEmpty ||
+                _complementController.text.trim().isEmpty) {
+              // Mostra um alerta ou mensagem de erro
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Preencha os campos obrigatórios: Nome do destinatário e Complemento.',
+                  ),
+                ),
+              );
+              return; // Interrompe a execução
+            }
             // Coleta os dados dos controladores
             final addressData = {
               "user_id": widget.userId,

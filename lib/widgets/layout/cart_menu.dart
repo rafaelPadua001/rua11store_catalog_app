@@ -498,6 +498,9 @@ class _CartMenuState extends State<CartMenu> {
                                       (context) => CheckoutPage(
                                         userId: user.id,
                                         userEmail: user.email ?? '',
+                                        userName:
+                                            user.userMetadata?['display_name'] ??
+                                            '',
                                         products: cartItems,
                                         delivery: selectedOption!,
                                         zipCode: _zipController.text,
