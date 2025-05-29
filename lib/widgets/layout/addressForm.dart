@@ -33,6 +33,36 @@ class _AddressFormState extends State<AddressForm> {
   final TextEditingController _phoneController = MaskedTextController(
     mask: '(00) 00000-0000',
   );
+  final List<String> estados = [
+    'AC',
+    'AL',
+    'AP',
+    'AM',
+    'BA',
+    'CE',
+    'DF',
+    'ES',
+    'GO',
+    'MA',
+    'MT',
+    'MS',
+    'MG',
+    'PA',
+    'PB',
+    'PR',
+    'PE',
+    'PI',
+    'RJ',
+    'RN',
+    'RS',
+    'RO',
+    'RR',
+    'SC',
+    'SP',
+    'SE',
+    'TO',
+  ];
+  String? _estadoSelecionado;
 
   bool _loading = true;
 
@@ -200,9 +230,22 @@ class _AddressFormState extends State<AddressForm> {
                 (value) =>
                     value == null || value.isEmpty ? 'Campo obrigatório' : null,
           ),
-          TextFormField(
-            controller: _stateController,
+          DropdownButtonFormField<String>(
+            value: _estadoSelecionado,
             decoration: const InputDecoration(labelText: 'Estado'),
+            items:
+                estados.map((String estado) {
+                  return DropdownMenuItem<String>(
+                    value: estado,
+                    child: Text(estado),
+                  );
+                }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _estadoSelecionado = newValue;
+                _stateController.text = newValue ?? '';
+              });
+            },
             validator:
                 (value) =>
                     value == null || value.isEmpty ? 'Campo obrigatório' : null,
