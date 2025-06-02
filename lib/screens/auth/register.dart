@@ -21,7 +21,7 @@ class _StateRegister extends State<Register> {
   final TextEditingController _confirmPassword = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  final apiUrl = dotenv.env['API_URL_LOCAL'];
+  final apiUrl = dotenv.env['API_URL'];
   DateTime? _selectedDate;
 
   Future<void> _selectDate(BuildContext context) async {

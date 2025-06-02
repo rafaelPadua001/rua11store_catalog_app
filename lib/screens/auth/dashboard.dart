@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../user/profile_user.dart';
 import '../orders/orders_widget.dart';
 import '../cart/cart_widget.dart';
+import '../coupon/couponpage.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -60,13 +61,16 @@ class _StateDashboard extends State<Dashboard> {
     setState(() {
       _selectedIndex = index;
     });
-    if (index == 1 && user != null) {
-      _navigateToCart();
+    if (index == 1) {
+      _navigateToCoupons();
     }
     if (index == 2 && user != null) {
-      _navigateToOrders();
+      _navigateToCart();
     }
     if (index == 3 && user != null) {
+      _navigateToOrders();
+    }
+    if (index == 4 && user != null) {
       _navigateToProfile();
     }
     if (index == 5) {
@@ -118,6 +122,19 @@ class _StateDashboard extends State<Dashboard> {
     }
   }
 
+  Future<void> _navigateToCoupons() async {
+    try {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => CouponPage(userId: user!.id)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao navegar: ${e.toString()}')),
+      );
+    }
+  }
+
   Future<void> _handleLogout(BuildContext context) async {
     try {
       await Supabase.instance.client.auth.signOut();
@@ -155,6 +172,11 @@ class _StateDashboard extends State<Dashboard> {
                 icon: Icon(Icons.home_outlined),
                 selectedIcon: Icon(Icons.home),
                 label: Text('Início'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.sell_outlined),
+                selectedIcon: Icon(Icons.sell),
+                label: Text('Coupons'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.shopping_cart_outlined),
