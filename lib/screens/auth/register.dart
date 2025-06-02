@@ -3,6 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/screens/email/email_verification.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -18,7 +21,7 @@ class _StateRegister extends State<Register> {
   final TextEditingController _confirmPassword = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-
+  final apiUrl = dotenv.env['API_URL_LOCAL'];
   DateTime? _selectedDate;
 
   Future<void> _selectDate(BuildContext context) async {
@@ -82,6 +85,8 @@ class _StateRegister extends State<Register> {
           ),
         );
 
+        // 4. If email is already confirmed
+        await _completeRegistration(authResponse.user!, birthDate: birthDate);
         navigator.pushReplacement(
           MaterialPageRoute(
             builder:
@@ -90,9 +95,6 @@ class _StateRegister extends State<Register> {
         );
         return;
       }
-
-      // 4. If email is already confirmed
-      await _completeRegistration(authResponse.user!, birthDate: birthDate);
     } catch (e) {
       scaffoldMessenger.showSnackBar(
         SnackBar(
@@ -109,9 +111,9 @@ class _StateRegister extends State<Register> {
     required DateTime birthDate,
   }) async {
     final supabase = Supabase.instance.client;
-    print(user);
+
     // 1. Criar perfil na tabela profile_users
-    final profileResponse = await supabase.from('profile_users').insert({
+    final profileResponse = await supabase.from('user_profiles').insert({
       'user_id': user.id,
       'full_name':
           user.userMetadata?['display_name'] ??
@@ -125,18 +127,39 @@ class _StateRegister extends State<Register> {
       'profile_complete': false,
       'avatar_url': null,
     });
+    // print(profileResponse);
+    // if (profileResponse == null) {
+    //   // ou response.error != null
+    //   throw Exception(
+    //     'Falha ao criar perfil: ${profileResponse.error!.message}',
+    //   );
+    // }
 
-    if (profileResponse.error != null) {
-      throw Exception(
-        'Falha ao criar perfil: ${profileResponse.error!.message}',
+    //2. gerar cupom de boas-vindas
+    try {
+      final url = Uri.parse('$apiUrl/coupon/pick_up_coupon');
+
+      final cupomResponse = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'client_id': user.id, 'coupon_title': 'BEMVINDO10'}),
       );
+
+      if (cupomResponse.statusCode == 200 || cupomResponse.statusCode == 201) {
+        final cupom = json.decode(cupomResponse.body);
+        debugPrint('Cupom gerado com sucesso: $cupom');
+      } else {
+        debugPrint('Erro ao gerar cupom: ${cupomResponse.body}');
+      }
+    } catch (e) {
+      debugPrint('Erro na requisição de cupom: $e');
     }
 
-    // 2. Navegar para a tela inicial
+    // 3. Navegar para a tela inicial
     if (mounted) {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => MyApp()));
+      // Navigator.of(
+      //   context,
+      // ).pushReplacement(MaterialPageRoute(builder: (_) => MyApp()));
     }
   }
 
