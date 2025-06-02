@@ -16,11 +16,12 @@ class CouponPage extends StatefulWidget {
 
 class _StateCouponPage extends State<CouponPage> {
   final apiUrl = dotenv.env['API_URL'];
+  late Future<List<Coupon>> futureCoupons;
 
   @override
   void initState() {
     super.initState();
-    fetchCoupons();
+    futureCoupons = fetchCoupons();
   }
 
   Future<List<Coupon>> fetchCoupons() async {
@@ -31,19 +32,66 @@ class _StateCouponPage extends State<CouponPage> {
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
-      print(data); // 👈 Veja a estrutura real
       return data.map((json) => Coupon.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load coupons');
     }
   }
 
+  Future<void> deleteCoupon(String couponId, String userId) async {
+    final response = await http.delete(
+      Uri.parse(
+        '$apiUrl/coupon/delete-coupons-by-client/$couponId?userId=$userId',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        futureCoupons = fetchCoupons(); // Atualiza a lista após deletar
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cupom excluído com sucesso')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao excluir cupom: ${response.body}')),
+      );
+    }
+  }
+
+  void confirmDelete(String couponId, String userId) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Confirmar exclusão'),
+            content: const Text('Deseja realmente excluir este cupom?'),
+            actions: [
+              TextButton(
+                child: const Text('Cancelar'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              TextButton(
+                child: const Text(
+                  'Excluir',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Fecha o diálogo
+                  deleteCoupon(couponId, userId); // Chama a função de exclusão
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Cupons')),
+      appBar: AppBar(title: const Text('Cupons')),
       body: FutureBuilder<List<Coupon>>(
-        future: fetchCoupons(),
+        future: futureCoupons,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -61,19 +109,41 @@ class _StateCouponPage extends State<CouponPage> {
               final coupon = coupons[index];
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ListTile(
-                  title: Text(coupon.title),
-                  subtitle: Text(
-                    'Código: ${coupon.code}\nDesconto: ${coupon.discount.toStringAsFixed(2)}%',
-                  ),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Início: ${coupon.startDate.toLocal().toString().split(' ')[0]}',
+                      // Parte esquerda com os dados do cupom
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              coupon.title,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text('Código: ${coupon.code}'),
+                            Text('Desconto: ${coupon.discount}%'),
+                            Text(
+                              'Início: ${coupon.startDate.toLocal().toString().split(' ')[0]}',
+                            ),
+                            Text(
+                              'Fim: ${coupon.endDate.toLocal().toString().split(' ')[0]}',
+                            ),
+                          ],
+                        ),
                       ),
-                      Text(
-                        'Fim: ${coupon.endDate.toLocal().toString().split(' ')[0]}',
+
+                      // Botão de deletar à direita
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed:
+                            () => confirmDelete(coupon.id, widget.userId),
                       ),
                     ],
                   ),
