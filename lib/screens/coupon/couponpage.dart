@@ -15,17 +15,7 @@ class CouponPage extends StatefulWidget {
 }
 
 class _StateCouponPage extends State<CouponPage> {
-  final apiUrl = dotenv.env['API_URL_LOCAL'];
-  // final List<Widget> _widgetOptions = [
-  //   Card(
-  //     child: Padding(
-  //       padding: EdgeInsets.all(8.0),
-  //       child: Column(children: [Text('Página de Cupons')]),
-  //     ),
-  //   ),
-  //   // Center(child: Text('Página de Produtos')),
-  //   // Center(child: Text('Página de Configurações')),
-  // ];
+  final apiUrl = dotenv.env['API_URL'];
 
   @override
   void initState() {
