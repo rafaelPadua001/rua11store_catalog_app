@@ -14,16 +14,19 @@ class CouponsController {
       final response = await http.get(
         Uri.parse('$baseUrl/coupon/get-coupons/$userId'),
         headers: {'Content-Type': 'application/json'},
-        //   body: jsonEncode({'coupon_code': couponCode, 'user_id': userId}),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
         if (data is List && data.isNotEmpty) {
-          return Coupon.fromJson(data[0]);
+          final coupon = Coupon.fromJson(data[0]);
+          await DeleteCoupon(couponId: coupon.id, userId: userId);
+          return coupon;
         } else if (data is Map<String, dynamic>) {
-          return Coupon.fromJson(data);
+          final coupon = Coupon.fromJson(data);
+          await DeleteCoupon(couponId: coupon.id, userId: userId);
+          return coupon;
         } else {
           return null;
         }
@@ -34,6 +37,25 @@ class CouponsController {
     } catch (e) {
       print('Erro na requisição: $e');
       return null;
+    }
+  }
+
+  Future<void> DeleteCoupon({
+    required int couponId,
+    required String userId,
+  }) async {
+    print('Teste');
+    final response = await http.delete(
+      Uri.parse(
+        '$baseUrl/coupon/delete-coupons-by-client/$couponId?userId=$userId',
+      ),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      print("Cupom deletado com sucesso!");
+    } else {
+      print("Erro ao deletar o cupom: ${response.body}");
     }
   }
 }
