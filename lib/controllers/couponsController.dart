@@ -21,11 +21,11 @@ class CouponsController {
 
         if (data is List && data.isNotEmpty) {
           final coupon = Coupon.fromJson(data[0]);
-          await DeleteCoupon(couponId: coupon.id, userId: userId);
+          //  await DeleteCoupon(couponId: coupon.id, userId: userId);
           return coupon;
         } else if (data is Map<String, dynamic>) {
           final coupon = Coupon.fromJson(data);
-          await DeleteCoupon(couponId: coupon.id, userId: userId);
+          // await DeleteCoupon(couponId: coupon.id, userId: userId);
           return coupon;
         } else {
           return null;
@@ -40,11 +40,12 @@ class CouponsController {
     }
   }
 
-  Future<void> DeleteCoupon({
+  static Future<void> deleteCoupon({
     required int couponId,
     required String userId,
   }) async {
-    print('Teste');
+    final String baseUrl = dotenv.env['API_URL'] ?? '';
+
     final response = await http.delete(
       Uri.parse(
         '$baseUrl/coupon/delete-coupons-by-client/$couponId?userId=$userId',
