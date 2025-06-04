@@ -15,6 +15,8 @@ class Payment {
   final String? expiry;
   final String? cvv;
   final String? cardToken;
+  final double? couponAmount;
+  final String? couponCode;
   final int? installments;
   final String cpf;
 
@@ -36,6 +38,8 @@ class Payment {
     this.cvv,
     this.cardToken,
     this.installments,
+    this.couponAmount,
+    this.couponCode,
   });
 
   Map<String, dynamic> toJson() {
@@ -61,6 +65,8 @@ class Payment {
           'cvv': cvv,
         },
       },
+      'coupon_amount': couponAmount,
+      'coupon_code': couponCode,
     };
   }
 }

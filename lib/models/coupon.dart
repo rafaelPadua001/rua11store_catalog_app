@@ -1,5 +1,5 @@
 class Coupon {
-  final String id;
+  final int id;
   final String code;
   final double discount;
   final String title;
@@ -17,15 +17,14 @@ class Coupon {
 
   factory Coupon.fromJson(Map<String, dynamic> json) {
     return Coupon(
-      id: json['id'].toString(),
-      code: json['code'],
+      id: int.tryParse(json['id'].toString()) ?? 0,
+      code: json['code'].toString(),
       discount: double.tryParse(json['discount'].toString()) ?? 0.0,
-      title: json['title'],
-      startDate: DateTime.parse(json['start_date']),
-      endDate: DateTime.parse(json['end_date']),
+      title: json['title'].toString(),
+      startDate: DateTime.parse(json['start_date'].toString()),
+      endDate: DateTime.parse(json['end_date'].toString()),
     );
   }
-
   Map<String, dynamic> toJson() {
     return {
       'id': id,
