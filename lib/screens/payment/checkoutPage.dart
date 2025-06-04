@@ -3,12 +3,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'package:rua11store_catalog_app/controllers/couponsController.dart';
 import 'package:rua11store_catalog_app/models/adress.dart';
 import 'package:rua11store_catalog_app/models/cardbrand.dart';
 import 'package:rua11store_catalog_app/screens/payment/payment_result.dart';
 import '../../controllers/PaymentController.dart';
 import '../../controllers/addressController.dart';
 import '../../models/payment.dart';
+import '../../models/coupon.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 
@@ -41,11 +43,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
   double _shipping = 0.0;
   double _total = 0.0;
   int _quantity = 1;
+  double _discount = 0.0;
   bool _isLoading = false;
   late TextEditingController _numberCardController;
   late TextEditingController _nameCardController;
   late TextEditingController _cardExpiryController;
   late TextEditingController _cardCVVController;
+  late TextEditingController _couponController;
+
+  Coupon? _appliedCoupon;
 
   final List<CardBrand> cardBrands = [
     CardBrand(
@@ -116,6 +122,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _stateController = TextEditingController();
     _countryController = TextEditingController();
     _phoneController = MaskedTextController(mask: '(00) 00000-0000');
+    _couponController = TextEditingController();
 
     _subtotal = widget.products.fold<double>(0.0, (sum, item) {
       final price = double.tryParse(item['price'].toString()) ?? 0.0;
@@ -182,6 +189,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _installmentsController.dispose();
     _zipCodeController.dispose();
     _bairroController.dispose();
+    _couponController.dispose();
     super.dispose();
   }
 
@@ -267,6 +275,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
       '',
     );
     if (_selectedPayment == 'credit' || _selectedPayment == 'debit') {
+      print('Cupom aplicado: ${_appliedCoupon?.code}');
+      print('Desconto calculado: $_discount');
       final tempPayment = Payment(
         zipCode: widget.zipCode,
         userId: widget.userId,
@@ -287,6 +297,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
         cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
         installments: int.tryParse(_installmentsController.text) ?? 1,
         paymentMethodId: _selectedPaymentMethodId,
+        couponAmount: _discount,
+        couponCode: _appliedCoupon?.code,
       );
 
       final expiryParts = (tempPayment.expiry ?? '').split('/');
@@ -322,7 +334,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
       expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
       cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
       installments: int.tryParse(_installmentsController.text) ?? 1,
-      paymentMethodId: _selectedPaymentMethodId, // <-- aqui
+      paymentMethodId: _selectedPaymentMethodId,
+      couponAmount: _discount,
+      couponCode: _appliedCoupon?.code,
     );
 
     // Enviar o pagamento
@@ -461,6 +475,39 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
+  // Future<double> _applyCoupon(String couponCode, String userId) async {
+  //   // Simule aqui a lógica de validação com base no userId e no cupom
+  //   // Por exemplo, chamar uma API ou consultar um banco local
+  //   if (couponCode.toUpperCase() == 'BEMVINDO10' && userId == 123) {
+  //     return 0.10; // 10% de desconto
+  //   }
+  //   return 0.0; // Cupom inválido ou não autorizado
+  // }
+
+  Future<void> _handleCouponSubmit(String couponCode) async {
+    final controller = CouponsController();
+
+    final coupon = await controller.validateCoupon(
+      couponCode: couponCode,
+      userId: widget.userId,
+    );
+
+    if (coupon != null) {
+      setState(() {
+        final discountRate = coupon.discount / 100;
+        final rawDiscount = _subtotal * discountRate;
+
+        _discount = double.parse(rawDiscount.toStringAsFixed(2));
+        _appliedCoupon = coupon;
+
+        final rawTotal = (_subtotal + _shipping) - _discount;
+        _total = double.parse(rawTotal.toStringAsFixed(2));
+      });
+    } else {
+      print("cupom inválido");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -526,6 +573,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         }
                       },
                     ),
+                    _buildCouponCard(context),
                     _buildPaymentCard(context),
                     _buildTotalCard(context),
                     const SizedBox(height: 16),
@@ -868,6 +916,48 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
+  Widget _buildCouponCard(BuildContext context) {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Discount Coupon',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _couponController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter coupon code',
+                        border: OutlineInputBorder(),
+                      ),
+                      onSubmitted: _handleCouponSubmit,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      _handleCouponSubmit(_couponController.text);
+                    },
+                    child: const Text('Apply'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildPaymentCard(BuildContext context) {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
@@ -1075,10 +1165,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildTotalCard(BuildContext context) {
-    int installments =
-        int.tryParse(_installmentsController.text) ??
-        1; // Valor padrão de 1 se não for válido
-    double totalInstallments = (_subtotal + _shipping) / installments;
+    int installments = int.tryParse(_installmentsController.text) ?? 1;
+
+    // Verifica se há cupom aplicado e calcula desconto
+    double discountPercent = _appliedCoupon?.discount ?? 0.0;
+    double discountAmount = _subtotal * (discountPercent / 100);
+    double discountedSubtotal = _subtotal - discountAmount;
+
+    double finalTotal = discountedSubtotal + _shipping;
+    double totalInstallments = finalTotal / installments;
+
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
@@ -1093,14 +1189,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               const SizedBox(height: 12),
               Text('Subtotal: R\$ ${_subtotal.toStringAsFixed(2)}'),
-              Text('Shipping: R\$ $_shipping'),
+              Text('Shipping: R\$ ${_shipping.toStringAsFixed(2)}'),
+              if (_appliedCoupon != null)
+                Text(
+                  'Discount (${_appliedCoupon!.code}): -R\$ ${discountAmount.toStringAsFixed(2)}',
+                ),
               const SizedBox(height: 8),
-
+              Text('Discount: R\$ ${_discount.toStringAsFixed(2)}'),
               Text(
                 _selectedInstallment == null
                     ? 'Total: R\$ ${_total.toStringAsFixed(2)}'
-                    : 'Total: R\$ ${(totalInstallments * _selectedInstallment!).toStringAsFixed(2)} '
-                        'x $_selectedInstallment = R\$ ${totalInstallments.toStringAsFixed(2)}',
+                    : 'Total: R\$ ${((_total) / _selectedInstallment!).toStringAsFixed(2)} '
+                        'x $_selectedInstallment = R\$ ${_total.toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,

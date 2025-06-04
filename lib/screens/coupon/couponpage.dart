@@ -143,7 +143,10 @@ class _StateCouponPage extends State<CouponPage> {
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed:
-                            () => confirmDelete(coupon.id, widget.userId),
+                            () => confirmDelete(
+                              coupon.id.toString(),
+                              widget.userId,
+                            ),
                       ),
                     ],
                   ),
