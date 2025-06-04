@@ -275,8 +275,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
       '',
     );
     if (_selectedPayment == 'credit' || _selectedPayment == 'debit') {
-      print('Cupom aplicado: ${_appliedCoupon?.id}');
-      print('Desconto calculado: $_discount');
+      // print('Cupom aplicado: ${_appliedCoupon?.id}');
+      // print('Desconto calculado: $_discount');
       final tempPayment = Payment(
         zipCode: widget.zipCode,
         userId: widget.userId,
@@ -480,15 +480,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
-  // Future<double> _applyCoupon(String couponCode, String userId) async {
-  //   // Simule aqui a lógica de validação com base no userId e no cupom
-  //   // Por exemplo, chamar uma API ou consultar um banco local
-  //   if (couponCode.toUpperCase() == 'BEMVINDO10' && userId == 123) {
-  //     return 0.10; // 10% de desconto
-  //   }
-  //   return 0.0; // Cupom inválido ou não autorizado
-  // }
-
   Future<void> _handleCouponSubmit(String couponCode) async {
     final controller = CouponsController();
 
@@ -509,7 +500,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
         _total = double.parse(rawTotal.toStringAsFixed(2));
       });
     } else {
-      print("cupom inválido");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Cupom inválido."),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
     }
   }
 
