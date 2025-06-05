@@ -42,7 +42,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   double _subtotal = 0.0;
   double _shipping = 0.0;
   double _total = 0.0;
-  int _quantity = 1;
+  final int _quantity = 1;
   double _discount = 0.0;
   bool _isLoading = false;
   late TextEditingController _numberCardController;
@@ -76,7 +76,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   int? _selectedInstallment;
   CardBrand? selectedBrand;
-  TextEditingController _cpfController = MaskedTextController(
+  final TextEditingController _cpfController = MaskedTextController(
     mask: '000.000.000-00',
   );
   final docType = 'CPF';
