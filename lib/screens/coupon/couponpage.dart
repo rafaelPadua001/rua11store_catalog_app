@@ -4,7 +4,6 @@ import 'package:rua11store_catalog_app/models/coupon.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../../models/coupon.dart';
 
 class CouponPage extends StatefulWidget {
   final String userId;

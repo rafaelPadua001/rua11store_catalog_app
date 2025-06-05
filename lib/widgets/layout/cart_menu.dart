@@ -317,7 +317,7 @@ class _CartMenuState extends State<CartMenu> {
                       final item = cartItems[index];
                       final itemId = item['id']?.toString() ?? index.toString();
                       String baseUrl =
-                          "https://rua11storecatalogapi-production.up.railway.app/";
+                          "https://rua11store-catalog-api.onrender.com/";
 
                       String imageUrl =
                           item['image_url'].startsWith('http')

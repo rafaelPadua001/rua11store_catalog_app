@@ -5,7 +5,7 @@ class OrdersController {
   final Future<void> Function(Map<String, dynamic>) onTrack;
 
   OrdersController({required this.onTrack})
-    : _baseUrl = dotenv.env['API_URL_LOCAL'] ?? '';
+    : _baseUrl = dotenv.env['API_URL'] ?? '';
 
   Future<void> trackOrder(Map<String, dynamic> data) async {
     await onTrack(data);
