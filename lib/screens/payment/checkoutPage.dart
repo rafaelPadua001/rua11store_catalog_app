@@ -143,7 +143,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           _selectedAddress = addresses.first.toMap();
 
           _recipientNameController.text =
-              _selectedAddress?['recipient_name'] ? widget.userName : '';
+              _selectedAddress?['recipient_name'] ?? widget.userName ?? '';
           _streetController.text = _selectedAddress?['street'] ?? '';
           _numberController.text = _selectedAddress?['number'] ?? '';
           _complementController.text = _selectedAddress?['complement'] ?? '';
@@ -417,10 +417,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
         const SnackBar(content: Text('Pagamento aprovado com sucesso!')),
       );
       await Future.delayed(const Duration(seconds: 2));
-      await CouponsController.deleteCoupon(
-        couponId: _appliedCoupon!.id,
-        userId: widget.userId,
-      );
+      if (_appliedCoupon != null) {
+        await CouponsController.deleteCoupon(
+          couponId: _appliedCoupon!.id,
+          userId: widget.userId,
+        );
+      }
 
       Navigator.pushReplacement(
         context,
