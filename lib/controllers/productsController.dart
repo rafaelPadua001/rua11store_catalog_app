@@ -15,7 +15,7 @@ class ProductsController extends ChangeNotifier {
     notifyListeners();
 
     final url = Uri.parse(
-      'https://rua11storecatalogapi-production.up.railway.app/products',
+      'https://rua11store-catalog-api.onrender.com//products',
     );
 
     try {

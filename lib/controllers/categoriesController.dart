@@ -10,30 +10,28 @@ class Categoriescontroller extends ChangeNotifier {
   List<Categories> get categories => _categories;
   bool get isLoading => _isLoading;
 
-
   Future<void> fetchCategories() async {
     _isLoading = true;
     notifyListeners();
 
-    final url = Uri.parse('https://rua11storecatalogapi-production.up.railway.app/categories/');
+    final url = Uri.parse(
+      'https://rua11store-catalog-api.onrender.com//categories/',
+    );
 
-    try{
+    try {
       final response = await http.get(url);
-      
-      if(response.statusCode == 200){
+
+      if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         _categories = data.map((json) => Categories.fromJson((json))).toList();
-      }
-      else 
-      {
+      } else {
         debugPrint('Erro ao carregar categorias: ${response.statusCode}');
       }
-    }
-    catch(e){
+    } catch (e) {
       debugPrint('Erro na requisição: $e');
     }
 
     _isLoading = false;
     notifyListeners();
   }
-} 
+}
