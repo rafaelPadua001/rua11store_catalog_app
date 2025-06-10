@@ -15,7 +15,7 @@ class Categoriescontroller extends ChangeNotifier {
     notifyListeners();
 
     final url = Uri.parse(
-      'https://rua11store-catalog-api.onrender.com//categories/',
+      'https://rua11store-catalog-api-lbp7.onrender.com/categories/',
     );
 
     try {
