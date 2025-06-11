@@ -216,9 +216,8 @@ class _ProductCardState extends State<ProductCard> {
                             color: Colors.white,
                           ),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.deepPurpleAccent,
-                    disabledBackgroundColor: Colors.deepPurpleAccent
-                        .withOpacity(0.5),
+                    backgroundColor: Colors.black,
+                    disabledBackgroundColor: Colors.grey.withOpacity(0.5),
                   ),
                 ),
               ],

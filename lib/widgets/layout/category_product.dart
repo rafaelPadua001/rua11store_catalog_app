@@ -257,8 +257,8 @@ class _CategoryProductState extends State<CategoryProduct> {
                                         color: Colors.white,
                                       ),
                               style: IconButton.styleFrom(
-                                backgroundColor: Colors.deepPurpleAccent,
-                                disabledBackgroundColor: Colors.deepPurpleAccent
+                                backgroundColor: Colors.black,
+                                disabledBackgroundColor: Colors.grey
                                     .withOpacity(0.5),
                               ),
                             ),
