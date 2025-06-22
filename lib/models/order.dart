@@ -25,32 +25,31 @@ class Order {
 
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
-      orderId: json['order_id'],
+      orderId: json['id'],
       userId: json['user_id'],
       status: json['status'],
       orderDate: json['order_date'],
-      orderTotal: (json['order_total'] as num).toDouble(),
+      orderTotal: (json['total_amount'] as num).toDouble(),
       paymentId: json['payment_id'],
       shipmentInfo: json['shipment_info'],
-      deliveryId: json['delivery_id'],
-      items:
-          (json['items'] as List<dynamic>)
-              .map((item) => OrderItem.fromJson(item))
-              .toList(),
+      deliveryId: json['delivery_id']?.toString(),
+      items: (json['products'] as List<dynamic>)
+          .map((item) => OrderItem.fromJson(item))
+          .toList(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'order_id': orderId,
+      'id': orderId,
       'user_id': userId,
       'status': status,
       'order_date': orderDate,
-      'order_total': orderTotal,
+      'total_amount': orderTotal,
       'payment_id': paymentId,
       'shipment_info': shipmentInfo,
       'delivery_id': deliveryId,
-      'items': items.map((item) => item.toJson()).toList(),
+      'products': items.map((item) => item.toJson()).toList(),
     };
   }
 }

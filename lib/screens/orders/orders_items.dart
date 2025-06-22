@@ -124,13 +124,9 @@ class OrderItemsWidget extends StatelessWidget {
                           (context, error, stackTrace) =>
                               const Icon(Icons.image_not_supported),
                     ),
-                    title: Text(item.productName),
-                    subtitle: Text(
-                      'Qtd: ${item.quantity} • Preço: R\$ ${item.productPrice}',
-                    ),
-                    trailing: Text(
-                      'Total: R\$ ${(item.quantity * double.parse(item.productPrice)).toStringAsFixed(2)}',
-                    ),
+                    title: Text(item.name),
+                    subtitle: Text('Qtd: ${item.quantity} • Preço: R\$ ${item.unitPrice.toStringAsFixed(2)}'),
+                    trailing:Text('Total: R\$ ${item.totalPrice.toStringAsFixed(2)}'),
                   ),
                 );
               },
