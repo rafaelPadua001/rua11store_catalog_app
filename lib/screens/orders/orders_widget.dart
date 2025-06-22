@@ -62,13 +62,14 @@ class _OrdersWidgetState extends State<OrdersWidget> {
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
+                    print(order);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder:
                             (context) => OrderItemsWidget(
                               items: order.items,
-                              deliveryId: order.deliveryId,
+                              deliveryId: order.melhorEnvioId,
                             ),
                       ),
                     );
