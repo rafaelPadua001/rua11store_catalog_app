@@ -19,6 +19,7 @@ factory OrderItem.fromJson(Map<String, dynamic> json) {
   return OrderItem(
     description: json['description'],
     name: json['name'],
+    productImage: json['product_image'],
     quantity: json['quantity'] is int ? json['quantity'] : int.parse(json['quantity'].toString()),
     totalPrice: json['total_price'] is num
         ? (json['total_price'] as num).toDouble()

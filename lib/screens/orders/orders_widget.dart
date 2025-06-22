@@ -14,7 +14,7 @@ class OrdersWidget extends StatefulWidget {
 }
 
 class _OrdersWidgetState extends State<OrdersWidget> {
-  final apiUrl = dotenv.env['API_URL'];
+  final apiUrl = dotenv.env['API_URL_LOCAL'];
   //final apiUrl = dotenv.env['API_URL_LOCAL'];
   late Future<List<Order>> ordersFuture;
 
