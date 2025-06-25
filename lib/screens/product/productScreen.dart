@@ -192,7 +192,7 @@ class _ProductScreenState extends State<ProductScreen> {
 
   Widget _buildProductImage(apiUrl) {
     return Image.network(
-      apiUrl + widget.product.image,
+      widget.product.image,
       width: 340,
       fit: BoxFit.cover,
     );

@@ -149,7 +149,7 @@ class _CartWidgetState extends State<CartWidget> {
                     final item = cartItems[index];
                     return ListTile(
                       leading: Image.network(
-                        '$apiUrl${item.imageUrl}',
+                        '${item.imageUrl}',
                         width: 50,
                         height: 50,
                         fit: BoxFit.cover,

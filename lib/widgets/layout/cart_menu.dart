@@ -322,7 +322,7 @@ class _CartMenuState extends State<CartMenu> {
                       String imageUrl =
                           item['image_url'].startsWith('http')
                               ? item['image_url']
-                              : baseUrl + item['image_url'];
+                              : item['image_url'];
 
                       return Card(
                         child: Dismissible(
