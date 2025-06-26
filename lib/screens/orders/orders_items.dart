@@ -116,7 +116,7 @@ class OrderItemsWidget extends StatelessWidget {
                   margin: const EdgeInsets.all(8),
                   child: ListTile(
                     leading: Image.network(
-                      '$apiUrl/${item.productImage}',
+                      '${item.productImage}',
                       width: 60,
                       height: 60,
                       fit: BoxFit.cover,

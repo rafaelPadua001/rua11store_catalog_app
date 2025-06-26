@@ -620,7 +620,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   child:
                       imageUrl.isNotEmpty
                           ? Image.network(
-                            apiUrl + imageUrl,
+                            imageUrl,
                             height: 80,
                             width: 80,
                             fit: BoxFit.cover,
