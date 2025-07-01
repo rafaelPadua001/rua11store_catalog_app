@@ -333,7 +333,7 @@ class _StateDashboard extends State<Dashboard> {
             },
             itemBuilder:
                 (context) => [
-                  PopupMenuItem(value: 'inicio', child: Text('Início')),
+                  //PopupMenuItem(value: 'inicio', child: Text('Início')),
                   PopupMenuItem(value: 'perfil', child: Text('Perfil')),
                   PopupMenuItem(
                     value: 'configuracoes',
@@ -404,11 +404,17 @@ class _StateDashboard extends State<Dashboard> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.shopping_bag, color: Colors.blue, size: 36),
-              const SizedBox(height: 8),
-              const Text(
-                'Pedidos',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              Row(
+                children: [
+                  Icon(Icons.shopping_bag, color: Colors.blue, size: 26),
+                  const SizedBox(
+                    width: 8,
+                  ), // espaço horizontal entre ícone e texto
+                  const Text(
+                    'Pedidos',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
             ],
           ),
@@ -427,11 +433,17 @@ class _StateDashboard extends State<Dashboard> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.card_giftcard, color: Colors.orange, size: 36),
-              const SizedBox(height: 8),
-              const Text(
-                'Cupons',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              Row(
+                children: [
+                  Icon(Icons.card_giftcard, color: Colors.orange, size: 26),
+                  const SizedBox(
+                    width: 8,
+                  ), // espaço horizontal entre ícone e texto
+                  const Text(
+                    'Cupons',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
             ],
           ),
@@ -450,11 +462,18 @@ class _StateDashboard extends State<Dashboard> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.shopping_cart, color: Colors.green, size: 36),
-              const SizedBox(height: 8),
-              const Text(
-                'Carrinho',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.shopping_cart, color: Colors.green, size: 26),
+                  const SizedBox(
+                    width: 8,
+                  ), // espaço horizontal entre ícone e texto
+                  const Text(
+                    'Carrinho',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
             ],
           ),
