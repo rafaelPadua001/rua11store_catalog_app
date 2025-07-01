@@ -46,8 +46,8 @@ class Product {
               ? int.tryParse(json['quantity'].toString()) ?? 0
               : 0,
       stockQuantity:
-          json['stock_quantity'] != null
-              ? int.tryParse(json['stock_quantity'].toString()) ?? 0
+          json['product_quantity'] != null
+              ? int.tryParse(json['product_quantity'].toString()) ?? 0
               : 0,
       price: json['price']?.toString() ?? '0',
       width:
