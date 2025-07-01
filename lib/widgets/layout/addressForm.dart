@@ -92,22 +92,56 @@ class _AddressFormState extends State<AddressForm> {
               response['id'] != null
                   ? int.tryParse(response['id'].toString())
                   : null;
+
           final fullName = response['full_name'] ?? '';
-          final address = response['addresses'];
+
+          final addressList = response['addresses'];
+          final address =
+              (addressList != null &&
+                      addressList is List &&
+                      addressList.isNotEmpty)
+                  ? addressList.first
+                  : null;
+
           final recipientName =
               fullName.isNotEmpty ? fullName : address?['recipient_name'] ?? '';
 
           _recipientNameController.text = recipientName;
 
-          _streetController.text = response['street'] ?? '';
-          _numberController.text = response['number'] ?? '';
-          _complementController.text = response['complement'] ?? '';
-          _bairroController.text = response['bairro'] ?? '';
-          _cityController.text = response['city'] ?? '';
-          _stateController.text = response['state'] ?? '';
-          _zipCodeController.text = response['zip_code'] ?? '';
-          _countryController.text = response['country'] ?? '';
-          _phoneController.text = response['phone'] ?? ''; // carregar telefone
+          _streetController.text =
+              address != null
+                  ? address['street'] ?? ''
+                  : response['street'] ?? '';
+          _numberController.text =
+              address != null
+                  ? address['number'] ?? ''
+                  : response['number'] ?? '';
+          _complementController.text =
+              address != null
+                  ? address['complement'] ?? ''
+                  : response['complement'] ?? '';
+          _bairroController.text =
+              address != null
+                  ? address['bairro'] ?? ''
+                  : response['bairro'] ?? '';
+          _cityController.text =
+              address != null ? address['city'] ?? '' : response['city'] ?? '';
+          _stateController.text =
+              address != null
+                  ? address['state'] ?? ''
+                  : response['state'] ?? '';
+          _zipCodeController.text =
+              address != null
+                  ? address['zip_code'] ?? ''
+                  : response['zip_code'] ?? '';
+          _countryController.text =
+              address != null
+                  ? address['country'] ?? ''
+                  : response['country'] ?? '';
+          _phoneController.text =
+              address != null
+                  ? address['phone'] ?? ''
+                  : response['phone'] ?? '';
         });
       }
     }
@@ -232,7 +266,10 @@ class _AddressFormState extends State<AddressForm> {
           ),
           DropdownButtonFormField<String>(
             value: _estadoSelecionado,
-            decoration: const InputDecoration(labelText: 'Estado'),
+
+            decoration: InputDecoration(
+              labelText: _stateController.text ?? 'Estado',
+            ),
             items:
                 estados.map((String estado) {
                   return DropdownMenuItem<String>(
