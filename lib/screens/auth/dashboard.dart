@@ -312,37 +312,40 @@ class _StateDashboard extends State<Dashboard> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
+      appBar: AppBar(
+        title: const Text('Dashboard'),
+        actions: [
+          PopupMenuButton<String>(
+            icon: Icon(Icons.notifications),
+            onSelected: (value) {
+              // Mapear os valores para índices que o NavigationRail usa
+              final menuIndexMap = {
+                'inicio': 0,
+                'perfil': 4,
+                'configuracoes': 7,
+                'logout': 5,
+              };
+
+              int? index = menuIndexMap[value];
+              if (index != null) {
+                _onItemTapped(index);
+              }
+            },
+            itemBuilder:
+                (context) => [
+                  PopupMenuItem(value: 'inicio', child: Text('Início')),
+                  PopupMenuItem(value: 'perfil', child: Text('Perfil')),
+                  PopupMenuItem(
+                    value: 'configuracoes',
+                    child: Text('Configurações'),
+                  ),
+                  PopupMenuItem(value: 'logout', child: Text('Logout')),
+                ],
+          ),
+        ],
+      ),
       body: Row(
         children: <Widget>[
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: _onItemTapped,
-            labelType: NavigationRailLabelType.selected,
-            destinations: const [
-              NavigationRailDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: Text('Início'),
-              ),
-
-              NavigationRailDestination(
-                icon: Icon(Icons.person_outlined),
-                selectedIcon: Icon(Icons.person),
-                label: Text('Perfil'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.settings_outlined),
-                selectedIcon: Icon(Icons.settings),
-                label: Text('Configurações'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.logout_outlined),
-                selectedIcon: Icon(Icons.logout),
-                label: Text('Logout'),
-              ),
-            ],
-          ),
           VerticalDivider(thickness: 0, width: 0.1),
 
           Expanded(
