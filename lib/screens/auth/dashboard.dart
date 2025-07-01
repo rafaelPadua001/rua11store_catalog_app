@@ -34,13 +34,14 @@ class _StateDashboard extends State<Dashboard> {
     return [
       Card(
         child: Padding(
-          padding: EdgeInsets.all(8.0),
+          padding: EdgeInsets.all(16.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(height: 12),
+              SizedBox(height: 8),
               Wrap(
-                spacing: 8.0,
-                runSpacing: 8.0,
+                spacing: 4.0,
+                runSpacing: 4.0,
                 children: [
                   Chip(
                     label: Text('Carrinho: ($cartItemsCount)'),
@@ -60,6 +61,24 @@ class _StateDashboard extends State<Dashboard> {
                     backgroundColor: Colors.orange,
                     labelStyle: TextStyle(color: Colors.white),
                   ),
+                  SizedBox(height: 12),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(child: _buildOrdersCategoryCard(context)),
+                  SizedBox(width: 12), // Espaço entre os cards
+                  Expanded(child: _buildRecentOrders(context)),
+                ],
+              ),
+              Row(
+                children: [
+                  // Espaço entre os cards
+                  Expanded(child: _buildOrdersCard(context)),
+                  SizedBox(width: 12), // Espaço entre os cards
+                  Expanded(child: _buildCouponsCard(context)),
+                  SizedBox(width: 12), // Espaço entre os cards
+                  Expanded(child: _buildCartsCard(context)),
                 ],
               ),
             ],
@@ -306,21 +325,7 @@ class _StateDashboard extends State<Dashboard> {
                 selectedIcon: Icon(Icons.home),
                 label: Text('Início'),
               ),
-              NavigationRailDestination(
-                icon: Icon(Icons.sell_outlined),
-                selectedIcon: Icon(Icons.sell),
-                label: Text('Coupons'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.shopping_cart_outlined),
-                selectedIcon: Icon(Icons.shopping_cart),
-                label: Text('Cart'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.shopping_bag_outlined),
-                selectedIcon: Icon(Icons.shopping_bag),
-                label: Text('Orders'),
-              ),
+
               NavigationRailDestination(
                 icon: Icon(Icons.person_outlined),
                 selectedIcon: Icon(Icons.person),
@@ -339,12 +344,118 @@ class _StateDashboard extends State<Dashboard> {
             ],
           ),
           VerticalDivider(thickness: 0, width: 0.1),
+
           Expanded(
             child: _widgetOptions.elementAt(
               _selectedIndex < _widgetOptions.length ? _selectedIndex : 0,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget _buildOrdersCategoryCard(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 8),
+            Text(
+              'Pedidos Por Categoria:',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget _buildRecentOrders(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 8),
+            Text(
+              'Atividades Recentes:',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget _buildOrdersCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _onItemTapped(3),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.shopping_bag, color: Colors.blue, size: 36),
+              const SizedBox(height: 8),
+              const Text(
+                'Pedidos',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget _buildCouponsCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _onItemTapped(1),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.card_giftcard, color: Colors.orange, size: 36),
+              const SizedBox(height: 8),
+              const Text(
+                'Cupons',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget _buildCartsCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _onItemTapped(2),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.shopping_cart, color: Colors.green, size: 36),
+              const SizedBox(height: 8),
+              const Text(
+                'Carrinho',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
