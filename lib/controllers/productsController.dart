@@ -14,7 +14,9 @@ class ProductsController extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final url = Uri.parse('http://localhost:5000/products');
+    final url = Uri.parse(
+      'https://rua11store-catalog-api-lbp7.onrender.com/products',
+    );
 
     try {
       final response = await http.get(url);
