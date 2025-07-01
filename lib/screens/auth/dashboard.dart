@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:rua11store_catalog_app/data/user_profile/user_profile_repository.dart';
 import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/models/user.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../user/profile_user.dart';
 import '../orders/orders_widget.dart';
 import '../cart/cart_widget.dart';
@@ -21,16 +24,51 @@ class _StateDashboard extends State<Dashboard> {
   bool isLoading = true;
   final UserProfileRepository _userProfileRepository = UserProfileRepository();
 
-  final List<Widget> _widgetOptions = [
-    Card(
-      child: Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Column(children: [Text('Página Inicial')]),
+  int cartItemsCount = 0;
+  int orderCount = 0;
+  int couponCount = 0;
+
+  final apiUrl = dotenv.env['API_URL_LOCAL'];
+
+  List<Widget> get _widgetOptions {
+    return [
+      Card(
+        child: Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              SizedBox(height: 12),
+              Wrap(
+                spacing: 8.0,
+                runSpacing: 8.0,
+                children: [
+                  Chip(
+                    label: Text('Carrinho: ($cartItemsCount)'),
+                    avatar: Icon(Icons.shopping_cart, color: Colors.white),
+                    backgroundColor: Colors.blue,
+                    labelStyle: TextStyle(color: Colors.white),
+                  ),
+                  Chip(
+                    label: Text('Pedidos: ($orderCount)'),
+                    avatar: Icon(Icons.receipt, color: Colors.white),
+                    backgroundColor: Colors.lightGreen,
+                    labelStyle: TextStyle(color: Colors.white),
+                  ),
+                  Chip(
+                    label: Text('Cupons: (0)'),
+                    avatar: Icon(Icons.card_giftcard, color: Colors.white),
+                    backgroundColor: Colors.orange,
+                    labelStyle: TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
-    ),
-    // Center(child: Text('Página de Produtos')),
-    // Center(child: Text('Página de Configurações')),
-  ];
+      // outros widgets da lista...
+    ];
+  }
 
   @override
   void initState() {
@@ -43,6 +81,11 @@ class _StateDashboard extends State<Dashboard> {
       final userData = await _userProfileRepository.getProfile();
       setState(() {
         user = userData;
+      });
+
+      await _loadDashboardCounts();
+
+      setState(() {
         isLoading = false;
       });
     } catch (e) {
@@ -55,6 +98,62 @@ class _StateDashboard extends State<Dashboard> {
         ),
       );
     }
+  }
+
+  Future<void> _loadOrdersFromApi() async {
+    final userId = user?.id;
+    if (userId == null) return;
+
+    try {
+      final baseUrl =
+          apiUrl!.endsWith('/')
+              ? apiUrl!.substring(0, apiUrl!.length - 1)
+              : apiUrl!;
+      final response = await http.get(
+        Uri.parse('$baseUrl/order/get-order/$userId'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        final List<dynamic> ordersList = data;
+
+        setState(() {
+          orderCount = ordersList.length;
+        });
+      } else {
+        throw Exception('Failed to load orders');
+      }
+    } catch (e) {
+      debugPrint('Erro ao carregar pedidos: $e');
+      setState(() {
+        orderCount = 0;
+      });
+    }
+    return;
+  }
+
+  Future<void> _loadDashboardCounts() async {
+    final supabase = Supabase.instance.client;
+
+    try {
+      //load cart countItems
+      final response = await Supabase.instance.client
+          .from('cart')
+          .select()
+          .eq('user_id', user!.id);
+
+      setState(() {
+        cartItemsCount = response.length;
+      });
+    } catch (e) {
+      debugPrint('Erro ao buscar contagens: $e');
+      setState(() {
+        cartItemsCount = 0;
+      });
+    }
+
+    await _loadOrdersFromApi();
   }
 
   void _onItemTapped(int index) {
