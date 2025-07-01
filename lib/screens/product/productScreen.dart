@@ -24,7 +24,7 @@ class ProductScreen extends StatefulWidget {
 }
 
 class _ProductScreenState extends State<ProductScreen> {
-  final apiUrl = dotenv.env['API_URL'];
+  final apiUrl = dotenv.env['API_URL_LOCAL'];
   //final apiUrl = dotenv.env['API_URL_LOCAL'];
   double quantity = 1;
   Map<String, dynamic>? selectedDelivery;
@@ -191,11 +191,7 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   Widget _buildProductImage(apiUrl) {
-    return Image.network(
-      widget.product.image,
-      width: 340,
-      fit: BoxFit.cover,
-    );
+    return Image.network(widget.product.image, width: 340, fit: BoxFit.cover);
   }
 
   Widget _buildPriceCard() {
@@ -313,6 +309,7 @@ class _ProductScreenState extends State<ProductScreen> {
                 icon: Icon(Icons.comment),
                 tooltip: 'message',
                 onPressed: () {
+                  print(widget.product.stockQuantity);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Botão comentar ainda não está pronto'),
@@ -331,12 +328,13 @@ class _ProductScreenState extends State<ProductScreen> {
               SizedBox(
                 width: 135,
                 child: SpinBox(
+                  key: ValueKey(widget.product.id),
                   min: 1,
                   max:
                       (widget.product.stockQuantity >= 1)
                           ? widget.product.stockQuantity.toDouble()
                           : 1.0,
-                  value: 1,
+                  value: quantity,
                   onChanged: (value) {
                     setState(() {
                       if (value >= widget.product.stockQuantity) {
@@ -365,7 +363,7 @@ class _ProductScreenState extends State<ProductScreen> {
                 ),
               ),
 
-              SizedBox(width: 6),
+              SizedBox(width: 2),
               Expanded(
                 child: TextButton(
                   style: ElevatedButton.styleFrom(
@@ -373,7 +371,7 @@ class _ProductScreenState extends State<ProductScreen> {
                       borderRadius: BorderRadius.zero,
                     ),
                     backgroundColor: Colors.black,
-                    minimumSize: Size(double.infinity, 50),
+                    minimumSize: Size(double.infinity, 25),
                   ),
                   onPressed: () async {
                     await _buyNow();
