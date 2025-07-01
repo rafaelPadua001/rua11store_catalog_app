@@ -84,17 +84,8 @@ class _AddressFormState extends State<AddressForm> {
               .eq('user_id', user.id)
               .maybeSingle();
 
-      print('address: $response');
-
       if (response != null) {
         setState(() {
-          _addressId =
-              response['id'] != null
-                  ? int.tryParse(response['id'].toString())
-                  : null;
-
-          final fullName = response['full_name'] ?? '';
-
           final addressList = response['addresses'];
           final address =
               (addressList != null &&
@@ -102,6 +93,13 @@ class _AddressFormState extends State<AddressForm> {
                       addressList.isNotEmpty)
                   ? addressList.first
                   : null;
+
+          _addressId =
+              address != null && address['id'] != null
+                  ? int.tryParse(address['id'].toString())
+                  : null;
+
+          final fullName = response['full_name'] ?? '';
 
           final recipientName =
               fullName.isNotEmpty ? fullName : address?['recipient_name'] ?? '';
@@ -172,6 +170,8 @@ class _AddressFormState extends State<AddressForm> {
         'phone': _phoneController.text, // campo telefone enviado
         'user_id': user.id,
       };
+
+      print(_addressId);
 
       if (_addressId == null) {
         // Inserir novo endereço
