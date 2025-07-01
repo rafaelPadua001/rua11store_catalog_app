@@ -28,7 +28,7 @@ class _StateDashboard extends State<Dashboard> {
   int orderCount = 0;
   int couponCount = 0;
 
-  final apiUrl = dotenv.env['API_URL_LOCAL'];
+  final apiUrl = dotenv.env['API_URL'];
 
   List<Widget> get _widgetOptions {
     return [
@@ -55,7 +55,7 @@ class _StateDashboard extends State<Dashboard> {
                     labelStyle: TextStyle(color: Colors.white),
                   ),
                   Chip(
-                    label: Text('Cupons: (0)'),
+                    label: Text('Cupons: ($couponCount)'),
                     avatar: Icon(Icons.card_giftcard, color: Colors.white),
                     backgroundColor: Colors.orange,
                     labelStyle: TextStyle(color: Colors.white),
@@ -66,7 +66,6 @@ class _StateDashboard extends State<Dashboard> {
           ),
         ),
       ),
-      // outros widgets da lista...
     ];
   }
 
@@ -133,6 +132,40 @@ class _StateDashboard extends State<Dashboard> {
     return;
   }
 
+  Future<void> _loadCouponsFromApi() async {
+    final userId = user?.id;
+    if (userId == null) return;
+
+    try {
+      final baseUrl =
+          apiUrl!.endsWith('/')
+              ? apiUrl!.substring(0, apiUrl!.length - 1)
+              : apiUrl!;
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/coupon/get-coupons/$userId'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        final List<dynamic> couponsList = data;
+
+        setState(() {
+          couponCount = couponsList.length;
+        });
+      } else {
+        throw Exception('Failed to load couponCountrs');
+      }
+    } catch (e) {
+      debugPrint('Erro ao carregar cupons: $e');
+      setState(() {
+        couponCount = 0;
+      });
+    }
+    return;
+  }
+
   Future<void> _loadDashboardCounts() async {
     final supabase = Supabase.instance.client;
 
@@ -154,6 +187,7 @@ class _StateDashboard extends State<Dashboard> {
     }
 
     await _loadOrdersFromApi();
+    await _loadCouponsFromApi();
   }
 
   void _onItemTapped(int index) {
