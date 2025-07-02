@@ -28,6 +28,8 @@ class _StateDashboard extends State<Dashboard> {
   int orderCount = 0;
   int couponCount = 0;
 
+  List<dynamic> _orders = [];
+
   final apiUrl = dotenv.env['API_URL'];
 
   List<Widget> get _widgetOptions {
@@ -137,6 +139,7 @@ class _StateDashboard extends State<Dashboard> {
         final List<dynamic> ordersList = data;
 
         setState(() {
+          _orders = data;
           orderCount = ordersList.length;
         });
       } else {
@@ -146,6 +149,7 @@ class _StateDashboard extends State<Dashboard> {
       debugPrint('Erro ao carregar pedidos: $e');
       setState(() {
         orderCount = 0;
+        _orders = [];
       });
     }
     return;
@@ -229,6 +233,17 @@ class _StateDashboard extends State<Dashboard> {
       _handleLogout(context);
     }
   }
+
+  String formatOrderDate(String isoDate) {
+    try {
+      final dateTime = DateTime.parse(isoDate);
+      return '${_twoDigits(dateTime.day)}/${_twoDigits(dateTime.month)}/${dateTime.year} às ${_twoDigits(dateTime.hour)}:${_twoDigits(dateTime.minute)}';
+    } catch (e) {
+      return 'Data inválida';
+    }
+  }
+
+  String _twoDigits(int n) => n.toString().padLeft(2, '0');
 
   Future<void> _navigateToProfile() async {
     try {
@@ -378,15 +393,48 @@ class _StateDashboard extends State<Dashboard> {
 
   @override
   Widget _buildRecentOrders(BuildContext context) {
+    final recentOrders = _orders.take(5).toList();
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const SizedBox(height: 8),
             Text(
               'Atividades Recentes:',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 2),
+            ...recentOrders.map(
+              (order) => ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
+                title: Text(
+                  'Pedido #${order['id']}',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Data: ${formatOrderDate(order['order_date']) ?? 'sem data'}',
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                    Text(
+                      'Status: ${order['status'] ?? 'desconhecido'}',
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  ],
+                ),
+                trailing: Text(
+                  'R\$ ${order['total_amount']?.toStringAsFixed(2) ?? '0.00'}',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -400,19 +448,19 @@ class _StateDashboard extends State<Dashboard> {
       onTap: () => _onItemTapped(3),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [
-                  Icon(Icons.shopping_bag, color: Colors.blue, size: 26),
+                  Icon(Icons.shopping_bag, color: Colors.blue, size: 20),
                   const SizedBox(
-                    width: 8,
+                    width: 4,
                   ), // espaço horizontal entre ícone e texto
                   const Text(
                     'Pedidos',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -429,19 +477,19 @@ class _StateDashboard extends State<Dashboard> {
       onTap: () => _onItemTapped(1),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [
-                  Icon(Icons.card_giftcard, color: Colors.orange, size: 26),
+                  Icon(Icons.card_giftcard, color: Colors.orange, size: 20),
                   const SizedBox(
-                    width: 8,
+                    width: 4,
                   ), // espaço horizontal entre ícone e texto
                   const Text(
                     'Cupons',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -458,20 +506,20 @@ class _StateDashboard extends State<Dashboard> {
       onTap: () => _onItemTapped(2),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.shopping_cart, color: Colors.green, size: 26),
+                  Icon(Icons.shopping_cart, color: Colors.green, size: 20),
                   const SizedBox(
-                    width: 8,
+                    width: 4,
                   ), // espaço horizontal entre ícone e texto
                   const Text(
                     'Carrinho',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
