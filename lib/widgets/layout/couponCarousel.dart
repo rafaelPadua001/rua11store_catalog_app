@@ -26,7 +26,7 @@ class _CouponCarouselState extends State<CouponCarousel> {
   Future<void> fetchCouponImages() async {
     try {
       final response = await http.get(
-        Uri.parse('${apiUrl}/coupon/get-all-client-coupons'),
+        Uri.parse('$apiUrl/coupon/get-all-client-coupons'),
       );
 
       if (response.statusCode == 200) {
@@ -71,7 +71,7 @@ class _CouponCarouselState extends State<CouponCarousel> {
       ),
       items:
           coupons.map((coupon) {
-            final imageUrl = '${apiUrl}${coupon['image_path']}';
+            final imageUrl = '$apiUrl${coupon['image_path']}';
             final isWelcomeCoupon = coupon['title'] == 'BEMVINDO10';
 
             return Builder(

@@ -357,7 +357,7 @@ class _ProductScreenState extends State<ProductScreen> {
                     border: OutlineInputBorder(),
                   ),
                   textStyle: TextStyle(color: Colors.white), // texto branco
-                  iconColor: MaterialStateProperty.all(
+                  iconColor: WidgetStateProperty.all(
                     Colors.white,
                   ), // botões brancos (setas)
                 ),

@@ -953,8 +953,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ),
             ElevatedButton(
               style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
-                foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                backgroundColor: WidgetStateProperty.all<Color>(Colors.green),
+                foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
               ),
               onPressed: () async {
                 if (_recipientNameController.text.trim().isEmpty ||
