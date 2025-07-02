@@ -298,7 +298,7 @@ class _ProductScreenState extends State<ProductScreen> {
 
   Widget _buildCardActions() {
     return Container(
-      color: Colors.black,
+      color: const Color.fromARGB(255, 113, 30, 247),
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -353,7 +353,12 @@ class _ProductScreenState extends State<ProductScreen> {
                     labelText: 'Quantidade:',
                     labelStyle: TextStyle(color: Colors.white), // label branca
                     filled: true,
-                    fillColor: Colors.black, // fundo preto
+                    fillColor: const Color.fromARGB(
+                      255,
+                      113,
+                      30,
+                      247,
+                    ), // fundo preto
                     border: OutlineInputBorder(),
                   ),
                   textStyle: TextStyle(color: Colors.white), // texto branco
@@ -370,7 +375,7 @@ class _ProductScreenState extends State<ProductScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.zero,
                     ),
-                    backgroundColor: Colors.black,
+                    backgroundColor: const Color.fromARGB(255, 113, 30, 247),
                     minimumSize: Size(double.infinity, 25),
                   ),
                   onPressed: () async {
