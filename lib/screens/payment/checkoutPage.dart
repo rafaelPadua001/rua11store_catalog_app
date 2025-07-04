@@ -1218,6 +1218,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   });
                 },
                 items: const [
+                  DropdownMenuItem(value: 'visa', child: Text('Visa')),
+                  DropdownMenuItem(value: 'master', child: Text('Mastercard')),
                   DropdownMenuItem(value: 'elo', child: Text('Elo')),
                 ],
                 validator: (value) {
