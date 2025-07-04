@@ -17,6 +17,8 @@ class PaymentController {
     required String docType,
     required String docNumber,
   }) async {
+    final cleanedCpf = docNumber.replaceAll(RegExp(r'\D'), '');
+
     if (publicKey == null) {
       print('chave publica (MP_PUBLIC_KEY) não configurada');
       return null;
@@ -32,8 +34,8 @@ class PaymentController {
       "expiration_year": expirationYear,
       "security_code": securityCode,
       "cardholder": {
-        "name": cardholderName,
-        "identification": {"type": docType, "number": docNumber},
+        "name": cardholderName.toUpperCase(),
+        "identification": {"type": docType, "number": cleanedCpf},
       },
     };
 
