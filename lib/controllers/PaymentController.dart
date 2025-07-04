@@ -34,7 +34,7 @@ class PaymentController {
       "expiration_year": expirationYear,
       "security_code": securityCode,
       "cardholder": {
-        "name": cardholderName,
+        "name": cardholderName.toUpperCase(),
         "identification": {"type": docType, "number": cleanedCpf},
       },
     };
