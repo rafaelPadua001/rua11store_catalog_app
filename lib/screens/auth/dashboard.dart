@@ -361,11 +361,17 @@ class _StateDashboard extends State<Dashboard> {
       ),
       body: Row(
         children: <Widget>[
-          VerticalDivider(thickness: 0, width: 0.1),
-
           Expanded(
-            child: _widgetOptions.elementAt(
-              _selectedIndex < _widgetOptions.length ? _selectedIndex : 0,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(
+                16.0,
+              ), // se quiser manter espaçamento
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 1200),
+                child: _widgetOptions.elementAt(
+                  _selectedIndex < _widgetOptions.length ? _selectedIndex : 0,
+                ),
+              ),
             ),
           ),
         ],
