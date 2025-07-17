@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinbox/flutter_spinbox.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:rua11store_catalog_app/models/comment.dart';
 import 'package:rua11store_catalog_app/screens/payment/checkoutPage.dart';
+import 'package:rua11store_catalog_app/widgets/layout/comments/commentBottomSheet.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/product.dart';
 import '../../widgets/layout/bottomSheePaget.dart';
@@ -183,6 +185,7 @@ class _ProductScreenState extends State<ProductScreen> {
             _buildPriceCard(),
             _buildDeliveryCard(),
             _buildDescription(),
+            _buildComments(),
           ],
         ),
       ),
@@ -296,6 +299,56 @@ class _ProductScreenState extends State<ProductScreen> {
     );
   }
 
+  Widget _buildComments() {
+    final comments = widget.product.comments ?? [];
+
+    if (comments.isEmpty) {
+      return Card(
+        elevation: 5,
+        child: ExpansionTile(
+          title: const Text(
+            'Comments',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+          children: [
+            Padding(
+              padding: EdgeInsets.all(12.0),
+              child: Text('No comments yet.'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Card(
+      elevation: 5,
+      child: ExpansionTile(
+        title: const Text(
+          'Comments',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        children:
+            comments.map<Widget>((comment) {
+              return ListTile(
+                leading:
+                    comment.avatar_url != null && comment.avatar_url!.isNotEmpty
+                        ? CircleAvatar(
+                          backgroundImage: NetworkImage(comment.avatar_url!),
+                        )
+                        : const CircleAvatar(child: Icon(Icons.person)),
+                title: Text(comment.userName ?? 'Anonymous'),
+                subtitle: Text(comment.comment ?? ''),
+                trailing: Text(
+                  comment.createdAt != null
+                      ? comment.createdAt!.toLocal().toString()
+                      : '',
+                ),
+              );
+            }).toList(),
+      ),
+    );
+  }
+
   Widget _buildCardActions() {
     return Container(
       color: const Color.fromARGB(255, 113, 30, 247),
@@ -307,16 +360,91 @@ class _ProductScreenState extends State<ProductScreen> {
               IconButton(
                 color: Colors.white,
                 icon: Icon(Icons.comment),
-                tooltip: 'message',
-                onPressed: () {
-                  print(widget.product.stockQuantity);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Botão comentar ainda não está pronto'),
-                    ),
-                  );
+                tooltip: 'Comment',
+                onPressed: () async {
+                  final result =
+                      await showModalBottomSheet<Map<String, dynamic>>(
+                        context: context,
+                        isScrollControlled: true,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(16),
+                          ),
+                        ),
+                        builder:
+                            (_) => CommentBottomSheet(
+                              userName: 'username',
+                              avatarUrl: 'https://example.com/avatar.jpg',
+                              productId: widget.product.id,
+                            ),
+                      );
+
+                  if (result != null) {
+                    setState(() {
+                      final dynamic idRaw = result['id'];
+                      int id = 0;
+                      if (idRaw is int) {
+                        id = idRaw;
+                      } else if (idRaw is String) {
+                        id = int.tryParse(idRaw) ?? 0;
+                      }
+
+                      final dynamic productIdRaw =
+                          result['product_id']; // note a chave corrigida para snake_case
+                      int productId = 0;
+                      if (productIdRaw is int) {
+                        productId = productIdRaw;
+                      } else if (productIdRaw is String) {
+                        productId = int.tryParse(productIdRaw) ?? 0;
+                      }
+
+                      String comment = (result['comment'] ?? '').toString();
+
+                      String? userId = result['user_id']?.toString();
+
+                      String? userName = result['user_name']?.toString();
+
+                      String? avatarUrl = result['avatar_url']?.toString();
+
+                      String status =
+                          (result['status'] ?? 'pendente').toString();
+
+                      DateTime? createdAt;
+                      if (result['created_at'] != null) {
+                        createdAt = DateTime.tryParse(
+                          result['created_at'].toString(),
+                        );
+                      }
+
+                      DateTime? updatedAt;
+                      if (result['updated_at'] != null) {
+                        updatedAt = DateTime.tryParse(
+                          result['updated_at'].toString(),
+                        );
+                      }
+
+                      widget.product.comments.add(
+                        Comment(
+                          id: id,
+                          comment: comment,
+                          userId: userId,
+                          userName: userName,
+                          avatar_url: avatarUrl,
+                          productId: productId,
+                          status: status,
+                          createdAt: createdAt,
+                          updatedAt: updatedAt,
+                        ),
+                      );
+                    });
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Save comment successful')),
+                    );
+                  }
                 },
               ),
+
               SizedBox(width: 8),
               IconButton(
                 color: Colors.white,

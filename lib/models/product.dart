@@ -1,3 +1,5 @@
+import 'package:rua11store_catalog_app/models/comment.dart';
+
 class Product {
   final int id;
   final String name;
@@ -15,6 +17,7 @@ class Product {
   final int? parentId;
   final int userId;
   final int stockQuantity;
+  final List<Comment> comments;
 
   Product({
     required this.id,
@@ -33,9 +36,14 @@ class Product {
     this.parentId,
     required this.userId,
     required this.stockQuantity,
+    required this.comments,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
+    var commentsJson = json['comments'] as List<dynamic>? ?? [];
+    List<Comment> commentsList =
+        commentsJson.map((c) => Comment.fromJson(c)).toList();
+
     return Product(
       id: json['id'] != null ? int.tryParse(json['id'].toString()) ?? 0 : 0,
       name: json['name']?.toString() ?? 'Nome não disponível',
@@ -83,6 +91,7 @@ class Product {
           json['user_id'] != null
               ? int.tryParse(json['user_id'].toString()) ?? 0
               : 0,
+      comments: commentsList,
     );
   }
 
