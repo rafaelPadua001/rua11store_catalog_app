@@ -26,6 +26,7 @@ class ProductScreen extends StatefulWidget {
 }
 
 class _ProductScreenState extends State<ProductScreen> {
+  User? _loggedUser;
   final apiUrl = dotenv.env['API_URL'];
   //final apiUrl = dotenv.env['API_URL_LOCAL'];
   double quantity = 1;
@@ -33,6 +34,18 @@ class _ProductScreenState extends State<ProductScreen> {
   String? selectedZipCode;
   bool _isAddingToCart = false;
   final bool _isBuying = false;
+
+  void initState() {
+    super.initState();
+    _loadLoggedUser();
+  }
+
+  Future<void> _loadLoggedUser() async {
+    final user = await verifyLogged();
+    setState(() {
+      _loggedUser = user;
+    });
+  }
 
   Future<User?> verifyLogged() async {
     final session = Supabase.instance.client.auth.currentSession;
@@ -310,7 +323,7 @@ class _ProductScreenState extends State<ProductScreen> {
             'Comments',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
-          children: [
+          children: const [
             Padding(
               padding: EdgeInsets.all(12.0),
               child: Text('No comments yet.'),
@@ -329,6 +342,9 @@ class _ProductScreenState extends State<ProductScreen> {
         ),
         children:
             comments.map<Widget>((comment) {
+              final isOwner =
+                  _loggedUser != null && comment.userId == _loggedUser!.id;
+
               return ListTile(
                 leading:
                     comment.avatar_url != null && comment.avatar_url!.isNotEmpty
@@ -337,7 +353,30 @@ class _ProductScreenState extends State<ProductScreen> {
                         )
                         : const CircleAvatar(child: Icon(Icons.person)),
                 title: Text(comment.userName ?? 'Anonymous'),
-                subtitle: Text(comment.comment ?? ''),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(comment.comment ?? ''),
+                    const SizedBox(height: 8),
+                    if (isOwner)
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              // lógica de edição
+                            },
+                            child: const Text('Edit'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              // lógica de remoção
+                            },
+                            child: const Text('Remove'),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
                 trailing: Text(
                   comment.createdAt != null
                       ? comment.createdAt!.toLocal().toString()

@@ -23,7 +23,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
 
   String? userName;
   String? avatarUrl;
-
+  User? currentUser;
   bool isLoading = true;
 
   @override
@@ -72,6 +72,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
     if (user == null) {
       //user not logged
       setState(() {
+        currentUser = null;
         userName = 'Usuário desconhecido';
         avatarUrl = '';
         isLoading = false;
@@ -88,12 +89,15 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
               .single();
 
       setState(() {
+        currentUser = user;
         userName = response['full_name'] ?? 'Sem Nome';
         avatarUrl = response['avatar_url'] ?? '';
+        isLoading = false;
       });
     } catch (error) {
       setState(() {
-        userName = 'Uknown';
+        currentUser = user;
+        userName = 'Unknown';
         avatarUrl = '';
         isLoading = false;
       });
@@ -102,6 +106,47 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Padding(
+        padding: MediaQuery.of(context).viewInsets,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 16),
+              CircularProgressIndicator(),
+              SizedBox(height: 12),
+              Text('Carregando usuário...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (currentUser == null) {
+      return Padding(
+        padding: MediaQuery.of(context).viewInsets,
+        child: Wrap(
+          children: [
+            const Icon(Icons.lock_outline, size: 48),
+            const SizedBox(height: 16),
+            const Text(
+              'You have logged to comment.',
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Padding(
       padding: MediaQuery.of(context).viewInsets,
       child: Container(
