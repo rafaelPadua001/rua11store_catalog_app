@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:rua11store_catalog_app/catalog_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';

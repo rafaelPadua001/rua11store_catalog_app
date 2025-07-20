@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DeliveryService {
   final bool isLocal;
@@ -20,7 +21,7 @@ class DeliveryService {
     );
 
     final body = jsonEncode({
-      "zipcode_origin": "73080-180",
+      "zipcode_origin": dotenv.env['ZIPCODE_ORIGIN'],
       "zipcode_destiny": zipDestiny,
       "products": products,
       // "weight": weight,
