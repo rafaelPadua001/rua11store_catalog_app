@@ -57,12 +57,12 @@ class Commentscontroller {
         return data;
       } else {
         print('Erro ao salvar commentário: ${response.body}');
-        return null;
       }
     } catch (error) {
       print('Exceção ao salvar comentaro: $error');
       return null;
     }
+    return null;
   }
 
   Future<bool> deleteComment(int commentId) async {
@@ -77,7 +77,7 @@ class Commentscontroller {
         return false;
       }
     } catch (e) {
-      print('Erro ao deletar comentário ${e}');
+      print('Erro ao deletar comentário $e');
       return false;
     }
   }

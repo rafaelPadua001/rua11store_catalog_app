@@ -9,13 +9,13 @@ class CommentBottomSheet extends StatefulWidget {
   final int? commentId;
   final String? comment;
   const CommentBottomSheet({
-    Key? key,
+    super.key,
     required this.userName,
     required this.avatarUrl,
     required this.productId,
     this.commentId,
     this.comment,
-  }) : super(key: key);
+  });
 
   @override
   _CommentBottomSheetState createState() => _CommentBottomSheetState();
@@ -59,7 +59,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
           'user_name': userName ?? 'Sem Nome',
           'avatar_url': avatarUrl ?? '',
           'product_id': widget.productId,
-          'status': 'ativo',
+          'status': 'pendente',
           'created_at': DateTime.now().toIso8601String(),
           'updated_at': DateTime.now().toIso8601String(),
         });
@@ -87,7 +87,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
           'user_name': userName ?? 'Sem Nome',
           'avatar_url': avatarUrl ?? '',
           'product_id': widget.productId,
-          'status': 'ativo',
+          'status': 'pendente',
           'created_at': DateTime.now().toIso8601String(),
           'updated_at': DateTime.now().toIso8601String(),
         });

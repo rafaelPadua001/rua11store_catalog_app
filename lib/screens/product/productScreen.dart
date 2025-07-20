@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinbox/flutter_spinbox.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import 'package:rua11store_catalog_app/controllers/commentsController.dart';
 import 'package:rua11store_catalog_app/models/comment.dart';
 import 'package:rua11store_catalog_app/screens/payment/checkoutPage.dart';
@@ -36,6 +37,7 @@ class _ProductScreenState extends State<ProductScreen> {
   bool _isAddingToCart = false;
   final bool _isBuying = false;
 
+  @override
   void initState() {
     super.initState();
     _loadLoggedUser();
@@ -185,7 +187,7 @@ class _ProductScreenState extends State<ProductScreen> {
 
       if (response) {
         setState(() {
-          widget.product.comments!.removeWhere((c) => c.id == commentId);
+          widget.product.comments.removeWhere((c) => c.id == commentId);
         });
 
         ScaffoldMessenger.of(
@@ -451,7 +453,7 @@ class _ProductScreenState extends State<ProductScreen> {
                             child: const Text('Edit'),
                           ),
                           TextButton(
-                            onPressed: () => _onRemoveComment(comment.id!),
+                            onPressed: () => _onRemoveComment(comment.id),
                             child: const Text('Remove'),
                           ),
                         ],
@@ -460,7 +462,10 @@ class _ProductScreenState extends State<ProductScreen> {
                 ),
                 trailing: Text(
                   comment.createdAt != null
-                      ? comment.createdAt!.toLocal().toString()
+                      ? timeago.format(
+                        comment.createdAt!.toLocal(),
+                        locale: 'pt_br',
+                      )
                       : '',
                 ),
               );
