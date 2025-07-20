@@ -358,8 +358,6 @@ class _ProductScreenState extends State<ProductScreen> {
                       ),
                 );
 
-                print("RESULTADO RETORNADO DO MODAL: $result");
-
                 if (result != null && result is Map) {
                   final delivery = result['delivery'];
                   final zip = result['zipcode'];
@@ -369,8 +367,6 @@ class _ProductScreenState extends State<ProductScreen> {
                       selectedDelivery = delivery;
                       selectedZipCode = zip;
                     });
-
-                    print("🚚 selectedDelivery atualizado: $selectedDelivery");
                   } else {
                     debugPrint('Dados retornados são inválidos');
                   }
