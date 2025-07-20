@@ -416,13 +416,12 @@ class _ProductScreenState extends State<ProductScreen> {
         ),
       );
     }
-
     return Card(
       elevation: 5,
       child: ExpansionTile(
         title: Text(
           'Comments (${comments.where((c) => c.status == 'ativo').length})',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
         children:
             comments.where((comment) => comment.status == 'ativo').map<Widget>((
@@ -430,7 +429,7 @@ class _ProductScreenState extends State<ProductScreen> {
             ) {
               final isOwner =
                   _loggedUser != null && comment.userId == _loggedUser!.id;
-              if (comment.status == 'ativo') {}
+
               return ListTile(
                 leading:
                     comment.avatar_url != null && comment.avatar_url!.isNotEmpty
@@ -448,9 +447,7 @@ class _ProductScreenState extends State<ProductScreen> {
                       Row(
                         children: [
                           TextButton(
-                            onPressed: () {
-                              _onUpdateComment(comment);
-                            },
+                            onPressed: () => _onUpdateComment(comment),
                             child: const Text('Edit'),
                           ),
                           TextButton(
