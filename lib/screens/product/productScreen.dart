@@ -40,7 +40,9 @@ class _ProductScreenState extends State<ProductScreen> {
   @override
   void initState() {
     super.initState();
-    _loadLoggedUser();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadLoggedUser();
+    });
   }
 
   Future<void> _loadLoggedUser() async {
@@ -356,34 +358,24 @@ class _ProductScreenState extends State<ProductScreen> {
                       ),
                 );
 
-                if (result != null && result is List) {
-                  final validResults =
-                      result
-                          .where(
-                            (item) =>
-                                item is Map &&
-                                !item.containsKey('error') &&
-                                !item.containsKey("message"),
-                          )
-                          .toList();
+                print("RESULTADO RETORNADO DO MODAL: $result");
 
-                  if (validResults.isNotEmpty) {
-                    final firstValid = validResults.first;
-                    final zip = firstValid['zipCode'] ?? firstValid['zipCode'];
+                if (result != null && result is Map) {
+                  final delivery = result['delivery'];
+                  final zip = result['zipcode'];
 
-                    if (zip is String) {
-                      setState(() {
-                        selectedDelivery = firstValid['delivery'];
-                        selectedZipCode = zip;
-                      });
-                    } else {
-                      debugPrint(
-                        'Erro: zipCode está nulo ou em formato inválido',
-                      );
-                    }
+                  if (delivery != null && zip is String) {
+                    setState(() {
+                      selectedDelivery = delivery;
+                      selectedZipCode = zip;
+                    });
+
+                    print("🚚 selectedDelivery atualizado: $selectedDelivery");
                   } else {
-                    debugPrint('Nenhum resultado válido (sem erro) encontrado');
+                    debugPrint('Dados retornados são inválidos');
                   }
+                } else {
+                  debugPrint('Nenhum resultado selecionado');
                 }
               },
             ),
