@@ -656,12 +656,6 @@
       "languageVersion": "3.5"
     },
     {
-      "name": "timeago",
-      "rootUri": "file:///C:/Users/Rafae/AppData/Local/Pub/Cache/hosted/pub.dev/timeago-3.7.1",
-      "packageUri": "lib/",
-      "languageVersion": "2.12"
-    },
-    {
       "name": "typed_data",
       "rootUri": "file:///C:/Users/Rafae/AppData/Local/Pub/Cache/hosted/pub.dev/typed_data-1.4.0",
       "packageUri": "lib/",

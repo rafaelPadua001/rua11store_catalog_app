@@ -53,7 +53,7 @@ class _CouponCarouselState extends State<CouponCarousel> {
     }
 
     if (coupons.isEmpty) {
-      return const SizedBox.shrink();
+      return const Center(child: Text('Nenhuma imagem disponível'));
     }
 
     bool hasWelcomeCoupon = coupons.any(
@@ -70,74 +70,58 @@ class _CouponCarouselState extends State<CouponCarousel> {
         autoPlayInterval: const Duration(seconds: 5),
       ),
       items:
-          coupons
-              .where((coupon) {
-                final end_date = coupon['end_date'];
-                if (end_date == null) return false;
+          coupons.map((coupon) {
+            final imageUrl = '$apiUrl${coupon['image_path']}';
+            final isWelcomeCoupon = coupon['title'] == 'BEMVINDO10';
 
-                final endDate = DateTime.tryParse(end_date);
-                if (endDate == null) return false;
-
-                final now = DateTime.now();
-                return now.isBefore(endDate); //show valid coupons
-              })
-              .map((coupon) {
-                final imageUrl = '$apiUrl${coupon['image_path']}';
-                final isWelcomeCoupon = coupon['title'] == 'BEMVINDO10';
-
-                return Builder(
-                  builder: (BuildContext context) {
-                    return ClipRRect(
-                      borderRadius: BorderRadius.circular(12.0),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (context, error, stackTrace) => const Center(
-                                  child: Text('Erro ao carregar imagem'),
-                                ),
-                          ),
-                          if (isWelcomeCoupon)
-                            Positioned(
-                              bottom: 10,
-                              left: 10,
-                              right: 10,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  // ação do botão, ex: navegar para tela de cadastro
-                                  print('Botão de cadastro clicado!');
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => Register(),
-                                    ),
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.black.withOpacity(
-                                    0.6,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 10,
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Cadastre-se e aproveite o cupom BEMVINDO10!',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
+            return Builder(
+              builder: (BuildContext context) {
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(12.0),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (context, error, stackTrace) => const Center(
+                              child: Text('Erro ao carregar imagem'),
                             ),
-                        ],
                       ),
-                    );
-                  },
+                      if (isWelcomeCoupon)
+                        Positioned(
+                          bottom: 10,
+                          left: 10,
+                          right: 10,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // ação do botão, ex: navegar para tela de cadastro
+                              print('Botão de cadastro clicado!');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Register(),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black.withOpacity(0.6),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                            ),
+                            child: const Text(
+                              'Cadastre-se e aproveite o cupom BEMVINDO10!',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 );
-              })
-              .toList(),
+              },
+            );
+          }).toList(),
     );
   }
 }
