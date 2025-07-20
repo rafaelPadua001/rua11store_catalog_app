@@ -421,14 +421,16 @@ class _ProductScreenState extends State<ProductScreen> {
       elevation: 5,
       child: ExpansionTile(
         title: Text(
-          'Comments (${comments.length})',
+          'Comments (${comments.where((c) => c.status == 'ativo').length})',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
         children:
-            comments.map<Widget>((comment) {
+            comments.where((comment) => comment.status == 'ativo').map<Widget>((
+              comment,
+            ) {
               final isOwner =
                   _loggedUser != null && comment.userId == _loggedUser!.id;
-
+              if (comment.status == 'ativo') {}
               return ListTile(
                 leading:
                     comment.avatar_url != null && comment.avatar_url!.isNotEmpty
