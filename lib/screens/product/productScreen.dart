@@ -356,17 +356,33 @@ class _ProductScreenState extends State<ProductScreen> {
                       ),
                 );
 
-                if (result != null && result is Map) {
-                  final zip = result['zipCode'] ?? result['zipcode'];
-                  if (zip is String) {
-                    setState(() {
-                      selectedDelivery = result['delivery'];
-                      selectedZipCode = zip;
-                    });
+                if (result != null && result is List) {
+                  final validResults =
+                      result
+                          .where(
+                            (item) =>
+                                item is Map &&
+                                !item.containsKey('error') &&
+                                !item.containsKey("message"),
+                          )
+                          .toList();
+
+                  if (validResults.isNotEmpty) {
+                    final firstValid = validResults.first;
+                    final zip = firstValid['zipCode'] ?? firstValid['zipCode'];
+
+                    if (zip is String) {
+                      setState(() {
+                        selectedDelivery = firstValid['delivery'];
+                        selectedZipCode = zip;
+                      });
+                    } else {
+                      debugPrint(
+                        'Erro: zipCode está nulo ou em formato inválido',
+                      );
+                    }
                   } else {
-                    debugPrint(
-                      'Erro: zipCode está nulo ou em formato inválido',
-                    );
+                    debugPrint('Nenhum resultado válido (sem erro) encontrado');
                   }
                 }
               },
