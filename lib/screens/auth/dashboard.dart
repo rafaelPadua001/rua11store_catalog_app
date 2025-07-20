@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rua11store_catalog_app/catalog_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -330,6 +331,13 @@ class _StateDashboard extends State<Dashboard> {
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            tooltip: 'Home',
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            },
+          ),
           PopupMenuButton<String>(
             icon: Icon(Icons.notifications),
             onSelected: (value) {

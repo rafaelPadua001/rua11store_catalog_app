@@ -47,6 +47,7 @@ dependencies:
   flutter_spinbox: ^0.13.1
   font_awesome_flutter: ^10.8.0
   carousel_slider_x: ^6.0.7
+  timeago: ^3.6.0
 
 dev_dependencies:
   flutter_test:
