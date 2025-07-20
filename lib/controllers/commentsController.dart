@@ -45,7 +45,7 @@ class Commentscontroller {
     required int commentId,
     required String comment,
   }) async {
-    final url = Uri.parse('$baseUrl/comments/update/${commentId}');
+    final url = Uri.parse('$baseUrl/comments/update/$commentId');
     try {
       final response = await http.put(
         url,
@@ -62,10 +62,11 @@ class Commentscontroller {
       print('Exceção ao salvar comentaro: $error');
       return null;
     }
+    return null;
   }
 
   Future<bool> deleteComment(int commentId) async {
-    final url = Uri.parse('$baseUrl/comments/delete/${commentId}');
+    final url = Uri.parse('$baseUrl/comments/delete/$commentId');
     try {
       final response = await http.delete(url);
 
@@ -76,7 +77,7 @@ class Commentscontroller {
         return false;
       }
     } catch (e) {
-      print('Erro ao deletar comentário ${e}');
+      print('Erro ao deletar comentário $e');
       return false;
     }
   }
