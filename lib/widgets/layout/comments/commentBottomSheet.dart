@@ -6,11 +6,15 @@ class CommentBottomSheet extends StatefulWidget {
   final String userName;
   final String avatarUrl;
   final int productId;
+  final int? commentId;
+  final String? comment;
   const CommentBottomSheet({
     Key? key,
     required this.userName,
     required this.avatarUrl,
     required this.productId,
+    this.commentId,
+    this.comment,
   }) : super(key: key);
 
   @override
@@ -30,35 +34,69 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
   void initState() {
     super.initState();
     _loadUserData();
+    if (widget.comment != null) {
+      _commentController.text = widget.comment!;
+    }
   }
 
   void _onSave() async {
     String comment = _commentController.text.trim();
     if (comment.isEmpty) return;
 
+    dynamic success;
     final controller = Commentscontroller();
-    final success = await controller.saveComment(
-      comment: comment,
-      userId: Supabase.instance.client.auth.currentUser!.id,
-      userName: userName ?? 'Sem Nome',
-      avatarUrl: avatarUrl ?? '',
-      productId: widget.productId.toString(),
-    );
 
-    if (success) {
-      Navigator.pop(context, {
-        'id': 0, // se você tiver o id real, coloque aqui
-        'comment': comment,
-        'user_id': Supabase.instance.client.auth.currentUser!.id,
-        'user_name': userName ?? 'Sem Nome',
-        'avatar_url': avatarUrl ?? '',
-        'product_id': widget.productId,
-        'status': 'pendente',
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      });
+    if (widget.commentId != null) {
+      success = await controller.updateComment(
+        commentId: widget.commentId!,
+        comment: comment,
+      );
+      if (success != null) {
+        Navigator.pop(context, {
+          'success': success, // se você tiver o id real, coloque aqui
+          'comment': comment,
+          'user_id': Supabase.instance.client.auth.currentUser!.id,
+          'user_name': userName ?? 'Sem Nome',
+          'avatar_url': avatarUrl ?? '',
+          'product_id': widget.productId,
+          'status': 'pendente',
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } else {
+        // trate erro de salvar comentário aqui, se quiser
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao salvar comentário')));
+      }
     } else {
-      // trate erro de salvar comentário aqui, se quiser
+      final success = await controller.saveComment(
+        comment: comment,
+        userId: Supabase.instance.client.auth.currentUser!.id,
+        userName: userName ?? 'Sem Nome',
+        avatarUrl: avatarUrl ?? '',
+        productId: widget.productId.toString(),
+      );
+
+      if (success != null) {
+        print(success);
+        Navigator.pop(context, {
+          'success': success, // se você tiver o id real, coloque aqui
+          'comment': comment,
+          'user_id': Supabase.instance.client.auth.currentUser!.id,
+          'user_name': userName ?? 'Sem Nome',
+          'avatar_url': avatarUrl ?? '',
+          'product_id': widget.productId,
+          'status': 'pendente',
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } else {
+        // trate erro de salvar comentário aqui, se quiser
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao salvar comentário')));
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinbox/flutter_spinbox.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:rua11store_catalog_app/controllers/commentsController.dart';
 import 'package:rua11store_catalog_app/models/comment.dart';
 import 'package:rua11store_catalog_app/screens/payment/checkoutPage.dart';
 import 'package:rua11store_catalog_app/widgets/layout/comments/commentBottomSheet.dart';
@@ -111,6 +112,89 @@ class _ProductScreenState extends State<ProductScreen> {
     } finally {
       if (mounted) {
         setState(() => _isAddingToCart = false);
+      }
+    }
+  }
+
+  Future<void> _onUpdateComment(Comment comment) async {
+    final update = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder:
+          (_) => CommentBottomSheet(
+            userName: comment.userName ?? '',
+            avatarUrl: comment.avatar_url ?? '',
+            productId: comment.productId,
+            comment: comment.comment ?? '',
+            commentId: comment.id,
+          ),
+    );
+
+    if (update != null) {
+      setState(() {
+        final index = widget.product.comments.indexWhere(
+          (c) => c.id == comment.id,
+        );
+        if (index != 1) {
+          widget.product.comments[index] = Comment(
+            id: comment.id,
+            comment: update['comment'],
+            userId: update['user_id'],
+            userName: update['user_name'],
+            avatar_url: update['avatar_url'],
+            productId: update['product_id'],
+            status: update['status'],
+            createdAt:
+                DateTime.tryParse(update['create_at'] ?? '') ?? DateTime.now(),
+            updatedAt:
+                DateTime.tryParse(update['updated_at'] ?? '') ?? DateTime.now(),
+          );
+        }
+      });
+    }
+  }
+
+  Future<void> _onRemoveComment(int commentId) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Remove comment'),
+            content: const Text(
+              'Are you sure you want to remove this comment ?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Remove'),
+              ),
+            ],
+          ),
+    );
+
+    if (shouldDelete == true) {
+      final controller = Commentscontroller();
+      final response = await controller.deleteComment(commentId);
+
+      if (response) {
+        setState(() {
+          widget.product.comments!.removeWhere((c) => c.id == commentId);
+        });
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Removed comment')));
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro on remove comment')));
       }
     }
   }
@@ -336,8 +420,8 @@ class _ProductScreenState extends State<ProductScreen> {
     return Card(
       elevation: 5,
       child: ExpansionTile(
-        title: const Text(
-          'Comments',
+        title: Text(
+          'Comments (${comments.length})',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
         children:
@@ -363,14 +447,12 @@ class _ProductScreenState extends State<ProductScreen> {
                         children: [
                           TextButton(
                             onPressed: () {
-                              // lógica de edição
+                              _onUpdateComment(comment);
                             },
                             child: const Text('Edit'),
                           ),
                           TextButton(
-                            onPressed: () {
-                              // lógica de remoção
-                            },
+                            onPressed: () => _onRemoveComment(comment.id!),
                             child: const Text('Remove'),
                           ),
                         ],
@@ -418,68 +500,69 @@ class _ProductScreenState extends State<ProductScreen> {
                             ),
                       );
 
-                  if (result != null) {
-                    setState(() {
-                      final dynamic idRaw = result['id'];
-                      int id = 0;
-                      if (idRaw is int) {
-                        id = idRaw;
-                      } else if (idRaw is String) {
-                        id = int.tryParse(idRaw) ?? 0;
-                      }
+                  final Map<String, dynamic>? success =
+                      result?['success'] as Map<String, dynamic>?;
 
-                      final dynamic productIdRaw =
-                          result['product_id']; // note a chave corrigida para snake_case
-                      int productId = 0;
-                      if (productIdRaw is int) {
-                        productId = productIdRaw;
-                      } else if (productIdRaw is String) {
-                        productId = int.tryParse(productIdRaw) ?? 0;
-                      }
+                  if (success != null) {
+                    final Map<String, dynamic>? commentData =
+                        success['comment'] as Map<String, dynamic>?;
 
-                      String comment = (result['comment'] ?? '').toString();
+                    if (commentData != null) {
+                      final int id =
+                          commentData['id'] is int
+                              ? commentData['id']
+                              : int.tryParse(commentData['id'].toString()) ?? 0;
+                      final String comment = commentData['comment'] ?? '';
+                      final String userId = commentData['user_id'] ?? '';
+                      final String userName = commentData['user_name'] ?? '';
+                      final String avatarUrl = commentData['avatar_url'] ?? '';
+                      final int productId =
+                          commentData['product_id'] is int
+                              ? commentData['product_id']
+                              : int.tryParse(
+                                    commentData['product_id'].toString(),
+                                  ) ??
+                                  0;
+                      final String status = commentData['status'] ?? 'pendente';
+                      final DateTime? createdAt = DateTime.tryParse(
+                        commentData['created_at'] ?? '',
+                      );
+                      final DateTime? updatedAt = DateTime.tryParse(
+                        commentData['updated_at'] ?? '',
+                      );
 
-                      String? userId = result['user_id']?.toString();
-
-                      String? userName = result['user_name']?.toString();
-
-                      String? avatarUrl = result['avatar_url']?.toString();
-
-                      String status =
-                          (result['status'] ?? 'pendente').toString();
-
-                      DateTime? createdAt;
-                      if (result['created_at'] != null) {
-                        createdAt = DateTime.tryParse(
-                          result['created_at'].toString(),
+                      // Agora você pode atualizar seu estado com o comentário:
+                      setState(() {
+                        widget.product.comments.add(
+                          Comment(
+                            id: id,
+                            comment: comment,
+                            userId: userId,
+                            userName: userName,
+                            avatar_url: avatarUrl,
+                            productId: productId,
+                            status: status,
+                            createdAt: createdAt,
+                            updatedAt: updatedAt,
+                          ),
                         );
-                      }
+                      });
 
-                      DateTime? updatedAt;
-                      if (result['updated_at'] != null) {
-                        updatedAt = DateTime.tryParse(
-                          result['updated_at'].toString(),
-                        );
-                      }
-
-                      widget.product.comments.add(
-                        Comment(
-                          id: id,
-                          comment: comment,
-                          userId: userId,
-                          userName: userName,
-                          avatar_url: avatarUrl,
-                          productId: productId,
-                          status: status,
-                          createdAt: createdAt,
-                          updatedAt: updatedAt,
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            success['message'] ??
+                                'Comentário salvo com sucesso',
+                          ),
                         ),
                       );
-                    });
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Save comment successful')),
-                    );
+                    } else {
+                      print(
+                        'Erro: comentário não encontrado dentro do success',
+                      );
+                    }
+                  } else {
+                    print('Erro: resposta success inválida');
                   }
                 },
               ),
