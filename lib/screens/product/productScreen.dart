@@ -140,7 +140,7 @@ class _ProductScreenState extends State<ProductScreen> {
         final index = widget.product.comments.indexWhere(
           (c) => c.id == comment.id,
         );
-        if (index != 1) {
+        if (index != -1) {
           widget.product.comments[index] = Comment(
             id: comment.id,
             comment: update['comment'],
