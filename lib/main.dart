@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:rua11store_catalog_app/screens/auth/changePasswordScreen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/supabase_config.dart';
 import 'controllers/categoriesController.dart';
@@ -8,6 +9,7 @@ import 'controllers/productsController.dart';
 import 'widgets/layout/appbar.dart';
 import 'catalog_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:html' as html;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +20,30 @@ void main() async {
   );
 
   await dotenv.load(fileName: ".env");
+  final uri = Uri.base;
+
+  String? accessToken;
+  String? type;
+
+  // Primeiro tenta ler os parâmetros do fragmento (após #)
+  if (uri.fragment.isNotEmpty) {
+    final params = Uri.splitQueryString(uri.fragment);
+    accessToken = params['access_token'];
+    type = params['type'];
+  }
+
+  // Se não encontrou no fragmento, tenta pegar nos queryParameters (após ?)
+  if (accessToken == null) {
+    accessToken =
+        uri.queryParameters['access_token'] ?? uri.queryParameters['code'];
+    type = uri.queryParameters['type'] ?? 'recovery';
+  }
+
+  Widget initialScreen = const MyHomePage(title: 'Rua11Store');
+
+  if (type == 'recovery' && accessToken != null && accessToken.isNotEmpty) {
+    initialScreen = ChangePasswordScreen(accessToken: accessToken);
+  }
 
   runApp(
     MultiProvider(
@@ -25,13 +51,19 @@ void main() async {
         ChangeNotifierProvider(create: (context) => Categoriescontroller()),
         ChangeNotifierProvider(create: (context) => ProductsController()),
       ],
-      child: const MyApp(),
+      child: MyApp(initialScreen: initialScreen),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Widget initialScreen;
+  const MyApp({
+    Key? key,
+    this.initialScreen = const MyHomePage(
+      title: 'Rua11Store',
+    ), // Valor padrão aqui
+  }) : super(key: key);
 
   // This widget is the root of your application.
   @override
@@ -67,7 +99,9 @@ class MyApp extends StatelessWidget {
           displaySmall: GoogleFonts.hahmlet(fontSize: 14),
         ),
       ),
-      home: const MyHomePage(title: 'Rua11Store'),
+      // onGenerateRoute: _onGenerateRoute,
+      initialRoute: '/',
+      home: initialScreen,
     );
   }
 }

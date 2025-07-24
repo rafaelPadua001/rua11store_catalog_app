@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rua11store_catalog_app/screens/auth/dashboard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'register.dart';
+import 'recoveryPassword.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -114,7 +115,12 @@ class _StateLogin extends State<Login> {
                   SizedBox(height: 16),
                   TextButton(
                     onPressed: () {
-                      print('Recuperação de senha clicada');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RecoveryPassword(),
+                        ),
+                      );
                     },
                     child: Text(
                       'Recuperar senha',
