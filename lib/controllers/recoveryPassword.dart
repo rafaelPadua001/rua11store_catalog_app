@@ -7,7 +7,10 @@ class RecoveryPasswordController {
 
   Future<bool> sendRecoveryEmail(BuildContext context, String email) async {
     try {
-      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+      await Supabase.instance.client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: '${baseUrl}/reset-password?type=recovery',
+      );
       return true;
     } catch (e) {
       return false;
