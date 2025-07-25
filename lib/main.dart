@@ -59,11 +59,11 @@ void main() async {
 class MyApp extends StatelessWidget {
   final Widget initialScreen;
   const MyApp({
-    Key? key,
+    super.key,
     this.initialScreen = const MyHomePage(
       title: 'Rua11Store',
     ), // Valor padrão aqui
-  }) : super(key: key);
+  });
 
   // This widget is the root of your application.
   @override
