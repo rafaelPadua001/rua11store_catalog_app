@@ -86,7 +86,7 @@ class _ProductCardState extends State<ProductCard> {
         height: widget.product.height,
         weight: widget.product.weight,
         length: widget.product.length,
-        imageUrl: widget.product.image,
+        imageUrl: widget.product.thumbnailPath,
         category: widget.product.categoryId.toString(),
       );
 
@@ -121,9 +121,9 @@ class _ProductCardState extends State<ProductCard> {
     final String baseUrl = dotenv.env['API_URL'] ?? 'https://default.url/';
 
     String imageUrl =
-        widget.product.image.startsWith('http')
-            ? widget.product.image
-            : baseUrl + widget.product.image;
+        widget.product.thumbnailPath.startsWith('http')
+            ? widget.product.thumbnailPath
+            : baseUrl + widget.product.thumbnailPath;
     return GestureDetector(
       onTap: () {
         Navigator.push(

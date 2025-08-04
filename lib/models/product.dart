@@ -4,6 +4,7 @@ class Product {
   final int id;
   final String name;
   final String description;
+  final String thumbnailPath;
   final String image;
   final int quantity;
   final String price;
@@ -23,6 +24,7 @@ class Product {
     required this.id,
     required this.name,
     required this.description,
+    required this.thumbnailPath,
     required this.image,
     required this.quantity,
     required this.width,
@@ -48,6 +50,7 @@ class Product {
       id: json['id'] != null ? int.tryParse(json['id'].toString()) ?? 0 : 0,
       name: json['name']?.toString() ?? 'Nome não disponível',
       description: json['description']?.toString() ?? 'Sem descrição',
+      thumbnailPath: json['thumbnail_path']?.toString() ?? '',
       image: json['image_path']?.toString() ?? '',
       quantity:
           json['quantity'] != null
