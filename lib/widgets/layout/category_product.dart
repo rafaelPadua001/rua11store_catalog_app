@@ -64,7 +64,7 @@ class _CategoryProductState extends State<CategoryProduct> {
         height: product.height,
         weight: product.weight,
         length: product.length,
-        imageUrl: product.image,
+        imageUrl: product.thumbnail_path,
         category: product.categoryId.toString(),
       );
 
@@ -151,9 +151,9 @@ class _CategoryProductState extends State<CategoryProduct> {
             itemBuilder: (context, index) {
               final product = products[index];
               String imageUrl =
-                  product.image.startsWith('http')
-                      ? product.image
-                      : baseUrl + product.image;
+                  product.thumbnailPath.startsWith('http')
+                      ? product.thumbnailPath
+                      : baseUrl + product.thumbnailPath;
 
               return GestureDetector(
                 onTap: () {

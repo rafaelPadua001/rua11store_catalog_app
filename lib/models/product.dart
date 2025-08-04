@@ -5,7 +5,7 @@ class Product {
   final String name;
   final String description;
   final String thumbnailPath;
-  final String image;
+  final List<String> images;
   final int quantity;
   final String price;
   final double width;
@@ -25,7 +25,7 @@ class Product {
     required this.name,
     required this.description,
     required this.thumbnailPath,
-    required this.image,
+    required this.images,
     required this.quantity,
     required this.width,
     required this.height,
@@ -46,12 +46,32 @@ class Product {
     List<Comment> commentsList =
         commentsJson.map((c) => Comment.fromJson(c)).toList();
 
+    final List<String> parsedImages =
+        (json['images'] is List)
+            ? (json['images'] as List)
+                .map((item) {
+                  if (item is Map && item['image_paths'] != null) {
+                    return item['image_paths'].toString();
+                  } else if (item is String) {
+                    return item;
+                  }
+                  return '';
+                })
+                .where((url) => url.isNotEmpty)
+                .toList()
+            : [];
+
+    final String thumb = json['thumbnail_path']?.toString() ?? '';
+
+    final List<String> allImages =
+        {if (thumb.isNotEmpty) thumb, ...parsedImages}.toList();
+
     return Product(
       id: json['id'] != null ? int.tryParse(json['id'].toString()) ?? 0 : 0,
       name: json['name']?.toString() ?? 'Nome não disponível',
       description: json['description']?.toString() ?? 'Sem descrição',
-      thumbnailPath: json['thumbnail_path']?.toString() ?? '',
-      image: json['image_path']?.toString() ?? '',
+      thumbnailPath: thumb,
+      images: allImages,
       quantity:
           json['quantity'] != null
               ? int.tryParse(json['quantity'].toString()) ?? 0

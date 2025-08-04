@@ -36,6 +36,7 @@ class _ProductScreenState extends State<ProductScreen> {
   String? selectedZipCode;
   bool _isAddingToCart = false;
   final bool _isBuying = false;
+  late String _selectedImage;
 
   @override
   void initState() {
@@ -43,6 +44,7 @@ class _ProductScreenState extends State<ProductScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadLoggedUser();
     });
+    _selectedImage = widget.product.images.first;
   }
 
   Future<void> _loadLoggedUser() async {
@@ -272,16 +274,31 @@ class _ProductScreenState extends State<ProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // final cartProvider = context.watch<CartProvider>();
-
+    List<String> allImages = widget.product.images;
     return Scaffold(
       appBar: AppBar(title: Text(widget.product.name)),
       body: SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(height: 20),
-            _buildProductImage(apiUrl),
+            // SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Coluna de miniaturas
+                SizedBox(
+                  width: 40, // largura fixa da coluna de miniaturas
+                  child: _buildProductImages(allImages),
+                ),
+                SizedBox(
+                  width: 4,
+                ), // espaço entre miniaturas e imagem principal
+                // Imagem principal
+                SizedBox(width: 320, child: _buildProductThumbnail(apiUrl)),
+              ],
+            ),
+
             SizedBox(height: 10),
             _buildPriceCard(),
             _buildDeliveryCard(),
@@ -294,11 +311,40 @@ class _ProductScreenState extends State<ProductScreen> {
     );
   }
 
-  Widget _buildProductImage(apiUrl) {
-    return Image.network(
-      widget.product.thumbnailPath,
-      width: 340,
-      fit: BoxFit.cover,
+  Widget _buildProductImages(List<String> allImages) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: allImages.length,
+      itemBuilder: (context, index) {
+        final imageUrl = allImages[index];
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedImage = imageUrl;
+            });
+          },
+          child: Card(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            elevation: 2,
+            child: SizedBox(
+              width: 50, // 🔹 largura fixa do card
+              height: 50,
+              child: Image.network(
+                widget.product.images[index],
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProductThumbnail(apiUrl) {
+    return AspectRatio(
+      aspectRatio: 1, // 1:1 (quadrada)
+      child: Image.network(_selectedImage, fit: BoxFit.contain),
     );
   }
 
