@@ -85,7 +85,7 @@ class _ProductScreenState extends State<ProductScreen> {
         height: widget.product.height,
         weight: widget.product.weight,
         length: widget.product.length,
-        imageUrl: widget.product.image,
+        imageUrl: widget.product.thumbnailPath,
         category: widget.product.categoryId.toString(),
       );
 
@@ -224,7 +224,7 @@ class _ProductScreenState extends State<ProductScreen> {
     final productData = {
       'product_id': widget.product.id,
       'name': widget.product.name,
-      'image': widget.product.image,
+      'image': widget.product.thumbnailPath,
       'price': widget.product.price,
       'width': widget.product.width,
       'height': widget.product.height,
@@ -295,7 +295,11 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   Widget _buildProductImage(apiUrl) {
-    return Image.network(widget.product.image, width: 340, fit: BoxFit.cover);
+    return Image.network(
+      widget.product.thumbnailPath,
+      width: 340,
+      fit: BoxFit.cover,
+    );
   }
 
   Widget _buildPriceCard() {
