@@ -50,8 +50,8 @@ class Product {
         (json['images'] is List)
             ? (json['images'] as List)
                 .map((item) {
-                  if (item is Map && item['image_paths'] != null) {
-                    return item['image_paths'].toString();
+                  if (item is Map && item['image_path'] != null) {
+                    return item['image_path'].toString();
                   } else if (item is String) {
                     return item;
                   }
