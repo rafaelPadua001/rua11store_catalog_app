@@ -1,6 +1,7 @@
 class Payment {
   final String zipCode;
   final String userEmail;
+  final String userName;
   final String userId;
   final String? paymentMethodId;
   final Map<String, dynamic> address; // <-- aqui
@@ -23,6 +24,7 @@ class Payment {
   Payment({
     required this.zipCode,
     required this.userEmail,
+    required this.userName,
     required this.userId,
     required this.paymentMethodId,
     required this.address, // <-- aqui
@@ -48,6 +50,7 @@ class Payment {
       'installments': installments,
       'zipCode': zipCode,
       'payer_email': userEmail,
+      'payer_name': userName,
       'userId': userId,
       'payment_method_id': paymentMethodId,
       'payer_cpf': cpf,

@@ -312,6 +312,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         zipCode: widget.zipCode,
         userId: widget.userId,
         userEmail: widget.userEmail,
+        userName: widget.userName,
         cpf: _cpfController.text,
         address: address, // Usando o endereço correto
         paymentType: _selectedPayment,
@@ -353,6 +354,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       zipCode: widget.zipCode ?? "default_value",
       userEmail: widget.userEmail,
       userId: widget.userId,
+      userName: widget.userName,
       cpf: _cpfController.text,
       address: address,
       paymentType: _selectedPayment,
