@@ -258,6 +258,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       // Se _selectedAddress está disponível, formata o endereço
       address = {
         "recipient_name": _selectedAddress!["recipient_name"] ?? "",
+        "user_name": widget.userName,
         "street": _selectedAddress!["street"] ?? "",
         "number": _selectedAddress!["number"] ?? "",
         "complement": _selectedAddress!["complement"] ?? "",
@@ -275,6 +276,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       // Se o usuário inseriu um endereço no formulário, usamos ele
       address = {
         "recipient_name": _recipientNameController.text,
+        "user_name": widget.userName,
         "street": _streetController.text,
         "number": _numberController.text,
         "complement": _complementController.text,
