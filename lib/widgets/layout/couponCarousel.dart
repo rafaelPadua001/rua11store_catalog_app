@@ -47,7 +47,7 @@ class _CouponCarouselState extends State<CouponCarousel> {
   }
 
   Future<void> applyCoupon(String couponCode, String couponTitle) async {
-    final endpoint = 'coupon/get-all-client-coupons';
+    final endpoint = 'coupon/pick_up_coupon';
     final url = Uri.parse('$apiUrl$endpoint');
 
     final supabase = Supabase.instance.client;
