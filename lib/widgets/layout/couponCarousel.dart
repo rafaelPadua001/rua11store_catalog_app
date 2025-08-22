@@ -112,11 +112,11 @@ class _CouponCarouselState extends State<CouponCarousel> {
 
     return CarouselSlider(
       options: CarouselOptions(
-        height: 350.0,
+        //height: 350.0,
         autoPlay: true,
         enlargeCenterPage: true,
         viewportFraction: 0.9,
-        aspectRatio: 16 / 9,
+        aspectRatio: 4 / 3,
         autoPlayInterval: const Duration(seconds: 5),
       ),
       items:
@@ -138,7 +138,7 @@ class _CouponCarouselState extends State<CouponCarousel> {
                 final coupon_code = coupon['code'];
                 final expiry_date = coupon['end_date'];
                 final discount = coupon['discount'];
-
+                final screenHeight = MediaQuery.of(context).size.height;
                 return Builder(
                   builder: (BuildContext context) {
                     return ClipRRect(
@@ -149,6 +149,9 @@ class _CouponCarouselState extends State<CouponCarousel> {
                           // imagem de fundo
                           Image.network(
                             imageUrl,
+                            height:
+                                screenHeight * 0.25, // 25% da altura da tela
+                            width: double.infinity,
                             fit: BoxFit.cover,
                             errorBuilder:
                                 (context, error, stackTrace) => const Center(
