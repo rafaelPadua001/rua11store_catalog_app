@@ -149,8 +149,8 @@ class _CouponCarouselState extends State<CouponCarousel> {
                           // imagem de fundo
                           Image.network(
                             imageUrl,
-                            height:
-                                screenHeight * 0.25, // 25% da altura da tela
+                            // height:
+                            //    screenHeight * 0.25, // 25% da altura da tela
                             width: double.infinity,
                             fit: BoxFit.cover,
                             errorBuilder:
@@ -173,81 +173,152 @@ class _CouponCarouselState extends State<CouponCarousel> {
                             ),
                           ),
 
-                          // conteúdo sobreposto
-                          Positioned(
-                            bottom: 10,
-                            left: 10,
-                            right: 10,
+                          // código + desconto
+                          Center(
                             child: Column(
+                              mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // título
-                                Text(
-                                  coupon_title,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 4),
-
-                                // código + desconto
-                                Text(
-                                  'Código: $coupon_code • $discount% OFF',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 2),
-
-                                // validade
-                                Text(
-                                  'Válido até: $expiry_date',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white60,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 10),
-
-                                // botão
-                                ElevatedButton(
-                                  onPressed: () {
-                                    if (isWelcomeCoupon) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => Register(),
+                                // conteúdo sobreposto
+                                Stack(
+                                  children: [
+                                    // imagem de fundo
+                                    AspectRatio(
+                                      aspectRatio: 4 / 3,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          image: DecorationImage(
+                                            image: NetworkImage(
+                                              "https://via.placeholder.com/800x450",
+                                            ),
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
-                                      );
-                                    } else {
-                                      applyCoupon(coupon_code, coupon_title);
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        isWelcomeCoupon
-                                            ? Colors.black.withOpacity(0.7)
-                                            : Colors.green.withOpacity(0.7),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 10,
+                                      ),
                                     ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+
+                                    // bloco de conteúdo com fundo semi-transparente
+                                    Positioned(
+                                      bottom: 12,
+                                      left: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: const Color.fromARGB(
+                                            255,
+                                            14,
+                                            13,
+                                            13,
+                                          ).withOpacity(
+                                            0.5,
+                                          ), // cor de fundo com opacity
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              coupon_title,
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color.fromARGB(
+                                                  179,
+                                                  253,
+                                                  215,
+                                                  2,
+                                                ),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Código: $coupon_code • $discount% OFF',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Color.fromARGB(
+                                                  179,
+                                                  253,
+                                                  215,
+                                                  2,
+                                                ),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              'Válido até: $expiry_date',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.white60,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            const SizedBox(height: 10),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                if (isWelcomeCoupon) {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (context) =>
+                                                              Register(),
+                                                    ),
+                                                  );
+                                                } else {
+                                                  applyCoupon(
+                                                    coupon_code,
+                                                    coupon_title,
+                                                  );
+                                                }
+                                              },
+                                              style: TextButton.styleFrom(
+                                                backgroundColor:
+                                                    const Color.fromARGB(
+                                                      255,
+                                                      76,
+                                                      0,
+                                                      255,
+                                                    ).withOpacity(0.7),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 10,
+                                                      horizontal: 16,
+                                                    ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                              ),
+                                              child: Text(
+                                                isWelcomeCoupon
+                                                    ? 'Cadastre-se e aproveite o cupom $coupon_code!'
+                                                    : 'Resgatar cupom',
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  color: Color.fromARGB(
+                                                    255,
+                                                    255,
+                                                    255,
+                                                    255,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  child: Text(
-                                    isWelcomeCoupon
-                                        ? 'Cadastre-se e aproveite o cupom $coupon_code!'
-                                        : 'Usar cupom',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
+                                  ],
                                 ),
                               ],
                             ),
