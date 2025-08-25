@@ -118,7 +118,8 @@ class _ProductCardState extends State<ProductCard> {
 
   @override
   Widget build(BuildContext context) {
-    final String baseUrl = dotenv.env['API_URL'] ?? 'https://default.url/';
+    final String baseUrl =
+        dotenv.env['API_URL_LOCAL'] ?? 'https://default.url/';
 
     String imageUrl =
         widget.product.thumbnailPath.startsWith('http')
@@ -151,23 +152,52 @@ class _ProductCardState extends State<ProductCard> {
                         double
                             .infinity, // Ajuste esse valor conforme necessário
                   ),
-                  child: Image.network(
-                    imageUrl,
-                    width: 40,
-                    fit: BoxFit.contain,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const Center(child: CircularProgressIndicator());
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Center(
-                        child: Icon(
-                          Icons.image_not_supported,
-                          color: Colors.grey,
-                          size: 50,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Image.network(
+                          imageUrl,
+                          width: 40,
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(
+                                Icons.image_not_supported,
+                                color: Colors.grey,
+                                size: 50,
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
+                      ),
+                      if (widget.product.stockQuantity == 0)
+                        Positioned(
+                          bottom: 8,
+                          //right: 8,
+                          child: Chip(
+                            label: const Text(
+                              'Esgotado',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            backgroundColor: const Color.fromARGB(
+                              255,
+                              98,
+                              0,
+                              255,
+                            ).withOpacity(0.8),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
