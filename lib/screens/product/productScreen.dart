@@ -288,14 +288,18 @@ class _ProductScreenState extends State<ProductScreen> {
               children: [
                 // Coluna de miniaturas
                 SizedBox(
-                  width: 40, // largura fixa da coluna de miniaturas
+                  width: 100, // largura fixa da coluna de miniaturas
                   child: _buildProductImages(allImages),
                 ),
                 SizedBox(
                   width: 4,
                 ), // espaço entre miniaturas e imagem principal
                 // Imagem principal
-                SizedBox(width: 320, child: _buildProductThumbnail(apiUrl)),
+                SizedBox(
+                  width: 320,
+                  height: 320,
+                  child: _buildProductThumbnail(apiUrl),
+                ),
               ],
             ),
 
@@ -328,11 +332,38 @@ class _ProductScreenState extends State<ProductScreen> {
             margin: const EdgeInsets.symmetric(vertical: 4),
             elevation: 2,
             child: SizedBox(
-              width: 50, // 🔹 largura fixa do card
-              height: 50,
-              child: Image.network(
-                widget.product.images[index],
-                fit: BoxFit.cover,
+              width: 80, // 🔹 largura fixa do card
+              height: 80,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Image.network(imageUrl, fit: BoxFit.contain),
+                  ),
+
+                  if (widget.product.stockQuantity == 0)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Esgotado',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -343,8 +374,35 @@ class _ProductScreenState extends State<ProductScreen> {
 
   Widget _buildProductThumbnail(apiUrl) {
     return AspectRatio(
-      aspectRatio: 1, // 1:1 (quadrada)
-      child: Image.network(_selectedImage, fit: BoxFit.contain),
+      aspectRatio: 1, // quadrada
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.network(_selectedImage, fit: BoxFit.contain),
+          ),
+
+          if (widget.product.stockQuantity == 0)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.85),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'Esgotado',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -443,7 +501,7 @@ class _ProductScreenState extends State<ProductScreen> {
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: Text(
-              'Description: ${widget.product.description}',
+              '${widget.product.description}',
               style: TextStyle(fontSize: 12),
             ),
           ),
@@ -630,7 +688,11 @@ class _ProductScreenState extends State<ProductScreen> {
                 color: Colors.white,
                 icon: Icon(Icons.add_shopping_cart_sharp),
                 tooltip: 'cart',
-                onPressed: _isAddingToCart ? null : _addToCart,
+                onPressed:
+                    (widget.product.stockQuantity < 1 || _isAddingToCart)
+                        ? null
+                        : _addToCart,
+                disabledColor: Colors.grey.withOpacity(0.6),
               ),
               SizedBox(width: 8),
               SizedBox(
@@ -680,17 +742,30 @@ class _ProductScreenState extends State<ProductScreen> {
               Expanded(
                 child: TextButton(
                   style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
+                    shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.zero,
                     ),
-                    backgroundColor: const Color.fromARGB(255, 113, 30, 247),
-                    minimumSize: Size(double.infinity, 25),
+                    backgroundColor:
+                        widget.product.stockQuantity >= 1
+                            ? const Color.fromARGB(
+                              255,
+                              113,
+                              30,
+                              247,
+                            ) // roxo ativo
+                            : Colors.grey, // cinza desabilitado
+                    minimumSize: const Size(double.infinity, 25),
                   ),
-                  onPressed: () async {
-                    await _buyNow();
-                  },
-
-                  child: Text('Buy Now', style: TextStyle(color: Colors.white)),
+                  onPressed:
+                      widget.product.stockQuantity >= 1
+                          ? () async {
+                            await _buyNow();
+                          }
+                          : null, // 🔹 null = botão desabilitado
+                  child: const Text(
+                    'Buy Now',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
             ],
