@@ -617,7 +617,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     _buildPaymentCard(context),
                     _buildTotalCard(context),
                     const SizedBox(height: 16),
-                    _buildElevatedButton(), // Botão azul grande
+                    //  _buildElevatedButton(), // Botão azul grande
                   ],
                 ),
               ),
@@ -719,7 +719,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         });
       },
       child: Card(
-        elevation: 0,
+        elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
@@ -1078,6 +1078,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
+        elevation: 4,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -1120,6 +1121,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
+        elevation: 4,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -1129,35 +1131,41 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 'Payment Method',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              RadioListTile<String>(
-                title: const Text('Cartão de Crédito'),
-                value: 'credit',
-                groupValue: _selectedPayment,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedPayment = value!;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Cartão de Débito'),
-                value: 'debit',
-                groupValue: _selectedPayment,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedPayment = value!;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Pix'),
-                value: 'pix',
-                groupValue: _selectedPayment,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedPayment = value!;
-                  });
-                },
+              SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: _buildCardtableCard(
+                      title: "Cartão de crédito",
+                      value: "credit",
+                      selectedValue: _selectedPayment,
+                      onTap: () {
+                        setState(() => _selectedPayment = "credit");
+                      },
+                    ),
+                  ),
+
+                  Expanded(
+                    child: _buildCardtableCard(
+                      title: "Débito",
+                      value: "debit",
+                      selectedValue: _selectedPayment,
+                      onTap: () => setState(() => _selectedPayment = "debit"),
+                    ),
+                  ),
+
+                  Expanded(
+                    child: _buildCardtableCard(
+                      title: "Pix",
+                      value: "pix",
+                      selectedValue: _selectedPayment,
+                      onTap: () {
+                        setState(() => _selectedPayment = "pix");
+                      },
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 16),
@@ -1173,133 +1181,166 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
+  Widget _buildCardtableCard({
+    required String title,
+    required String value,
+    required String selectedValue,
+    required VoidCallback onTap,
+  }) {
+    final bool isSelected = value == selectedValue;
+
+    return InkWell(
+      onTap: onTap,
+      child: Card(
+        color: isSelected ? Colors.blue[50] : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: isSelected ? Colors.blue : Colors.grey.shade300,
+            width: 1,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Icon(
+                isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: isSelected ? Colors.blue : Colors.grey,
+              ),
+
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (isSelected) Icon(Icons.check, color: Colors.blue),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCardPaymentForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          controller: _cpfController,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: 'CPF'),
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Row(
           children: [
-            if (_selectedPayment == 'credit') ...[
-              // Número de Parcelas
-              SizedBox(
-                height: 60,
-                child: DropdownButtonFormField<int>(
-                  value: _selectedInstallment,
-                  decoration: InputDecoration(
-                    labelText: 'Número de Parcelas',
-                    isDense: true,
-                  ),
-                  items:
-                      List.generate(4, (index) => index + 1)
-                          .map(
-                            (number) => DropdownMenuItem<int>(
-                              value: number,
-                              child: Text('$number'),
-                            ),
-                          )
-                          .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedInstallment = value!;
-                      _installmentsController.text = value.toString();
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null) {
-                      return 'Por favor, selecione o número de parcelas';
-                    }
-                    return null;
-                  },
+            Expanded(
+              flex: 2,
+              child: TextField(
+                controller: _cpfController,
+                decoration: const InputDecoration(
+                  labelText: 'CPF',
+                  isDense: true,
                 ),
               ),
-              SizedBox(height: 16),
-              // Cartões de Crédito
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
+            ),
+            const SizedBox(width: 8),
+            if (_selectedPayment == 'credit')
+              Expanded(
+                flex: 2,
+                child: Stack(
+                  clipBehavior: Clip.none, // 👈 deixa o menu sair pra fora
+                  children: [
+                    DropdownButtonFormField<int>(
+                      value: _selectedInstallment,
+                      decoration: const InputDecoration(
+                        labelText: 'Parcelas',
+                        isDense: true,
+                      ),
+                      items:
+                          List.generate(4, (i) => i + 1)
+                              .map(
+                                (n) => DropdownMenuItem(
+                                  value: n,
+                                  child: Text('$n'),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (value) {
+                        setState(() => _selectedInstallment = value!);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
                   labelText: 'Forma de Pagamento',
-                  border: OutlineInputBorder(),
+                  isDense: true,
                 ),
                 value: _selectedPaymentMethodId,
                 onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedPaymentMethodId = newValue;
-                  });
-                },
-                items: const [
-                  DropdownMenuItem(value: 'visa', child: Text('Visa')),
-                  DropdownMenuItem(value: 'master', child: Text('Mastercard')),
-                  DropdownMenuItem(
-                    value: 'amex',
-                    child: Text('American Express'),
-                  ),
-                ],
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Selecione um método de pagamento';
-                  }
-                  return null;
-                },
-              ),
-            ] else if (_selectedPayment == 'debit') ...[
-              // Cartão de Débito
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Forma de Pagamento (Débito)',
-                  border: OutlineInputBorder(),
-                ),
-                value: _selectedPaymentMethodId,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedPaymentMethodId = newValue;
-                  });
+                  setState(() => _selectedPaymentMethodId = newValue);
                 },
                 items: const [
                   DropdownMenuItem(value: 'visa', child: Text('Visa')),
                   DropdownMenuItem(value: 'master', child: Text('Mastercard')),
                   DropdownMenuItem(value: 'elo', child: Text('Elo')),
                 ],
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Selecione um método de pagamento';
-                  }
-                  return null;
-                },
               ),
-            ],
+            ),
           ],
-        ),
-
-        TextField(
-          controller: _numberCardController,
-          decoration: InputDecoration(labelText: 'Número do Cartão'),
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        ),
-
-        TextField(
-          controller: _nameCardController,
-          decoration: InputDecoration(labelText: 'Nome no Cartão'),
         ),
         Row(
           children: [
             Expanded(
+              flex: 3,
+              child: TextField(
+                controller: _numberCardController,
+                decoration: InputDecoration(
+                  labelText: 'N° do Cartão',
+                  isDense: true,
+                ),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 3,
+              child: TextField(
+                controller: _nameCardController,
+                decoration: InputDecoration(
+                  labelText: 'Nome no Cartão',
+                  isDense: true,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
               child: TextField(
                 controller: _cardExpiryController,
-                decoration: InputDecoration(labelText: 'Validade MM/AA'),
+                decoration: InputDecoration(
+                  labelText: 'Validade MM/AA',
+                  isDense: true,
+                ),
                 keyboardType: TextInputType.number,
               ),
             ),
             SizedBox(width: 5),
             Expanded(
+              flex: 2,
               child: TextField(
                 controller: _cardCVVController,
-                decoration: InputDecoration(labelText: '*CVV'),
+                decoration: InputDecoration(labelText: '*CVV', isDense: true),
                 keyboardType: TextInputType.number,
                 inputFormatters: [
                   LengthLimitingTextInputFormatter(3), // Limita a 3 caracteres
@@ -1338,6 +1379,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
+        elevation: 0,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -1359,13 +1401,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
               Text(
                 _selectedInstallment == null
                     ? 'Total: R\$ ${_total.toStringAsFixed(2)}'
-                    : 'Total: R\$ ${((_total) / _selectedInstallment!).toStringAsFixed(2)} '
-                        'x $_selectedInstallment = R\$ ${_total.toStringAsFixed(2)}',
+                    : 'Total: R\$${_total.toStringAsFixed(2)} '
+                        '/ $_selectedInstallment = R\$ ${((_total) / _selectedInstallment!).toStringAsFixed(2)} ',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                 ),
               ),
+              _buildElevatedButton(),
             ],
           ),
         ),
@@ -1379,7 +1422,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       height: 60,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
+          backgroundColor: Colors.deepPurpleAccent,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
