@@ -50,6 +50,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
   late TextEditingController _cardExpiryController;
   late TextEditingController _cardCVVController;
   late TextEditingController _couponController;
+  final apiUrl = dotenv.env['API_URL'] ?? dotenv.env['API_URL_LOCAL'] ?? '';
+  bool isExpanded = false;
 
   final List<String> estados = [
     'AC',
@@ -627,159 +629,197 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildProductsList() {
-    final apiUrl = dotenv.env['API_URL'] ?? '';
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: widget.products.length,
-      itemBuilder: (context, index) {
-        final p = widget.products[index];
-        // print(p);
-        final imageUrl = p['image'] ?? p['image_url'] ?? '';
-        final name =
-            p['name'] ?? p['product_name'] ?? p['productName'] ?? 'Sem nome';
-        final price = double.tryParse(p['price'].toString()) ?? 0.0;
-        final quantity = int.tryParse(p['quantity'].toString()) ?? 0;
-        final total = price * quantity;
+    return Card(
+      elevation: 4, // sombra para todos os produtos
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.all(12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: widget.products.length,
+          itemBuilder: (context, index) {
+            final p = widget.products[index];
+            final imageUrl = p['image'] ?? p['image_url'] ?? '';
+            final name =
+                p['name'] ??
+                p['product_name'] ??
+                p['productName'] ??
+                'Sem nome';
+            final price = double.tryParse(p['price'].toString()) ?? 0.0;
+            final quantity = int.tryParse(p['quantity'].toString()) ?? 0;
+            final total = price * quantity;
 
-        return Card(
-          margin: const EdgeInsets.all(12.0),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child:
-                      imageUrl.isNotEmpty
-                          ? Image.network(
-                            imageUrl,
-                            height: 80,
-                            width: 80,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (context, error, stackTrace) =>
-                                    const Icon(Icons.broken_image, size: 80),
-                          )
-                          : const Icon(Icons.image_not_supported, size: 80),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'R\$ ${total.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      Text(
-                        'Quantidade: $quantity',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ],
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 2.0,
+              ), // espaçamento entre produtos
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child:
+                        imageUrl.isNotEmpty
+                            ? Image.network(
+                              imageUrl,
+                              height: 90,
+                              width: 70,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (context, error, stackTrace) =>
+                                      const Icon(Icons.broken_image, size: 120),
+                            )
+                            : const Icon(Icons.image_not_supported, size: 120),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    print('Remover $name');
-                    // lógica de remoção aqui
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'R\$ ${total.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        Text(
+                          'Quantidade: $quantity',
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      print('Remover $name');
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
   Widget _buildAddressCard(BuildContext context, Address address) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width,
+    return InkWell(
+      onTap: () {
+        setState(() {
+          isExpanded = !isExpanded;
+        });
+      },
       child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Icon(
+                Icons.local_shipping,
+                size: 28,
+                color: Colors.deepPurpleAccent,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Delivery to Address',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Entrega',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          isExpanded
+                              ? Icons.arrow_drop_up
+                              : Icons.arrow_drop_down,
+                          color: Colors.black54,
+                        ),
+                      ],
+                    ),
+                    if (isExpanded) ...[
+                      Text(
+                        _selectedAddress != null
+                            ? _selectedAddress!['recipient_name'] ??
+                                'Nome não informado'
+                            : address.recipientName,
                       ),
-                    ),
-                    // Atualizado para acessar corretamente os dados de _selectedAddress
-                    Text(
-                      _selectedAddress != null
-                          ? _selectedAddress!['recipient_name'] ??
-                              'Nome não informado'
-                          : address.recipientName,
-                    ),
-                    Text(
-                      _selectedAddress != null
-                          ? '${_selectedAddress!['street']}, ${_selectedAddress!['number']}, ${_selectedAddress!['complement']} ,${_selectedAddress!['bairro']}'
-                          : '${address.street}, ${address.number}, ${address.complement} ,${address.bairro}',
-                    ),
-                    Text(
-                      _selectedAddress != null
-                          ? '${_selectedAddress!['city']}, ${_selectedAddress!['state']}, ${_selectedAddress!['zip_code']}'
-                          : '${address.city}, ${address.state} ,  ${address.zipCode}',
-                    ),
-                    SizedBox(height: 6),
+                      Text(
+                        _selectedAddress != null
+                            ? '${_selectedAddress!['street']}, ${_selectedAddress!['number']}, ${_selectedAddress!['complement']} ,${_selectedAddress!['bairro']}'
+                            : '${address.street}, ${address.number}, ${address.complement} ,${address.bairro}',
+                      ),
+                      Text(
+                        _selectedAddress != null
+                            ? '${_selectedAddress!['city']}, ${_selectedAddress!['state']}, ${_selectedAddress!['zip_code']}'
+                            : '${address.city}, ${address.state} ,  ${address.zipCode}',
+                      ),
+                      SizedBox(height: 6),
+
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return _buildAddressFormDialog(context);
+                                },
+                              );
+                            },
+                            child: const Text('Change'),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              try {
+                                final existingAddress = await _addressController
+                                    .getUserAddresses(widget.userId);
+
+                                final id = existingAddress.first.id;
+
+                                if (id != null) {
+                                  await _addressController.deleteAddress(id);
+                                  Navigator.of(
+                                    context,
+                                  ).pop(); // Fecha o diálogo
+                                  Navigator.of(context).pop(
+                                    true,
+                                  ); // Retorna true para indicar sucesso
+                                } else {
+                                  print('ID do endereço não encontrado');
+                                }
+                              } catch (e) {
+                                print('Erro ao remover endereço: $e');
+                                Navigator.of(
+                                  context,
+                                ).pop(); // Fecha o diálogo mesmo com erro
+                              }
+                            },
+                            child: const Text('remove'),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
-              ),
-              TextButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return _buildAddressFormDialog(context);
-                    },
-                  );
-                },
-                child: const Text('Change'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  try {
-                    final existingAddress = await _addressController
-                        .getUserAddresses(widget.userId);
-
-                    final id = existingAddress.first.id;
-
-                    if (id != null) {
-                      await _addressController.deleteAddress(id);
-                      Navigator.of(context).pop(); // Fecha o diálogo
-                      Navigator.of(
-                        context,
-                      ).pop(true); // Retorna true para indicar sucesso
-                    } else {
-                      print('ID do endereço não encontrado');
-                    }
-                  } catch (e) {
-                    print('Erro ao remover endereço: $e');
-                    Navigator.of(
-                      context,
-                    ).pop(); // Fecha o diálogo mesmo com erro
-                  }
-                },
-                child: const Text('remove'),
               ),
             ],
           ),
