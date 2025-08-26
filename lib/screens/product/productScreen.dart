@@ -288,7 +288,7 @@ class _ProductScreenState extends State<ProductScreen> {
               children: [
                 // Coluna de miniaturas
                 SizedBox(
-                  width: 100, // largura fixa da coluna de miniaturas
+                  width: 90, // largura fixa da coluna de miniaturas
                   child: _buildProductImages(allImages),
                 ),
                 SizedBox(
