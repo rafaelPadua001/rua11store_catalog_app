@@ -284,7 +284,7 @@ class _ProductScreenState extends State<ProductScreen> {
             // SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              //crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Coluna de miniaturas
                 SizedBox(
@@ -292,12 +292,16 @@ class _ProductScreenState extends State<ProductScreen> {
                   child: _buildProductImages(allImages),
                 ),
                 SizedBox(
-                  width: 4,
+                  width: 1,
                 ), // espaço entre miniaturas e imagem principal
                 // Imagem principal
                 SizedBox(
-                  width: 320,
-                  height: 320,
+                  width:
+                      MediaQuery.of(context).size.width *
+                      0.75, // 90% da largura da tela
+                  height:
+                      MediaQuery.of(context).size.height *
+                      0.6, // 50% da altura da tela
                   child: _buildProductThumbnail(apiUrl),
                 ),
               ],
@@ -330,10 +334,10 @@ class _ProductScreenState extends State<ProductScreen> {
           },
           child: Card(
             margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 2,
+            elevation: 1,
             child: SizedBox(
-              width: 80, // 🔹 largura fixa do card
-              height: 80,
+              width: 90, // 🔹 largura fixa do card
+              height: 90,
               child: Stack(
                 children: [
                   Positioned.fill(
