@@ -346,7 +346,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         securityCode: tempPayment.cvv ?? '',
         cardholderName: tempPayment.nameCard ?? '',
         docType: docType,
-        docNumber: _cpfController.text,
+        docNumber: _cpfController.text.replaceAll(RegExp(r'\D'), ''),
       );
     }
 
@@ -357,7 +357,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       userEmail: widget.userEmail,
       userId: widget.userId,
       userName: widget.userName,
-      cpf: _cpfController.text,
+      cpf: _cpfController.text.replaceAll(RegExp(r'\D'), ''),
       address: address,
       paymentType: _selectedPayment,
       subtotal: _subtotal,
@@ -1167,6 +1167,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       selectedValue: _selectedPayment,
                       onTap: () {
                         setState(() => _selectedPayment = "pix");
+                        _handlePayment();
                       },
                     ),
                   ),
@@ -1310,15 +1311,34 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 onChanged: (String? newValue) {
                   setState(() => _selectedPaymentMethodId = newValue);
                 },
-                items: const [
-                  DropdownMenuItem(value: 'visa', child: Text('Visa')),
-                  DropdownMenuItem(value: 'master', child: Text('Mastercard')),
-                  DropdownMenuItem(value: 'elo', child: Text('Elo')),
+                items: [
+                  if (_selectedPayment == 'credit') ...[
+                    const DropdownMenuItem(value: 'visa', child: Text('Visa')),
+                    const DropdownMenuItem(
+                      value: 'master',
+                      child: Text('Mastercard'),
+                    ),
+                    const DropdownMenuItem(value: 'elo', child: Text('Elo')),
+                  ] else if (_selectedPayment == 'debit') ...[
+                    const DropdownMenuItem(
+                      value: 'visa_debit',
+                      child: Text('Visa'),
+                    ),
+                    const DropdownMenuItem(
+                      value: 'master_debit',
+                      child: Text('Mastercard'),
+                    ),
+                    const DropdownMenuItem(
+                      value: 'elo_debit',
+                      child: Text('Elo'),
+                    ),
+                  ],
                 ],
               ),
             ),
           ],
         ),
+
         Row(
           children: [
             Expanded(
@@ -1416,7 +1436,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
               const SizedBox(height: 12),
               Text('Products: R\$ ${_subtotal.toStringAsFixed(2)}'),
-              Text('Shiping: R\$ ${_shipping.toStringAsFixed(2)}'),
+              Text('Shipping: R\$ ${_shipping.toStringAsFixed(2)}'),
               if (_appliedCoupon != null)
                 Text(
                   'Discount (${_appliedCoupon!.code}): -R\$ ${discountAmount.toStringAsFixed(2)}',
