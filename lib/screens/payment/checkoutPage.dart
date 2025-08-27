@@ -563,7 +563,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildProductsList(), // Certifique-se que aqui não tem ListView com scroll
+                    _buildProductsList(),
                     FutureBuilder<List<Address>>(
                       future: _addressesFuture,
                       builder: (context, snapshot) {
@@ -1167,7 +1167,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       selectedValue: _selectedPayment,
                       onTap: () {
                         setState(() => _selectedPayment = "pix");
-                        _handlePayment();
+                        // _handlePayment();
                       },
                     ),
                   ),
@@ -1401,10 +1401,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildPixInfo() {
-    return const Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Você selecionou pagamento via pix"),
+        TextField(
+          controller: _cpfController,
+          decoration: const InputDecoration(labelText: 'CPF', isDense: true),
+        ),
+
+        Text("Digite seu CPF e clique em Place Order Now"),
         Text('A chave pix será exibida após o pedido'),
       ],
     );
