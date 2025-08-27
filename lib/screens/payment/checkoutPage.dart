@@ -51,7 +51,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   late TextEditingController _cardCVVController;
   late TextEditingController _couponController;
   final apiUrl = dotenv.env['API_URL'] ?? dotenv.env['API_URL_LOCAL'] ?? '';
-  bool isExpanded = false;
+  bool isExpanded = true;
 
   final List<String> estados = [
     'AC',
@@ -630,7 +630,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   Widget _buildProductsList() {
     return Card(
-      elevation: 4, // sombra para todos os produtos
+      elevation: 2, // sombra para todos os produtos
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.all(12),
       child: Padding(
@@ -728,7 +728,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             children: [
               const Icon(
                 Icons.local_shipping,
-                size: 28,
+                size: 24,
                 color: Colors.deepPurpleAccent,
               ),
               const SizedBox(width: 12),
@@ -740,7 +740,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Entrega',
+                          'Shipment',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -1121,7 +1121,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
-        elevation: 4,
+        elevation: 2,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -1137,7 +1137,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 children: [
                   Expanded(
                     child: _buildCardtableCard(
-                      title: "Cartão de crédito",
+                      title: "Crédito",
                       value: "credit",
                       selectedValue: _selectedPayment,
                       onTap: () {
@@ -1151,7 +1151,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       title: "Débito",
                       value: "debit",
                       selectedValue: _selectedPayment,
-                      onTap: () => setState(() => _selectedPayment = "debit"),
+                      onTap: (() {
+                        setState(() => _selectedPayment = "debit");
+                        _selectedInstallment = null;
+                        _discount = 0;
+                        _total = _subtotal + _shipping;
+                      }),
                     ),
                   ),
 
@@ -1192,32 +1197,52 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return InkWell(
       onTap: onTap,
       child: Card(
-        color: isSelected ? Colors.blue[50] : Colors.white,
+        color: isSelected ? Colors.deepPurpleAccent : Colors.grey.shade200,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
-            color: isSelected ? Colors.blue : Colors.grey.shade300,
+            color: isSelected ? Colors.deepPurpleAccent : Colors.grey.shade300,
             width: 1,
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(4.0),
+          padding: const EdgeInsets.all(2.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Icon(
-                isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: isSelected ? Colors.blue : Colors.grey,
+              //Icon(
+              //  isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+              //  color: isSelected ? Colors.greenAccent : Colors.grey,
+              //),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (title == 'Crédito')
+                    Icon(
+                      Icons.credit_card,
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
+                  if (title == 'Débito')
+                    Icon(
+                      Icons.account_balance_wallet,
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
+                  if (title == 'Pix')
+                    Icon(
+                      Icons.pix,
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
+                ],
               ),
-
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : Colors.black,
                 ),
               ),
-              if (isSelected) Icon(Icons.check, color: Colors.blue),
+              if (isSelected) Icon(Icons.check, color: Colors.greenAccent),
             ],
           ),
         ),
@@ -1379,7 +1404,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
-        elevation: 0,
+        elevation: 2,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -1390,8 +1415,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              Text('Subtotal: R\$ ${_subtotal.toStringAsFixed(2)}'),
-              Text('Shipping: R\$ ${_shipping.toStringAsFixed(2)}'),
+              Text('Products: R\$ ${_subtotal.toStringAsFixed(2)}'),
+              Text('Shiping: R\$ ${_shipping.toStringAsFixed(2)}'),
               if (_appliedCoupon != null)
                 Text(
                   'Discount (${_appliedCoupon!.code}): -R\$ ${discountAmount.toStringAsFixed(2)}',
