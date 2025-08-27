@@ -1206,7 +1206,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(2.0),
+          padding: const EdgeInsets.all(10.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
