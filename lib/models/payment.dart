@@ -4,7 +4,7 @@ class Payment {
   final String userName;
   final String userId;
   final String? paymentMethodId;
-  final Map<String, dynamic> address; // <-- aqui
+  final Map<String, dynamic>? address;
   final String paymentType;
   final double subtotal;
   final double shipping;
@@ -26,8 +26,8 @@ class Payment {
     required this.userEmail,
     required this.userName,
     required this.userId,
-    required this.paymentMethodId,
-    required this.address, // <-- aqui
+    this.paymentMethodId,
+    this.address,
     required this.paymentType,
     required this.subtotal,
     required this.shipping,
@@ -44,17 +44,18 @@ class Payment {
     this.couponCode,
   });
 
+  /// Envia para backend
   Map<String, dynamic> toJson() {
     return {
-      'card_token': cardToken,
-      'installments': installments,
+      'card_token': cardToken ?? '',
+      'installments': installments ?? 1,
       'zipCode': zipCode,
       'payer_email': userEmail,
       'payer_name': userName,
       'userId': userId,
-      'payment_method_id': paymentMethodId,
+      'payment_method_id': paymentMethodId ?? '',
       'payer_cpf': cpf,
-      'address': address, // <-- aqui
+      'address': address ?? {},
       'paymentType': paymentType,
       'subtotal': subtotal.toStringAsFixed(2),
       'frete': shipping.toStringAsFixed(2),
@@ -62,14 +63,47 @@ class Payment {
       'products': products,
       if (paymentType == 'Crédito' || paymentType == 'Débito') ...{
         'cartao': {
-          'numero': numberCard,
-          'nome': nameCard,
-          'validade': expiry,
-          'cvv': cvv,
+          'numero': numberCard ?? '',
+          'nome': nameCard ?? '',
+          'validade': expiry ?? '',
+          'cvv': cvv ?? '',
         },
       },
-      'coupon_amount': couponAmount,
-      'coupon_code': couponCode,
+      'coupon_amount': couponAmount ?? 0,
+      'coupon_code': couponCode ?? '',
     };
+  }
+
+  /// Constrói a partir do backend
+  factory Payment.fromJson(Map<String, dynamic> json) {
+    return Payment(
+      zipCode: json['zipCode'] ?? '',
+      userEmail: json['payer_email'] ?? '',
+      userName: json['payer_name'] ?? '',
+      userId: json['userId'] ?? '',
+      paymentMethodId: json['payment_method_id'],
+      address: (json['address'] as Map<String, dynamic>?) ?? {},
+      paymentType: json['paymentType'] ?? '',
+      subtotal: double.tryParse(json['subtotal'].toString()) ?? 0.0,
+      shipping: double.tryParse(json['frete'].toString()) ?? 0.0,
+      total: double.tryParse(json['total'].toString()) ?? 0.0,
+      products:
+          (json['products'] as List<dynamic>?)
+              ?.map((e) => Map<String, dynamic>.from(e))
+              .toList() ??
+          [],
+      cpf: json['payer_cpf'] ?? '',
+      numberCard: json['cartao']?['numero'],
+      nameCard: json['cartao']?['nome'],
+      expiry: json['cartao']?['validade'],
+      cvv: json['cartao']?['cvv'],
+      cardToken: json['card_token'],
+      installments: json['installments'],
+      couponAmount:
+          (json['coupon_amount'] != null)
+              ? double.tryParse(json['coupon_amount'].toString())
+              : null,
+      couponCode: json['coupon_code'],
+    );
   }
 }
