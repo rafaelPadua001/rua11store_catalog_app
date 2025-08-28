@@ -381,7 +381,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
     // print('Success ${response['status']}');
     if (_selectedPayment.toLowerCase() == 'pix' &&
         response['qr_code'] != null &&
-        response['qr_code_base64'] != null) {
+        response['qr_code_base64'] != null &&
+        response['qr_code_base64'].isNotEmpty) {
       // Exibe o QR code e código copia-e-cola na mesma tela
       showDialog(
         context: context,
