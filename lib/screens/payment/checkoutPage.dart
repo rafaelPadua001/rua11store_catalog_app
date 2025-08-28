@@ -380,8 +380,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     // print('Success ${response['status']}');
     if (_selectedPayment.toLowerCase() == 'pix' &&
-        response.containsKey('qr_code') &&
-        response.containsKey('qr_code_base64')) {
+        response['qr_code'] != null &&
+        response['qr_code_base64'] != null) {
       // Exibe o QR code e código copia-e-cola na mesma tela
       showDialog(
         context: context,
@@ -391,43 +391,44 @@ class _CheckoutPageState extends State<CheckoutPage> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
-                  width: 200,
-                  height: 200,
-                  child: Image.memory(
-                    base64Decode(response['qr_code_base64']),
-                    fit: BoxFit.contain,
+                if (response['qr_code_base64'] != null)
+                  SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: Image.memory(
+                      base64Decode(response['qr_code_base64']),
+                      fit: BoxFit.contain,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: SelectableText(
-                        response['qr_code'],
-                        textAlign: TextAlign.center,
+                if (response['qr_code'] != null)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: SelectableText(
+                          response['qr_code'] ?? '',
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.copy),
-                      tooltip: 'Copiar código Pix',
-                      onPressed: () {
-                        Clipboard.setData(
-                          ClipboardData(text: response['qr_code']),
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Código Pix copiado para a área de transferência',
+                      IconButton(
+                        icon: const Icon(Icons.copy),
+                        tooltip: 'Copiar código Pix',
+                        onPressed: () {
+                          Clipboard.setData(
+                            ClipboardData(text: response['qr_code'] ?? ''),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Código Pix copiado para a área de transferência',
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 const SizedBox(height: 5),
                 const Text(
                   "Escaneie o QR Code ou copie o código acima para pagar.",
