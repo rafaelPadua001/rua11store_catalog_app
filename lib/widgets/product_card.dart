@@ -179,22 +179,31 @@ class _ProductCardState extends State<ProductCard> {
                       if (widget.product.stockQuantity == 0)
                         Positioned(
                           bottom: 8,
-                          //right: 8,
-                          child: Chip(
-                            label: const Text(
+                          left: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(
+                                255,
+                                98,
+                                0,
+                                255,
+                              ).withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(
+                                4,
+                              ), // cantos arredondados
+                              border: null, // garante que não tenha borda
+                            ),
+                            child: const Text(
                               'Esgotado',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            backgroundColor: const Color.fromARGB(
-                              255,
-                              98,
-                              0,
-                              255,
-                            ).withOpacity(0.8),
-                            visualDensity: VisualDensity.compact,
                           ),
                         ),
                     ],

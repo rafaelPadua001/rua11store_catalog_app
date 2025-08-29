@@ -145,7 +145,7 @@ class _CategoryProductState extends State<CategoryProduct> {
               crossAxisCount: 2, // número de colunas
               crossAxisSpacing: 10, // espaçamento horizontal
               mainAxisSpacing: 10, // espaçamento vertical
-              // childAspectRatio: 0.5, // proporção largura/altura do item
+              childAspectRatio: 0.7, // proporção largura/altura do item
             ),
             itemCount: products.length,
             itemBuilder: (context, index) {
@@ -157,9 +157,7 @@ class _CategoryProductState extends State<CategoryProduct> {
 
               return GestureDetector(
                 onTap: () {
-                  FocusScope.of(
-                    context,
-                  ).unfocus(); // Fecha o teclado ao tocar fora
+                  FocusScope.of(context).unfocus();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -172,132 +170,123 @@ class _CategoryProductState extends State<CategoryProduct> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(6),
-                            ),
-                            child: Container(
-                              constraints: const BoxConstraints(
-                                maxHeight: 300,
-                                maxWidth: double.infinity,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(6),
+                          ),
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: Image.network(
+                                  imageUrl,
+                                  fit: BoxFit.contain,
+                                ),
                               ),
-                              child: Stack(
-                                children: [
-                                  Positioned.fill(
-                                    child: Image.network(
-                                      imageUrl,
-                                      width: 800,
-                                      fit: BoxFit.contain,
-                                      loadingBuilder: (
-                                        context,
-                                        child,
-                                        loadingProgress,
-                                      ) {
-                                        if (loadingProgress == null)
-                                          return child;
-                                        return const Center(
-                                          child: CircularProgressIndicator(),
-                                        );
-                                      },
-                                      errorBuilder: (
-                                        context,
-                                        error,
-                                        stackTrace,
-                                      ) {
-                                        return const Center(
-                                          child: Icon(
-                                            Icons.image_not_supported,
-                                            color: Colors.grey,
-                                            size: 50,
-                                          ),
-                                        );
-                                      },
+                              if (product.stockQuantity == 0)
+                                Positioned(
+                                  bottom: 8,
+                                  left: 8,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromARGB(
+                                        255,
+                                        98,
+                                        0,
+                                        255,
+                                      ).withOpacity(0.8),
+                                      borderRadius: BorderRadius.circular(
+                                        4,
+                                      ), // cantos arredondados
+                                      border:
+                                          null, // garante que não tenha borda
+                                    ),
+                                    child: const Text(
+                                      'Esgotado',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                  if (product.stockQuantity == 0)
-                                    Positioned(
-                                      bottom: 8,
-                                      //right: 8,
-                                      child: Chip(
-                                        label: const Text(
-                                          'Esgotado',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        backgroundColor: const Color.fromARGB(
-                                          255,
-                                          98,
-                                          0,
-                                          255,
-                                        ).withOpacity(0.8),
-                                        visualDensity: VisualDensity.compact,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
+                                ),
+                            ],
                           ),
                         ),
-                        SizedBox(height: 8),
-                        Text(
-                          product.name,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          'R\$ ${product.price}',
-                          // style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            IconButton(
-                              onPressed: () => _openWhatsApp(product),
-                              icon: const FaIcon(
-                                FontAwesomeIcons.whatsapp,
-                                color: Colors.white,
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0,
+                            vertical: 4,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Text(
+                                product.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              style: IconButton.styleFrom(
-                                backgroundColor: Colors.green,
+                              Text('R\$ ${product.price}'),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  IconButton(
+                                    onPressed: () => _openWhatsApp(product),
+                                    icon: const FaIcon(
+                                      FontAwesomeIcons.whatsapp,
+                                      color: Colors.white,
+                                    ),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    onPressed:
+                                        _isAddingToCart
+                                            ? null
+                                            : () => _addToCart(product),
+                                    icon:
+                                        _isAddingToCart
+                                            ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                            : const Icon(
+                                              Icons.add_shopping_cart,
+                                              color: Colors.white,
+                                            ),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: Colors.black,
+                                      disabledBackgroundColor: Colors.grey
+                                          .withOpacity(0.5),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              onPressed:
-                                  _isAddingToCart
-                                      ? null
-                                      : () => _addToCart(product),
-                              icon:
-                                  _isAddingToCart
-                                      ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                      : const Icon(
-                                        Icons.add_shopping_cart,
-                                        color: Colors.white,
-                                      ),
-                              style: IconButton.styleFrom(
-                                backgroundColor: Colors.black,
-                                disabledBackgroundColor: Colors.grey
-                                    .withOpacity(0.5),
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               );
