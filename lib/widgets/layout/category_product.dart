@@ -145,7 +145,7 @@ class _CategoryProductState extends State<CategoryProduct> {
               crossAxisCount: 2, // número de colunas
               crossAxisSpacing: 10, // espaçamento horizontal
               mainAxisSpacing: 10, // espaçamento vertical
-              childAspectRatio: 0.7, // proporção largura/altura do item
+              // childAspectRatio: 0.5, // proporção largura/altura do item
             ),
             itemCount: products.length,
             itemBuilder: (context, index) {
@@ -168,7 +168,7 @@ class _CategoryProductState extends State<CategoryProduct> {
                   );
                 },
                 child: Card(
-                  elevation: 3,
+                  elevation: 1,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -187,29 +187,61 @@ class _CategoryProductState extends State<CategoryProduct> {
                                 maxHeight: 300,
                                 maxWidth: double.infinity,
                               ),
-                              child: Image.network(
-                                imageUrl,
-                                width: 500,
-                                fit: BoxFit.contain,
-                                loadingBuilder: (
-                                  context,
-                                  child,
-                                  loadingProgress,
-                                ) {
-                                  if (loadingProgress == null) return child;
-                                  return const Center(
-                                    child: CircularProgressIndicator(),
-                                  );
-                                },
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Center(
-                                    child: Icon(
-                                      Icons.image_not_supported,
-                                      color: Colors.grey,
-                                      size: 50,
+                              child: Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: Image.network(
+                                      imageUrl,
+                                      width: 800,
+                                      fit: BoxFit.contain,
+                                      loadingBuilder: (
+                                        context,
+                                        child,
+                                        loadingProgress,
+                                      ) {
+                                        if (loadingProgress == null)
+                                          return child;
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      },
+                                      errorBuilder: (
+                                        context,
+                                        error,
+                                        stackTrace,
+                                      ) {
+                                        return const Center(
+                                          child: Icon(
+                                            Icons.image_not_supported,
+                                            color: Colors.grey,
+                                            size: 50,
+                                          ),
+                                        );
+                                      },
                                     ),
-                                  );
-                                },
+                                  ),
+                                  if (product.stockQuantity == 0)
+                                    Positioned(
+                                      bottom: 8,
+                                      //right: 8,
+                                      child: Chip(
+                                        label: const Text(
+                                          'Esgotado',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        backgroundColor: const Color.fromARGB(
+                                          255,
+                                          98,
+                                          0,
+                                          255,
+                                        ).withOpacity(0.8),
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                           ),
@@ -221,7 +253,7 @@ class _CategoryProductState extends State<CategoryProduct> {
                         ),
                         Text(
                           'R\$ ${product.price}',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          // style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
