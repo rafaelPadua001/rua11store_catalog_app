@@ -35,6 +35,7 @@ class _StateDashboard extends State<Dashboard> {
   List<Widget> get _widgetOptions {
     return [
       Card(
+        elevation: 0,
         child: Padding(
           padding: EdgeInsets.all(16.0),
           child: Column(
@@ -45,23 +46,65 @@ class _StateDashboard extends State<Dashboard> {
                 spacing: 4.0,
                 runSpacing: 4.0,
                 children: [
-                  Chip(
-                    label: Text('Carrinho: ($cartItemsCount)'),
-                    avatar: Icon(Icons.shopping_cart, color: Colors.white),
-                    backgroundColor: Colors.blue,
-                    labelStyle: TextStyle(color: Colors.white),
+                  ActionChip(
+                    shape: const StadiumBorder(
+                      side: BorderSide(color: Colors.transparent),
+                    ),
+                    label: Text('Carrinho $cartItemsCount'),
+                    avatar: Icon(
+                      Icons.shopping_cart_checkout_sharp,
+                      color: Color.fromRGBO(44, 42, 102, 1),
+                      size: 20,
+                    ),
+                    backgroundColor: Colors.white,
+                    labelStyle: TextStyle(
+                      color: const Color.fromRGBO(44, 42, 102, 1),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    onPressed: () {
+                      _onItemTapped(2);
+                    },
                   ),
-                  Chip(
-                    label: Text('Pedidos: ($orderCount)'),
-                    avatar: Icon(Icons.receipt, color: Colors.white),
-                    backgroundColor: Colors.lightGreen,
-                    labelStyle: TextStyle(color: Colors.white),
+                  ActionChip(
+                    shape: const StadiumBorder(
+                      side: BorderSide(color: Colors.transparent),
+                    ),
+                    label: Text('Pedidos $orderCount'),
+                    avatar: Icon(
+                      Icons.local_mall,
+                      size: 20,
+                      color: Color.fromRGBO(44, 42, 102, 1),
+                    ),
+                    backgroundColor: Colors.white,
+                    labelStyle: TextStyle(
+                      color: Color.fromRGBO(44, 42, 102, 1),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    onPressed: () {
+                      _onItemTapped(3);
+                    },
                   ),
-                  Chip(
-                    label: Text('Cupons: ($couponCount)'),
-                    avatar: Icon(Icons.card_giftcard, color: Colors.white),
-                    backgroundColor: Colors.orange,
-                    labelStyle: TextStyle(color: Colors.white),
+                  ActionChip(
+                    shape: const StadiumBorder(
+                      side: BorderSide(color: Colors.transparent),
+                    ),
+                    label: Text('Cupons $couponCount'),
+                    avatar: Icon(
+                      Icons.confirmation_number,
+                      size: 20,
+                      color: Color.fromRGBO(44, 42, 102, 1),
+                    ),
+                    backgroundColor: Colors.white,
+                    labelStyle: TextStyle(
+                      color: Color.fromRGBO(44, 42, 102, 1),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    onPressed: () {
+                      _onItemTapped(1);
+                    },
                   ),
                   SizedBox(height: 12),
                 ],
@@ -70,19 +113,9 @@ class _StateDashboard extends State<Dashboard> {
                 children: [
                   Expanded(child: _buildOrdersCategoryCard(context)),
                   SizedBox(width: 12), // Espaço entre os cards
-                  Expanded(child: _buildRecentOrders(context)),
                 ],
               ),
-              Row(
-                children: [
-                  // Espaço entre os cards
-                  Expanded(child: _buildOrdersCard(context)),
-                  SizedBox(width: 12), // Espaço entre os cards
-                  Expanded(child: _buildCouponsCard(context)),
-                  SizedBox(width: 12), // Espaço entre os cards
-                  Expanded(child: _buildCartsCard(context)),
-                ],
-              ),
+              Row(children: [Expanded(child: _buildRecentOrders(context))]),
             ],
           ),
         ),
@@ -392,6 +425,7 @@ class _StateDashboard extends State<Dashboard> {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
             Text(
@@ -408,13 +442,15 @@ class _StateDashboard extends State<Dashboard> {
   Widget _buildRecentOrders(BuildContext context) {
     final recentOrders = _orders.take(5).toList();
     return Card(
+      elevation: 1,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Atividades Recentes:',
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 2),
             ...recentOrders.map(
@@ -423,7 +459,7 @@ class _StateDashboard extends State<Dashboard> {
                 title: Text(
                   'Pedido #${order['id']}',
                   style: const TextStyle(
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -434,110 +470,48 @@ class _StateDashboard extends State<Dashboard> {
                       'Data: ${formatOrderDate(order['order_date']) ?? 'sem data'}',
                       style: const TextStyle(fontSize: 10),
                     ),
-                    Text(
-                      'Status: ${order['status'] ?? 'desconhecido'}',
-                      style: const TextStyle(fontSize: 10),
-                    ),
                   ],
                 ),
-                trailing: Text(
-                  'R\$ ${order['total_amount']?.toStringAsFixed(2) ?? '0.00'}',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
+                trailing: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'R\$ ${order['total_amount']?.toStringAsFixed(2) ?? '0.00'}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Chip(
+                      shape: const StadiumBorder(
+                        side: BorderSide(color: Colors.transparent),
+                      ),
+                      backgroundColor: () {
+                        switch (order['status']) {
+                          case 'approved':
+                            return Colors.lightGreen;
+                          case 'rejected':
+                            return Colors.redAccent;
+                          case 'pending':
+                            return Colors.amber;
+                          default:
+                            return Colors.grey;
+                        }
+                      }(),
+                      label: Text(
+                        '${order['status'] ?? 'desconhecido'}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget _buildOrdersCard(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _onItemTapped(3),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.shopping_bag, color: Colors.blue, size: 20),
-                  const SizedBox(
-                    width: 4,
-                  ), // espaço horizontal entre ícone e texto
-                  const Text(
-                    'Pedidos',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget _buildCouponsCard(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _onItemTapped(1),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.card_giftcard, color: Colors.orange, size: 20),
-                  const SizedBox(
-                    width: 4,
-                  ), // espaço horizontal entre ícone e texto
-                  const Text(
-                    'Cupons',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget _buildCartsCard(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _onItemTapped(2),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.shopping_cart, color: Colors.green, size: 20),
-                  const SizedBox(
-                    width: 4,
-                  ), // espaço horizontal entre ícone e texto
-                  const Text(
-                    'Carrinho',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ],
-          ),
         ),
       ),
     );
