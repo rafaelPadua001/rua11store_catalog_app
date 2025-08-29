@@ -310,8 +310,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
       '',
     );
     if (_selectedPayment == 'credit' || _selectedPayment == 'debit') {
-      // print('Cupom aplicado: ${_appliedCoupon?.id}');
-      // print('Desconto calculado: $_discount');
       final tempPayment = Payment(
         zipCode: widget.zipCode,
         userId: widget.userId,
@@ -379,6 +377,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
     // Enviar o pagamento
     final controller = PaymentController();
     final response = await controller.sendPayment(payment);
+
+    setState(() {
+      _isLoading = false;
+    });
 
     // print('Success ${response['status']}');
     if (_selectedPayment.toLowerCase() == 'pix' &&
@@ -486,12 +488,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
         context,
       ).showSnackBar(const SnackBar(content: Text('Erro ao enviar pagamento')));
       await Future.delayed(const Duration(seconds: 2));
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PaymentResult(response: response),
-        ),
-      );
+      return setState(() {
+        _isLoading = false;
+      });
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => PaymentResult(response: response),
+      //   ),
+      // );
     }
   }
 
@@ -1145,7 +1150,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       value: "credit",
                       selectedValue: _selectedPayment,
                       onTap: () {
-                        setState(() => _selectedPayment = "credit");
+                        setState(() {
+                          _selectedPayment = "credit";
+                          _selectedPaymentMethodId = null;
+                        });
                       },
                     ),
                   ),
@@ -1160,6 +1168,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         _selectedInstallment = null;
                         _discount = 0;
                         _total = _subtotal + _shipping;
+                        _selectedPayment = "debit";
+                        _selectedPaymentMethodId = null;
                       }),
                     ),
                   ),
@@ -1171,7 +1181,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       selectedValue: _selectedPayment,
                       onTap: () {
                         setState(() => _selectedPayment = "pix");
-                        // _handlePayment();
+                        _handlePayment();
                       },
                     ),
                   ),
@@ -1181,9 +1191,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               const SizedBox(height: 16),
 
               if (_selectedPayment == 'credit' || _selectedPayment == 'debit')
-                _buildCardPaymentForm()
-              else if (_selectedPayment == 'pix')
-                _buildPixInfo(),
+                _buildCardPaymentForm(),
             ],
           ),
         ),
@@ -1200,7 +1208,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final bool isSelected = value == selectedValue;
 
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (onTap != null) {
+          onTap();
+        }
+      },
+
       child: Card(
         color: isSelected ? Colors.deepPurpleAccent : Colors.grey.shade200,
         shape: RoundedRectangleBorder(
@@ -1400,21 +1417,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ),
           ],
         ),
-      ],
-    );
-  }
-
-  Widget _buildPixInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: _cpfController,
-          decoration: const InputDecoration(labelText: 'CPF', isDense: true),
-        ),
-
-        Text("Digite seu CPF e clique em Place Order Now"),
-        Text('A chave pix será exibida após o pedido'),
       ],
     );
   }
