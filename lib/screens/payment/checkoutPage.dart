@@ -50,6 +50,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
   late TextEditingController _cardExpiryController;
   late TextEditingController _cardCVVController;
   late TextEditingController _couponController;
+  final apiUrl = dotenv.env['API_URL'] ?? dotenv.env['API_URL_LOCAL'] ?? '';
+  bool isExpanded = true;
 
   final List<String> estados = [
     'AC',
@@ -346,7 +348,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         securityCode: tempPayment.cvv ?? '',
         cardholderName: tempPayment.nameCard ?? '',
         docType: docType,
-        docNumber: _cpfController.text,
+        docNumber: _cpfController.text.replaceAll(RegExp(r'\D'), ''),
       );
     }
 
@@ -357,7 +359,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       userEmail: widget.userEmail,
       userId: widget.userId,
       userName: widget.userName,
-      cpf: _cpfController.text,
+      cpf: _cpfController.text.replaceAll(RegExp(r'\D'), ''),
       address: address,
       paymentType: _selectedPayment,
       subtotal: _subtotal,
@@ -380,8 +382,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     // print('Success ${response['status']}');
     if (_selectedPayment.toLowerCase() == 'pix' &&
-        response.containsKey('qr_code') &&
-        response.containsKey('qr_code_base64')) {
+        response['qr_code'] != null &&
+        response['qr_code_base64'] != null &&
+        response['qr_code_base64'].isNotEmpty) {
       // Exibe o QR code e código copia-e-cola na mesma tela
       showDialog(
         context: context,
@@ -391,43 +394,44 @@ class _CheckoutPageState extends State<CheckoutPage> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
-                  width: 200,
-                  height: 200,
-                  child: Image.memory(
-                    base64Decode(response['qr_code_base64']),
-                    fit: BoxFit.contain,
+                if (response['qr_code_base64'] != null)
+                  SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: Image.memory(
+                      base64Decode(response['qr_code_base64']),
+                      fit: BoxFit.contain,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: SelectableText(
-                        response['qr_code'],
-                        textAlign: TextAlign.center,
+                if (response['qr_code'] != null)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: SelectableText(
+                          response['qr_code'] ?? '',
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.copy),
-                      tooltip: 'Copiar código Pix',
-                      onPressed: () {
-                        Clipboard.setData(
-                          ClipboardData(text: response['qr_code']),
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Código Pix copiado para a área de transferência',
+                      IconButton(
+                        icon: const Icon(Icons.copy),
+                        tooltip: 'Copiar código Pix',
+                        onPressed: () {
+                          Clipboard.setData(
+                            ClipboardData(text: response['qr_code'] ?? ''),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Código Pix copiado para a área de transferência',
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 const SizedBox(height: 5),
                 const Text(
                   "Escaneie o QR Code ou copie o código acima para pagar.",
@@ -563,7 +567,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildProductsList(), // Certifique-se que aqui não tem ListView com scroll
+                    _buildProductsList(),
                     FutureBuilder<List<Address>>(
                       future: _addressesFuture,
                       builder: (context, snapshot) {
@@ -617,7 +621,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     _buildPaymentCard(context),
                     _buildTotalCard(context),
                     const SizedBox(height: 16),
-                    _buildElevatedButton(), // Botão azul grande
+                    //  _buildElevatedButton(), // Botão azul grande
                   ],
                 ),
               ),
@@ -629,159 +633,197 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildProductsList() {
-    final apiUrl = dotenv.env['API_URL'] ?? '';
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: widget.products.length,
-      itemBuilder: (context, index) {
-        final p = widget.products[index];
-        // print(p);
-        final imageUrl = p['image'] ?? p['image_url'] ?? '';
-        final name =
-            p['name'] ?? p['product_name'] ?? p['productName'] ?? 'Sem nome';
-        final price = double.tryParse(p['price'].toString()) ?? 0.0;
-        final quantity = int.tryParse(p['quantity'].toString()) ?? 0;
-        final total = price * quantity;
+    return Card(
+      elevation: 2, // sombra para todos os produtos
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.all(12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: widget.products.length,
+          itemBuilder: (context, index) {
+            final p = widget.products[index];
+            final imageUrl = p['image'] ?? p['image_url'] ?? '';
+            final name =
+                p['name'] ??
+                p['product_name'] ??
+                p['productName'] ??
+                'Sem nome';
+            final price = double.tryParse(p['price'].toString()) ?? 0.0;
+            final quantity = int.tryParse(p['quantity'].toString()) ?? 0;
+            final total = price * quantity;
 
-        return Card(
-          margin: const EdgeInsets.all(12.0),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child:
-                      imageUrl.isNotEmpty
-                          ? Image.network(
-                            imageUrl,
-                            height: 80,
-                            width: 80,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (context, error, stackTrace) =>
-                                    const Icon(Icons.broken_image, size: 80),
-                          )
-                          : const Icon(Icons.image_not_supported, size: 80),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'R\$ ${total.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      Text(
-                        'Quantidade: $quantity',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ],
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 2.0,
+              ), // espaçamento entre produtos
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child:
+                        imageUrl.isNotEmpty
+                            ? Image.network(
+                              imageUrl,
+                              height: 90,
+                              width: 70,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (context, error, stackTrace) =>
+                                      const Icon(Icons.broken_image, size: 120),
+                            )
+                            : const Icon(Icons.image_not_supported, size: 120),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    print('Remover $name');
-                    // lógica de remoção aqui
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'R\$ ${total.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        Text(
+                          'Quantidade: $quantity',
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      print('Remover $name');
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
   Widget _buildAddressCard(BuildContext context, Address address) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width,
+    return InkWell(
+      onTap: () {
+        setState(() {
+          isExpanded = !isExpanded;
+        });
+      },
       child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Icon(
+                Icons.local_shipping,
+                size: 24,
+                color: Colors.deepPurpleAccent,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Delivery to Address',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Shipment',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          isExpanded
+                              ? Icons.arrow_drop_up
+                              : Icons.arrow_drop_down,
+                          color: Colors.black54,
+                        ),
+                      ],
+                    ),
+                    if (isExpanded) ...[
+                      Text(
+                        _selectedAddress != null
+                            ? _selectedAddress!['recipient_name'] ??
+                                'Nome não informado'
+                            : address.recipientName,
                       ),
-                    ),
-                    // Atualizado para acessar corretamente os dados de _selectedAddress
-                    Text(
-                      _selectedAddress != null
-                          ? _selectedAddress!['recipient_name'] ??
-                              'Nome não informado'
-                          : address.recipientName,
-                    ),
-                    Text(
-                      _selectedAddress != null
-                          ? '${_selectedAddress!['street']}, ${_selectedAddress!['number']}, ${_selectedAddress!['complement']} ,${_selectedAddress!['bairro']}'
-                          : '${address.street}, ${address.number}, ${address.complement} ,${address.bairro}',
-                    ),
-                    Text(
-                      _selectedAddress != null
-                          ? '${_selectedAddress!['city']}, ${_selectedAddress!['state']}, ${_selectedAddress!['zip_code']}'
-                          : '${address.city}, ${address.state} ,  ${address.zipCode}',
-                    ),
-                    SizedBox(height: 6),
+                      Text(
+                        _selectedAddress != null
+                            ? '${_selectedAddress!['street']}, ${_selectedAddress!['number']}, ${_selectedAddress!['complement']} ,${_selectedAddress!['bairro']}'
+                            : '${address.street}, ${address.number}, ${address.complement} ,${address.bairro}',
+                      ),
+                      Text(
+                        _selectedAddress != null
+                            ? '${_selectedAddress!['city']}, ${_selectedAddress!['state']}, ${_selectedAddress!['zip_code']}'
+                            : '${address.city}, ${address.state} ,  ${address.zipCode}',
+                      ),
+                      SizedBox(height: 6),
+
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return _buildAddressFormDialog(context);
+                                },
+                              );
+                            },
+                            child: const Text('Change'),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              try {
+                                final existingAddress = await _addressController
+                                    .getUserAddresses(widget.userId);
+
+                                final id = existingAddress.first.id;
+
+                                if (id != null) {
+                                  await _addressController.deleteAddress(id);
+                                  Navigator.of(
+                                    context,
+                                  ).pop(); // Fecha o diálogo
+                                  Navigator.of(context).pop(
+                                    true,
+                                  ); // Retorna true para indicar sucesso
+                                } else {
+                                  print('ID do endereço não encontrado');
+                                }
+                              } catch (e) {
+                                print('Erro ao remover endereço: $e');
+                                Navigator.of(
+                                  context,
+                                ).pop(); // Fecha o diálogo mesmo com erro
+                              }
+                            },
+                            child: const Text('remove'),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
-              ),
-              TextButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return _buildAddressFormDialog(context);
-                    },
-                  );
-                },
-                child: const Text('Change'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  try {
-                    final existingAddress = await _addressController
-                        .getUserAddresses(widget.userId);
-
-                    final id = existingAddress.first.id;
-
-                    if (id != null) {
-                      await _addressController.deleteAddress(id);
-                      Navigator.of(context).pop(); // Fecha o diálogo
-                      Navigator.of(
-                        context,
-                      ).pop(true); // Retorna true para indicar sucesso
-                    } else {
-                      print('ID do endereço não encontrado');
-                    }
-                  } catch (e) {
-                    print('Erro ao remover endereço: $e');
-                    Navigator.of(
-                      context,
-                    ).pop(); // Fecha o diálogo mesmo com erro
-                  }
-                },
-                child: const Text('remove'),
               ),
             ],
           ),
@@ -1040,6 +1082,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
+        elevation: 4,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -1082,6 +1125,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
+        elevation: 2,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -1091,35 +1135,47 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 'Payment Method',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              RadioListTile<String>(
-                title: const Text('Cartão de Crédito'),
-                value: 'credit',
-                groupValue: _selectedPayment,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedPayment = value!;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Cartão de Débito'),
-                value: 'debit',
-                groupValue: _selectedPayment,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedPayment = value!;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Pix'),
-                value: 'pix',
-                groupValue: _selectedPayment,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedPayment = value!;
-                  });
-                },
+              SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: _buildCardtableCard(
+                      title: "Crédito",
+                      value: "credit",
+                      selectedValue: _selectedPayment,
+                      onTap: () {
+                        setState(() => _selectedPayment = "credit");
+                      },
+                    ),
+                  ),
+
+                  Expanded(
+                    child: _buildCardtableCard(
+                      title: "Débito",
+                      value: "debit",
+                      selectedValue: _selectedPayment,
+                      onTap: (() {
+                        setState(() => _selectedPayment = "debit");
+                        _selectedInstallment = null;
+                        _discount = 0;
+                        _total = _subtotal + _shipping;
+                      }),
+                    ),
+                  ),
+
+                  Expanded(
+                    child: _buildCardtableCard(
+                      title: "Pix",
+                      value: "pix",
+                      selectedValue: _selectedPayment,
+                      onTap: () {
+                        setState(() => _selectedPayment = "pix");
+                        // _handlePayment();
+                      },
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 16),
@@ -1135,133 +1191,205 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
+  Widget _buildCardtableCard({
+    required String title,
+    required String value,
+    required String selectedValue,
+    required VoidCallback onTap,
+  }) {
+    final bool isSelected = value == selectedValue;
+
+    return InkWell(
+      onTap: onTap,
+      child: Card(
+        color: isSelected ? Colors.deepPurpleAccent : Colors.grey.shade200,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: isSelected ? Colors.deepPurpleAccent : Colors.grey.shade300,
+            width: 1,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              //Icon(
+              //  isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+              //  color: isSelected ? Colors.greenAccent : Colors.grey,
+              //),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (title == 'Crédito')
+                    Icon(
+                      Icons.credit_card,
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
+                  if (title == 'Débito')
+                    Icon(
+                      Icons.account_balance_wallet,
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
+                  if (title == 'Pix')
+                    Icon(
+                      Icons.pix,
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
+                ],
+              ),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : Colors.black,
+                ),
+              ),
+              if (isSelected) Icon(Icons.check, color: Colors.greenAccent),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCardPaymentForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          controller: _cpfController,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: 'CPF'),
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Row(
           children: [
-            if (_selectedPayment == 'credit') ...[
-              // Número de Parcelas
-              SizedBox(
-                height: 60,
-                child: DropdownButtonFormField<int>(
-                  value: _selectedInstallment,
-                  decoration: InputDecoration(
-                    labelText: 'Número de Parcelas',
-                    isDense: true,
-                  ),
-                  items:
-                      List.generate(4, (index) => index + 1)
-                          .map(
-                            (number) => DropdownMenuItem<int>(
-                              value: number,
-                              child: Text('$number'),
-                            ),
-                          )
-                          .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedInstallment = value!;
-                      _installmentsController.text = value.toString();
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null) {
-                      return 'Por favor, selecione o número de parcelas';
-                    }
-                    return null;
-                  },
+            Expanded(
+              flex: 2,
+              child: TextField(
+                controller: _cpfController,
+                decoration: const InputDecoration(
+                  labelText: 'CPF',
+                  isDense: true,
                 ),
               ),
-              SizedBox(height: 16),
-              // Cartões de Crédito
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Forma de Pagamento',
-                  border: OutlineInputBorder(),
+            ),
+            const SizedBox(width: 8),
+            if (_selectedPayment == 'credit')
+              Expanded(
+                flex: 2,
+                child: Stack(
+                  clipBehavior: Clip.none, // 👈 deixa o menu sair pra fora
+                  children: [
+                    DropdownButtonFormField<int>(
+                      value: _selectedInstallment,
+                      decoration: const InputDecoration(
+                        labelText: 'Parcelas',
+                        isDense: true,
+                      ),
+                      items:
+                          List.generate(4, (i) => i + 1)
+                              .map(
+                                (n) => DropdownMenuItem(
+                                  value: n,
+                                  child: Text('$n'),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (value) {
+                        setState(() => _selectedInstallment = value!);
+                      },
+                    ),
+                  ],
                 ),
-                value: _selectedPaymentMethodId,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedPaymentMethodId = newValue;
-                  });
-                },
-                items: const [
-                  DropdownMenuItem(value: 'visa', child: Text('Visa')),
-                  DropdownMenuItem(value: 'master', child: Text('Mastercard')),
-                  DropdownMenuItem(
-                    value: 'amex',
-                    child: Text('American Express'),
-                  ),
-                ],
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Selecione um método de pagamento';
-                  }
-                  return null;
-                },
               ),
-            ] else if (_selectedPayment == 'debit') ...[
-              // Cartão de Débito
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Forma de Pagamento (Débito)',
-                  border: OutlineInputBorder(),
-                ),
-                value: _selectedPaymentMethodId,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedPaymentMethodId = newValue;
-                  });
-                },
-                items: const [
-                  DropdownMenuItem(value: 'visa', child: Text('Visa')),
-                  DropdownMenuItem(value: 'master', child: Text('Mastercard')),
-                  DropdownMenuItem(value: 'elo', child: Text('Elo')),
-                ],
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Selecione um método de pagamento';
-                  }
-                  return null;
-                },
-              ),
-            ],
           ],
-        ),
-
-        TextField(
-          controller: _numberCardController,
-          decoration: InputDecoration(labelText: 'Número do Cartão'),
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        ),
-
-        TextField(
-          controller: _nameCardController,
-          decoration: InputDecoration(labelText: 'Nome no Cartão'),
         ),
         Row(
           children: [
             Expanded(
+              flex: 3,
+              child: DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
+                  labelText: 'Forma de Pagamento',
+                  isDense: true,
+                ),
+                value: _selectedPaymentMethodId,
+                onChanged: (String? newValue) {
+                  setState(() => _selectedPaymentMethodId = newValue);
+                },
+                items: [
+                  if (_selectedPayment == 'credit') ...[
+                    const DropdownMenuItem(value: 'visa', child: Text('Visa')),
+                    const DropdownMenuItem(
+                      value: 'master',
+                      child: Text('Mastercard'),
+                    ),
+                    const DropdownMenuItem(value: 'elo', child: Text('Elo')),
+                  ] else if (_selectedPayment == 'debit') ...[
+                    const DropdownMenuItem(
+                      value: 'visa_debit',
+                      child: Text('Visa'),
+                    ),
+                    const DropdownMenuItem(
+                      value: 'master_debit',
+                      child: Text('Mastercard'),
+                    ),
+                    const DropdownMenuItem(
+                      value: 'elo_debit',
+                      child: Text('Elo'),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: TextField(
+                controller: _numberCardController,
+                decoration: InputDecoration(
+                  labelText: 'N° do Cartão',
+                  isDense: true,
+                ),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 3,
+              child: TextField(
+                controller: _nameCardController,
+                decoration: InputDecoration(
+                  labelText: 'Nome no Cartão',
+                  isDense: true,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
               child: TextField(
                 controller: _cardExpiryController,
-                decoration: InputDecoration(labelText: 'Validade MM/AA'),
+                decoration: InputDecoration(
+                  labelText: 'Validade MM/AA',
+                  isDense: true,
+                ),
                 keyboardType: TextInputType.number,
               ),
             ),
             SizedBox(width: 5),
             Expanded(
+              flex: 2,
               child: TextField(
                 controller: _cardCVVController,
-                decoration: InputDecoration(labelText: '*CVV'),
+                decoration: InputDecoration(labelText: '*CVV', isDense: true),
                 keyboardType: TextInputType.number,
                 inputFormatters: [
                   LengthLimitingTextInputFormatter(3), // Limita a 3 caracteres
@@ -1277,10 +1405,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildPixInfo() {
-    return const Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Você selecionou pagamento via pix"),
+        TextField(
+          controller: _cpfController,
+          decoration: const InputDecoration(labelText: 'CPF', isDense: true),
+        ),
+
+        Text("Digite seu CPF e clique em Place Order Now"),
         Text('A chave pix será exibida após o pedido'),
       ],
     );
@@ -1300,6 +1433,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
+        elevation: 2,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -1310,7 +1444,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              Text('Subtotal: R\$ ${_subtotal.toStringAsFixed(2)}'),
+              Text('Products: R\$ ${_subtotal.toStringAsFixed(2)}'),
               Text('Shipping: R\$ ${_shipping.toStringAsFixed(2)}'),
               if (_appliedCoupon != null)
                 Text(
@@ -1321,13 +1455,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
               Text(
                 _selectedInstallment == null
                     ? 'Total: R\$ ${_total.toStringAsFixed(2)}'
-                    : 'Total: R\$ ${((_total) / _selectedInstallment!).toStringAsFixed(2)} '
-                        'x $_selectedInstallment = R\$ ${_total.toStringAsFixed(2)}',
+                    : 'Total: R\$${_total.toStringAsFixed(2)} '
+                        '/ $_selectedInstallment = R\$ ${((_total) / _selectedInstallment!).toStringAsFixed(2)} ',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                 ),
               ),
+              _buildElevatedButton(),
             ],
           ),
         ),
@@ -1341,7 +1476,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       height: 60,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
+          backgroundColor: Colors.deepPurpleAccent,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
