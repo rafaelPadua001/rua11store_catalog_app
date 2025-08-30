@@ -346,22 +346,29 @@ class _ProductScreenState extends State<ProductScreen> {
 
                   if (widget.product.stockQuantity == 0)
                     Positioned(
-                      top: 4,
-                      right: 4,
+                      bottom: 8,
+                      left: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 2,
+                          horizontal: 12,
+                          vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(4),
+                          color: const Color.fromARGB(
+                            255,
+                            98,
+                            0,
+                            255,
+                          ).withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(
+                            4,
+                          ), // cantos arredondados
+                          border: null, // garante que não tenha borda
                         ),
                         child: const Text(
                           'Esgotado',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 8,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -387,19 +394,22 @@ class _ProductScreenState extends State<ProductScreen> {
 
           if (widget.product.stockQuantity == 0)
             Positioned(
-              top: 8,
-              right: 8,
+              bottom: 8,
+              left: 8,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.85),
-                  borderRadius: BorderRadius.circular(6),
+                  color: const Color.fromARGB(255, 98, 0, 255).withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(4), // cantos arredondados
+                  border: null, // garante que não tenha borda
                 ),
                 child: const Text(
                   'Esgotado',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
