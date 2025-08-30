@@ -140,12 +140,11 @@ class _CategoryProductState extends State<CategoryProduct> {
             ),
           ),
           body: GridView.builder(
-            padding: EdgeInsets.all(10),
+            padding: const EdgeInsets.all(10),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2, // número de colunas
-              crossAxisSpacing: 10, // espaçamento horizontal
-              mainAxisSpacing: 10, // espaçamento vertical
-              childAspectRatio: 0.7, // proporção largura/altura do item
+              childAspectRatio:
+                  0.6, // largura/altura do card, ajuste se quiser mais ou menos alto
             ),
             itemCount: products.length,
             itemBuilder: (context, index) {
@@ -173,8 +172,9 @@ class _CategoryProductState extends State<CategoryProduct> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        flex: 2,
+                      // Imagem do produto
+                      AspectRatio(
+                        aspectRatio: 1, // quadrado
                         child: ClipRRect(
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(6),
@@ -184,7 +184,7 @@ class _CategoryProductState extends State<CategoryProduct> {
                               Positioned.fill(
                                 child: Image.network(
                                   imageUrl,
-                                  fit: BoxFit.contain,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
                               if (product.stockQuantity == 0)
@@ -222,25 +222,34 @@ class _CategoryProductState extends State<CategoryProduct> {
                           ),
                         ),
                       ),
-                      Expanded(
-                        flex: 1,
+
+                      // Conteúdo textual + botões
+                      Flexible(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8.0,
+                            horizontal: 8,
                             vertical: 4,
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 product.name,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
-                                maxLines: 1,
+                                maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              Text('R\$ ${product.price}'),
+                              Text(
+                                'R\$ ${product.price}',
+                                maxLines: 1,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurpleAccent,
+                                ),
+                              ),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -254,7 +263,7 @@ class _CategoryProductState extends State<CategoryProduct> {
                                       backgroundColor: Colors.green,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 4),
                                   IconButton(
                                     onPressed:
                                         _isAddingToCart
@@ -263,8 +272,8 @@ class _CategoryProductState extends State<CategoryProduct> {
                                     icon:
                                         _isAddingToCart
                                             ? const SizedBox(
-                                              width: 20,
-                                              height: 20,
+                                              width: 10,
+                                              height: 10,
                                               child: CircularProgressIndicator(
                                                 color: Colors.white,
                                                 strokeWidth: 2,
