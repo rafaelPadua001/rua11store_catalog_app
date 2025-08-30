@@ -223,7 +223,10 @@ class _ProductCardState extends State<ProductCard> {
               padding: const EdgeInsets.symmetric(horizontal: 2.0),
               child: Text(
                 'R\$ ${widget.product.price}',
-                style: const TextStyle(color: Colors.black),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurpleAccent,
+                ),
               ),
             ),
             Row(

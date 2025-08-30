@@ -184,7 +184,8 @@ class _CategoryProductState extends State<CategoryProduct> {
                               Positioned.fill(
                                 child: Image.network(
                                   imageUrl,
-                                  fit: BoxFit.cover,
+                                  width: 40,
+                                  fit: BoxFit.contain,
                                 ),
                               ),
                               if (product.stockQuantity == 0)
