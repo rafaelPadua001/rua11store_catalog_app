@@ -144,7 +144,7 @@ class _CategoryProductState extends State<CategoryProduct> {
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2, // número de colunas
               childAspectRatio:
-                  0.6, // largura/altura do card, ajuste se quiser mais ou menos alto
+                  0.5, // largura/altura do card, ajuste se quiser mais ou menos alto
             ),
             itemCount: products.length,
             itemBuilder: (context, index) {

@@ -198,7 +198,7 @@ class _CatalogPageState extends State<CatalogPage> {
                         NeverScrollableScrollPhysics(), // Para rolagem funcionar com o pai
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.6,
+                      childAspectRatio: 0.5,
                     ),
                     itemCount: filteredProducts.length,
                     itemBuilder: (context, index) {
