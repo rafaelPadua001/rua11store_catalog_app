@@ -135,22 +135,22 @@ class _ProductCardState extends State<ProductCard> {
         );
       },
       child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         elevation: 1,
+        color: Colors.white,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            AspectRatio(
+              aspectRatio: 1,
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(6),
                 ),
                 child: Container(
-                  constraints: const BoxConstraints(
-                    maxHeight: 100,
-                    maxWidth:
-                        double
-                            .infinity, // Ajuste esse valor conforme necessário
+                  constraints: BoxConstraints(
+                    maxHeight: 40,
+                    maxWidth: 40, // Ajuste esse valor conforme necessário
                   ),
                   child: Stack(
                     children: [
@@ -178,8 +178,8 @@ class _ProductCardState extends State<ProductCard> {
                       ),
                       if (widget.product.stockQuantity == 0)
                         Positioned(
-                          bottom: 8,
-                          left: 8,
+                          top: 8,
+                          right: 8,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -188,9 +188,9 @@ class _ProductCardState extends State<ProductCard> {
                             decoration: BoxDecoration(
                               color: const Color.fromARGB(
                                 255,
-                                98,
-                                0,
                                 255,
+                                0,
+                                0,
                               ).withOpacity(0.8),
                               borderRadius: BorderRadius.circular(
                                 4,
@@ -211,58 +211,74 @@ class _ProductCardState extends State<ProductCard> {
                 ),
               ),
             ),
-
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                widget.product.name,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2.0),
-              child: Text(
-                'R\$ ${widget.product.price}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.deepPurpleAccent,
-                ),
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: _openWhatsApp,
-                  icon: const FaIcon(
-                    FontAwesomeIcons.whatsapp,
-                    color: Colors.white,
-                  ),
-                  style: IconButton.styleFrom(backgroundColor: Colors.green),
-                ),
-                const SizedBox(width: 8), // espaçamento entre os botões
-                IconButton(
-                  onPressed: _isAddingToCart ? null : _addToCart,
-                  icon:
-                      _isAddingToCart
-                          ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                          : const Icon(
-                            Icons.add_shopping_cart,
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      widget.product.name,
+                      style: const TextStyle(
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      'R\$ ${widget.product.price}',
+                      style: const TextStyle(
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          onPressed: _openWhatsApp,
+                          icon: const FaIcon(
+                            FontAwesomeIcons.whatsapp,
                             color: Colors.white,
                           ),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    disabledBackgroundColor: Colors.grey.withOpacity(0.5),
-                  ),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.green,
+                          ),
+                        ),
+                        const SizedBox(width: 4), // espaçamento entre os botões
+                        IconButton(
+                          onPressed: _isAddingToCart ? null : _addToCart,
+                          icon:
+                              _isAddingToCart
+                                  ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : const Icon(
+                                    Icons.add_shopping_cart,
+                                    color: Colors.white,
+                                  ),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            disabledBackgroundColor: Colors.grey.withOpacity(
+                              0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ],
         ),

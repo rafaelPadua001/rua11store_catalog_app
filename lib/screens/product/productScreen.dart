@@ -356,9 +356,9 @@ class _ProductScreenState extends State<ProductScreen> {
                         decoration: BoxDecoration(
                           color: const Color.fromARGB(
                             255,
-                            98,
-                            0,
                             255,
+                            51,
+                            0,
                           ).withOpacity(0.8),
                           borderRadius: BorderRadius.circular(
                             4,
@@ -402,7 +402,7 @@ class _ProductScreenState extends State<ProductScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 98, 0, 255).withOpacity(0.8),
+                  color: const Color.fromARGB(255, 255, 38, 0).withOpacity(0.8),
                   borderRadius: BorderRadius.circular(4), // cantos arredondados
                   border: null, // garante que não tenha borda
                 ),
