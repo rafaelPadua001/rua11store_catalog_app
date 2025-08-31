@@ -232,13 +232,15 @@ class _CategoryProductState extends State<CategoryProduct> {
                             vertical: 4,
                           ),
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
                                 product.name,
                                 style: const TextStyle(
+                                  fontFamily: 'Roboto',
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 18,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -247,8 +249,10 @@ class _CategoryProductState extends State<CategoryProduct> {
                                 'R\$ ${product.price}',
                                 maxLines: 1,
                                 style: const TextStyle(
+                                  fontFamily: 'Roboto',
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurpleAccent,
+                                  color: Colors.green,
+                                  fontSize: 16,
                                 ),
                               ),
                               Row(
