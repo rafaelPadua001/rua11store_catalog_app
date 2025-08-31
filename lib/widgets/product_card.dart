@@ -118,8 +118,7 @@ class _ProductCardState extends State<ProductCard> {
 
   @override
   Widget build(BuildContext context) {
-    final String baseUrl =
-        dotenv.env['API_URL_LOCAL'] ?? 'https://default.url/';
+    final String baseUrl = dotenv.env['API_URL'] ?? 'https://default.url/';
 
     String imageUrl =
         widget.product.thumbnailPath.startsWith('http')

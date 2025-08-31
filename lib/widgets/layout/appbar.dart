@@ -55,13 +55,17 @@ class _AppBarExampleState extends State<AppBarExample> {
       title: Text(
         'Rua11Store',
         style: GoogleFonts.lobster(
-          textStyle: const TextStyle(color: Colors.white),
+          textStyle: const TextStyle(color: Colors.white, fontSize: 18),
         ),
       ),
       backgroundColor: Theme.of(context).colorScheme.primary,
       actions: <Widget>[
         CartMenu(),
         MenuAnchor(
+          alignmentOffset: const Offset(
+            0,
+            8,
+          ), // desloca o menu 8 pixels para baixo
           builder: (
             BuildContext context,
             MenuController controller,
@@ -76,7 +80,7 @@ class _AppBarExampleState extends State<AppBarExample> {
             );
           },
           menuChildren: [
-            if (_user == null) // Exibe apenas se não estiver logado
+            if (_user == null)
               MenuItemButton(
                 onPressed: () {
                   Navigator.push(
@@ -87,7 +91,7 @@ class _AppBarExampleState extends State<AppBarExample> {
                 child: const Row(
                   children: [
                     Icon(Icons.login),
-                    SizedBox(width: 10),
+                    SizedBox(width: 5),
                     Text('Login'),
                   ],
                 ),
@@ -103,7 +107,7 @@ class _AppBarExampleState extends State<AppBarExample> {
                 child: const Row(
                   children: [
                     Icon(Icons.dashboard),
-                    SizedBox(width: 10),
+                    SizedBox(width: 5),
                     Text('Dashboard'),
                   ],
                 ),
@@ -113,7 +117,7 @@ class _AppBarExampleState extends State<AppBarExample> {
                 child: const Row(
                   children: [
                     Icon(Icons.logout),
-                    SizedBox(width: 10),
+                    SizedBox(width: 5),
                     Text('Logout'),
                   ],
                 ),

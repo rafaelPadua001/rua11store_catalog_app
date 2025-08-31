@@ -73,7 +73,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme(
           // seedColor: Colors.white,
-          primary: Color.fromARGB(255, 94, 36, 231),
+          primary: Color.fromARGB(255, 76, 0, 255),
           secondary: Color(0xFF5E4B6E),
           surface: Color(0xFFF5F5F5),
           error: Colors.deepPurpleAccent,
