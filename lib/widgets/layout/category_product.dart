@@ -200,9 +200,9 @@ class _CategoryProductState extends State<CategoryProduct> {
                                     decoration: BoxDecoration(
                                       color: const Color.fromARGB(
                                         255,
-                                        98,
-                                        0,
                                         255,
+                                        51,
+                                        0,
                                       ).withOpacity(0.8),
                                       borderRadius: BorderRadius.circular(
                                         4,

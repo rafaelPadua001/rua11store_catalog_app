@@ -77,21 +77,36 @@ class _CatalogPageState extends State<CatalogPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: "Buscar produto...",
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
-                onChanged: (value) {
-                  setState(() {
-                    searchQuery = value;
-                  });
-                },
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: "Buscar produto...",
+                    prefixIcon: Icon(Icons.search),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      searchQuery = value;
+                    });
+                  },
+                ),
               ),
+
               SizedBox(height: 10),
               SizedBox(
                 height: 50,
@@ -157,10 +172,10 @@ class _CatalogPageState extends State<CatalogPage> {
                   },
                 ),
               ),
-              SizedBox(height: 10),
+              SizedBox(height: 8),
               CouponCarousel(),
-              SizedBox(height: 10),
-              Divider(thickness: 0.1),
+              SizedBox(height: 8),
+              // Divider(thickness: 0.1),
               Consumer<ProductsController>(
                 builder: (context, productController, child) {
                   if (productController.isLoading) {
@@ -177,14 +192,13 @@ class _CatalogPageState extends State<CatalogPage> {
                       }).toList();
 
                   return GridView.builder(
+                    padding: const EdgeInsets.all(10),
                     shrinkWrap: true,
                     physics:
                         NeverScrollableScrollPhysics(), // Para rolagem funcionar com o pai
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      crossAxisSpacing: 5,
-                      mainAxisSpacing: 5,
-                      childAspectRatio: 0.5,
+                      childAspectRatio: 0.6,
                     ),
                     itemCount: filteredProducts.length,
                     itemBuilder: (context, index) {

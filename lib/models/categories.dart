@@ -8,7 +8,6 @@ class Categories {
   final bool isSubcategory;
   final int? parentId;
   final int userId;
-  
 
   Categories({
     required this.id,
@@ -17,29 +16,32 @@ class Categories {
     required this.parentId,
     required this.userId,
     /* required this.image, */
-    required this.icon 
-  
-    });
-    
-    factory Categories.fromJson(Map<String, dynamic> json){
-      return Categories(
-        id: json['id'],
-        name: json['name'] ?? '',
-        isSubcategory:  json['is_subcategory'] ?? false,
-        parentId: json['parentId'],
-        userId: json['user_id'],
-        icon: _mapNameToIcon(json['name'])
-      );
-    }
+    required this.icon,
+  });
 
-    static IconData _mapNameToIcon(String name){
-      final lowerName = name.toLowerCase();
-      if (lowerName.contains('sedas')) return Icons.layers;
-      if (lowerName.contains('tabacos')) return Icons.smoking_rooms;
-      if (lowerName.contains('filtros')) return Icons.filter_alt;
-      if (lowerName.contains('piteiras')) return Icons.circle;
+  factory Categories.fromJson(Map<String, dynamic> json) {
+    return Categories(
+      id: json['id'],
+      name: json['name'] ?? '',
+      isSubcategory: json['is_subcategory'] ?? false,
+      parentId: json['parentId'],
+      userId: json['user_id'],
+      icon: _mapNameToIcon(json['name']),
+    );
+  }
 
-      return Icons.category;
-      
-    }
+  static IconData _mapNameToIcon(String name) {
+    final lowerName = name.toLowerCase();
+    if (lowerName.contains('sedas')) return Icons.layers;
+    if (lowerName.contains('cuias')) return Icons.rice_bowl;
+    if (lowerName.contains('tabacos')) return Icons.smoking_rooms;
+    if (lowerName.contains('isqueiros')) return Icons.local_fire_department;
+    if (lowerName.contains('filtros')) return Icons.filter_alt;
+    if (lowerName.contains('cases/bags')) return Icons.business_center;
+    if (lowerName.contains('slicks')) return Icons.bento;
+    if (lowerName.contains('cinzeiros')) return Icons.cleaning_services;
+    if (lowerName.contains('piteiras')) return Icons.circle;
+
+    return Icons.category;
+  }
 }
