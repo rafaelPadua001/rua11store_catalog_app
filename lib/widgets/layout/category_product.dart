@@ -144,7 +144,7 @@ class _CategoryProductState extends State<CategoryProduct> {
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2, // número de colunas
               childAspectRatio:
-                  0.6, // largura/altura do card, ajuste se quiser mais ou menos alto
+                  0.5, // largura/altura do card, ajuste se quiser mais ou menos alto
             ),
             itemCount: products.length,
             itemBuilder: (context, index) {
@@ -232,13 +232,15 @@ class _CategoryProductState extends State<CategoryProduct> {
                             vertical: 4,
                           ),
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
                                 product.name,
                                 style: const TextStyle(
+                                  fontFamily: 'Roboto',
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 18,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -247,8 +249,10 @@ class _CategoryProductState extends State<CategoryProduct> {
                                 'R\$ ${product.price}',
                                 maxLines: 1,
                                 style: const TextStyle(
+                                  fontFamily: 'Roboto',
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurpleAccent,
+                                  color: Colors.green,
+                                  fontSize: 16,
                                 ),
                               ),
                               Row(
