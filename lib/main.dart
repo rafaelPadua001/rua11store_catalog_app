@@ -9,7 +9,7 @@ import 'controllers/productsController.dart';
 import 'widgets/layout/appbar.dart';
 import 'catalog_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dart:html' as html;
+//import 'dart:html' as html;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

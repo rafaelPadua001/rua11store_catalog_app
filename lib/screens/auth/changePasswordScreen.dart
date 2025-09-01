@@ -1,12 +1,12 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:html' as html;
 import '../../../main.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   final String accessToken;
   const ChangePasswordScreen({required this.accessToken, Key? key})
-    : super(key: key);
+      : super(key: key);
 
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
@@ -15,11 +15,9 @@ class ChangePasswordScreen extends StatefulWidget {
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _loading = true;
   bool _loadingSubmit = false;
-  bool _sessionRestored = false;
-  String? _errorMessage;
-
-  final TextEditingController _passwordController = TextEditingController();
   bool _passwordChanged = false;
+  String? _errorMessage;
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void initState() {
@@ -35,27 +33,21 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   Future<void> _restoreSession() async {
     setState(() => _loading = true);
-
     try {
-      final response = await Supabase.instance.client.auth.recoverSession(
-        widget.accessToken,
-      );
+      final response =
+          await Supabase.instance.client.auth.recoverSession(widget.accessToken);
 
-      if (response.session != null) {
-        setState(() {
-          _sessionRestored = true;
-          _loading = false;
-        });
-      } else {
-        setState(() {
-          // _errorMessage = 'Sessão inválida ou expirada.';
-          _loading = false;
-        });
+      setState(() {
+        _loading = false;
+      });
+
+      if (response.session == null) {
+        // Sessão inválida, talvez redirecionar ou mostrar erro
       }
     } catch (e) {
       setState(() {
-        // _errorMessage = 'Erro ao restaurar sessão: $e';
         _loading = false;
+        _errorMessage = 'Erro ao restaurar sessão';
       });
     }
   }
@@ -74,11 +66,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     });
 
     try {
-      final updateResponse = await Supabase.instance.client.auth.updateUser(
-        UserAttributes(password: newPassword),
-      );
+      final response =
+          await Supabase.instance.client.auth.updateUser(UserAttributes(password: newPassword));
 
-      if (updateResponse.user != null) {
+      if (response.user != null) {
         if (!mounted) return;
 
         setState(() {
@@ -90,8 +81,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           const SnackBar(content: Text('Senha atualizada com sucesso')),
         );
 
-        // Limpa URL pra não recarregar tela de troca de senha
-        html.window.history.pushState(null, 'Rua11Store', '/');
+        // No Web, se quiser limpar a URL, pode usar:
+        if (kIsWeb) {
+          // O navegador vai permanecer na mesma rota, sem recarregar
+        }
       } else {
         setState(() {
           _errorMessage = 'Erro ao atualizar senha';
@@ -108,14 +101,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Nova Senha')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -131,22 +122,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed:
-                  _loadingSubmit || _passwordChanged ? null : _updatePassword,
-              child:
-                  _loadingSubmit
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Atualizar senha'),
+              onPressed: _loadingSubmit || _passwordChanged ? null : _updatePassword,
+              child: _loadingSubmit
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text('Atualizar senha'),
             ),
             if (_passwordChanged) ...[
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                      builder:
-                          (context) => const MyHomePage(title: 'Rua11Store'),
-                    ),
+                    MaterialPageRoute(builder: (_) => const MyHomePage(title: 'Rua11Store')),
                     (route) => false,
                   );
                 },
