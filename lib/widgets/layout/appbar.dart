@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:rua11store_catalog_app/screens/auth/dashboard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -17,6 +18,7 @@ class AppBarExample extends StatefulWidget implements PreferredSizeWidget {
 
 class _AppBarExampleState extends State<AppBarExample> {
   User? _user;
+  bool hasLogo = true;
 
   @override
   void initState() {
@@ -52,12 +54,25 @@ class _AppBarExampleState extends State<AppBarExample> {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(
-        'Rua11Store',
-        style: GoogleFonts.lobster(
-          textStyle: const TextStyle(color: Colors.white, fontSize: 18),
-        ),
+      leading: Padding(
+        padding: EdgeInsets.all(8.0),
+        child: hasLogo 
+          ? Image.asset(
+          'assets/icons/logo/logo.png',
+          height: kIsWeb ? 48 : 32,
+          width: kIsWeb ? 48 : 32,
+          fit: BoxFit.contain,
+          )
+          :  Text(
+              'Rua11Store',
+              style: GoogleFonts.lobster(
+                textStyle: const TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+         
+        
       ),
+      title: null,
       backgroundColor: Theme.of(context).colorScheme.primary,
       actions: <Widget>[
         CartMenu(),

@@ -175,7 +175,8 @@ class _ProductCardState extends State<ProductCard> {
                           },
                         ),
                       ),
-                      if (widget.product.stockQuantity == 0)
+                 
+                      if (widget.product.quantity == 0)
                         Positioned(
                           top: 8,
                           right: 8,
