@@ -34,7 +34,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  url_launcher: ^6.3.1
+  url_launcher: ^6.3.2
   google_fonts: ^6.2.1
   intl: ^0.20.2
   supabase_flutter: ^2.8.4
@@ -42,12 +42,13 @@ dependencies:
   cached_network_image: ^3.4.1
   image_picker: ^1.1.2
   provider: ^6.1.4
-  flutter_dotenv: ^5.1.0
+  flutter_dotenv: ^6.0.0
   flutter_masked_text2: ^0.9.1
   flutter_spinbox: ^0.13.1
   font_awesome_flutter: ^10.8.0
   carousel_slider_x: ^6.0.7
   timeago: ^3.6.0
+  
 
 dev_dependencies:
   flutter_test:
@@ -58,7 +59,13 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: 0.14.4
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/logo/logo.png"
 
 flutter_native_splash:
     color: "#6300FF"  # Cor de fundo
@@ -83,6 +90,7 @@ flutter:
   assets:
     - .env
     - assets/icons/splash_logo.png
+    - assets/icons/logo/logo.png
   
   
   

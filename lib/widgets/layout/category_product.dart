@@ -188,7 +188,7 @@ class _CategoryProductState extends State<CategoryProduct> {
                                   fit: BoxFit.contain,
                                 ),
                               ),
-                              if (product.stockQuantity == 0)
+                              if (product.quantity == 0)
                                 Positioned(
                                   bottom: 8,
                                   left: 8,
