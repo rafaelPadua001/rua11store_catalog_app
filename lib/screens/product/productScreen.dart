@@ -344,7 +344,7 @@ class _ProductScreenState extends State<ProductScreen> {
                     child: Image.network(imageUrl, fit: BoxFit.contain),
                   ),
 
-                  if (widget.product.stockQuantity == 0)
+                  if (widget.product.quantity == 0)
                     Positioned(
                       bottom: 8,
                       left: 8,
@@ -392,7 +392,7 @@ class _ProductScreenState extends State<ProductScreen> {
             child: Image.network(_selectedImage, fit: BoxFit.contain),
           ),
 
-          if (widget.product.stockQuantity == 0)
+          if (widget.product.quantity == 0)
             Positioned(
               bottom: 8,
               left: 8,
