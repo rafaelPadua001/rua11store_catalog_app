@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:flutter_spinbox/flutter_spinbox.dart';
-import 'package:rua11store_catalog_app/models/cart.dart';
+import 'package:rua11store_catalog_app/models/cartItems.dart';
 import 'package:rua11store_catalog_app/screens/payment/checkoutPage.dart';
 import '../../data/cart/cart_repository.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -40,11 +40,24 @@ class _CartWidgetState extends State<CartWidget> {
   }
 
   Future<void> _loadCartItems() async {
-    final items = await cartRepository.fetchCartItems(widget.userId);
-    setState(() {
-      cartItems = items;
-      isLoading = false;
-    });
+    setState(() => isLoading = true);
+
+    try {
+      // 1. Obtém ou cria o cartId
+      final cartId = await cartRepository.getOrCreateCart(widget.userId);
+
+      // 2. Busca os itens do carrinho
+      final items = await cartRepository.fetchCartItems(widget.userId);
+
+      // 3. Atualiza o estado
+      setState(() {
+        cartItems = items;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      print('Erro ao carregar itens do carrinho: $e');
+    }
   }
 
   double get totalCartValue {
@@ -293,11 +306,13 @@ class _CartWidgetState extends State<CartWidget> {
                                                       cartItems
                                                           .map(
                                                             (item) =>
-                                                                item.toMap(),
+                                                                item.toJson(),
                                                           )
                                                           .toList(), // Converte CartItem para Map
                                                   delivery: selectedOption!,
                                                   zipCode: _zipController.text,
+                                                  cartRepository:
+                                                      cartRepository,
                                                 ),
                                           ),
                                         );

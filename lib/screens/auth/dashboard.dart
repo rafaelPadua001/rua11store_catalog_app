@@ -228,7 +228,7 @@ class _StateDashboard extends State<Dashboard> {
     try {
       //load cart countItems
       final response = await Supabase.instance.client
-          .from('cart')
+          .from('carts')
           .select()
           .eq('user_id', user!.id);
 

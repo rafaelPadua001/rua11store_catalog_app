@@ -4,7 +4,7 @@ import 'package:rua11store_catalog_app/data/cart/cart_notifier.dart';
 import 'package:rua11store_catalog_app/data/cart/cart_repository.dart';
 import 'package:rua11store_catalog_app/main.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:rua11store_catalog_app/models/cart.dart';
+import 'package:rua11store_catalog_app/models/cartItems.dart';
 import 'package:rua11store_catalog_app/screens/product/productScreen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -52,12 +52,14 @@ class _CategoryProductState extends State<CategoryProduct> {
     setState(() => _isAddingToCart = true);
 
     try {
+      final cartId = await widget.cartRepository.getOrCreateCart(user.id);
       final cartItem = CartItem(
         id: '',
         userId: user.id,
+        cartId: cartId,
         productId: product.id,
         productName: product.name,
-        price: product.numericPrice,
+        price: product.numericPrice / 100,
         description: product.description,
         quantity: 1,
         width: product.width,

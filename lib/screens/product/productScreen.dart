@@ -11,6 +11,7 @@ import '../../models/product.dart';
 import '../../widgets/layout/bottomSheePaget.dart';
 import '../../data/cart/cart_repository.dart';
 import '../../models/cart.dart';
+import '../../models/cartItems.dart';
 import '../../data/cart/cart_notifier.dart';
 
 class ProductScreen extends StatefulWidget {
@@ -69,21 +70,25 @@ class _ProductScreenState extends State<ProductScreen> {
 
   Future<void> _addToCart() async {
     final user = await verifyLogged();
-
     if (user == null) return;
 
     setState(() => _isAddingToCart = true);
 
     try {
+      // 1. Pega ou cria o carrinho
+      String cartId = await widget.cartRepository.getOrCreateCart(user.id);
+
+      // 2. Cria CartItem
       final cartItem = CartItem(
         id: '',
         userId: user.id,
+        cartId: cartId,
         productId: widget.product.id,
         productName: widget.product.name,
-        price: widget.product.numericPrice,
+        price: widget.product.numericPrice / 100,
         description: widget.product.description,
         quantity: quantity.toInt(),
-        width: widget.product.weight,
+        width: widget.product.width,
         height: widget.product.height,
         weight: widget.product.weight,
         length: widget.product.length,
@@ -91,10 +96,11 @@ class _ProductScreenState extends State<ProductScreen> {
         category: widget.product.categoryId.toString(),
       );
 
+      // 3. Adiciona o item
       await widget.cartRepository.addItem(cartItem);
-      // Recarrega os itens atualizados
-      await widget.cartRepository.fetchCartItems(user.id);
 
+      // 4. Atualiza contagem
+      await widget.cartRepository.fetchCartItems(cartId);
       cartItemCount.value = widget.cartRepository.items.length;
 
       if (mounted) {
@@ -103,11 +109,7 @@ class _ProductScreenState extends State<ProductScreen> {
             content: Text('${widget.product.name} adicionado ao carrinho!'),
           ),
         );
-
-        // Reabre o menu (caso exista uma função _showCartMenu)
-        Navigator.of(context).pop(); // fecha se estiver aberto
-        await Future.delayed(const Duration(milliseconds: 50));
-        //_showCartMenu(context);
+        Navigator.of(context).pop(); // fecha menu
       }
     } catch (e) {
       if (mounted) {
@@ -116,9 +118,7 @@ class _ProductScreenState extends State<ProductScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isAddingToCart = false);
-      }
+      if (mounted) setState(() => _isAddingToCart = false);
     }
   }
 
@@ -267,6 +267,7 @@ class _ProductScreenState extends State<ProductScreen> {
               products: [productData],
               delivery: deliveryData,
               zipCode: selectedZipCode.toString(),
+              cartRepository: widget.cartRepository,
             ),
       ),
     );

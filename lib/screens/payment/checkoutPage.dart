@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:rua11store_catalog_app/controllers/couponsController.dart';
+import 'package:rua11store_catalog_app/data/cart/cart_repository.dart';
 import 'package:rua11store_catalog_app/models/adress.dart';
 import 'package:rua11store_catalog_app/models/cardbrand.dart';
 import 'package:rua11store_catalog_app/screens/payment/payment_result.dart';
@@ -21,6 +22,7 @@ class CheckoutPage extends StatefulWidget {
   final String zipCode;
   final List<Map> products;
   final Map delivery;
+  final CartRepository cartRepository;
 
   const CheckoutPage({
     super.key,
@@ -30,6 +32,7 @@ class CheckoutPage extends StatefulWidget {
     required this.products,
     required this.delivery,
     required this.zipCode,
+    required this.cartRepository,
   });
 
   @override
@@ -650,6 +653,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           itemCount: widget.products.length,
           itemBuilder: (context, index) {
             final p = widget.products[index];
+            final itemId = p['id'];
             final imageUrl = p['image'] ?? p['image_url'] ?? '';
             final name =
                 p['name'] ??
@@ -707,7 +711,28 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
+                    onPressed: () async {
+                      setState(() {
+                        widget.products.removeAt(index);
+                      });
+                      try {
+                        await widget.cartRepository.removeItem(itemId);
+
+                        if (widget.products.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('$name removido com sucesso !'),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        setState(() {
+                          widget.products.insert(index, p);
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Erro ao remover: $e')),
+                        );
+                      }
                       print('Remover $name');
                     },
                   ),
