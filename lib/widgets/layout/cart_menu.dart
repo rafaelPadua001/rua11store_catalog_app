@@ -504,6 +504,7 @@ class _CartMenuState extends State<CartMenu> {
                                         products: cartItems,
                                         delivery: selectedOption!,
                                         zipCode: _zipController.text,
+                                        cartRepository: _cartRepository,
                                       ),
                                 ),
                               );

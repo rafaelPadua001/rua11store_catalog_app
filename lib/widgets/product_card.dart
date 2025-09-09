@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/product.dart';
 import '../../data/cart/cart_repository.dart';
-import '../models/cart.dart';
+import '../models/cartItems.dart';
 import '../screens/product/productScreen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -74,12 +74,14 @@ class _ProductCardState extends State<ProductCard> {
     setState(() => _isAddingToCart = true);
 
     try {
+      final cartId = await widget.cartRepository.getOrCreateCart(user.id);
       final cartItem = CartItem(
         id: '',
         userId: user.id,
+        cartId: cartId,
         productId: widget.product.id,
         productName: widget.product.name,
-        price: widget.product.numericPrice,
+        price: widget.product.numericPrice / 100,
         description: widget.product.description,
         quantity: 1,
         width: widget.product.width,
@@ -175,7 +177,7 @@ class _ProductCardState extends State<ProductCard> {
                           },
                         ),
                       ),
-                 
+
                       if (widget.product.quantity == 0)
                         Positioned(
                           top: 8,

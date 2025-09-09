@@ -56,23 +56,25 @@ class _AppBarExampleState extends State<AppBarExample> {
     return AppBar(
       leading: Padding(
         padding: EdgeInsets.all(8.0),
-        child: hasLogo 
-          ? Image.asset(
-          'assets/icons/logo/logo.png',
-          height: kIsWeb ? 48 : 32,
-          width: kIsWeb ? 48 : 32,
-          fit: BoxFit.contain,
-          )
-          :  Text(
-              'Rua11Store',
-              style: GoogleFonts.lobster(
-                textStyle: const TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            ),
-         
-        
+        child:
+            hasLogo
+                ? Image.asset(
+                  'assets/icons/logo/logo.png',
+                  height: kIsWeb ? 48 : 32,
+                  width: kIsWeb ? 48 : 32,
+                  fit: BoxFit.contain,
+                )
+                : Text(
+                  'Rua11Store',
+                  style: GoogleFonts.lobster(
+                    textStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
       ),
-      title: null,
+      title: SizedBox.shrink(),
       backgroundColor: Theme.of(context).colorScheme.primary,
       actions: <Widget>[
         CartMenu(),
