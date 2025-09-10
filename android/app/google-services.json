@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "358519725314",
+    "project_id": "rua11store-notifications-24f29",
+    "storage_bucket": "rua11store-notifications-24f29.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:358519725314:android:fec03ecdf81951b06ef61b",
+        "android_client_info": {
+          "package_name": "com.example.rua11store_catalog_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSjQMAJpP1B-8KwJrpWVjySijWbq05EjY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

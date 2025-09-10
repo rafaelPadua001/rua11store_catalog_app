@@ -3,6 +3,7 @@ import 'package:rua11store_catalog_app/screens/auth/dashboard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'register.dart';
 import 'recoveryPassword.dart';
+import '../../services/register_device_token.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -23,10 +24,18 @@ class _StateLogin extends State<Login> {
 
       try {
         // Tenta fazer login
-        await Supabase.instance.client.auth.signInWithPassword(
+        final response = await Supabase.instance.client.auth.signInWithPassword(
           email: email,
           password: password,
         );
+
+        final user = response.user;
+        if (user == null) {
+          throw Exception("Usuário não encontrado após o login");
+        }
+
+        //Register token to device
+        await RegisterDeviceToken.registerDeviceToken(user.id);
 
         // Se chegou aqui, o login foi bem-sucedido
         ScaffoldMessenger.of(
@@ -45,6 +54,7 @@ class _StateLogin extends State<Login> {
         ).showSnackBar(SnackBar(content: Text('Erro de login: ${e.message}')));
       } catch (e) {
         // Outros erros inesperados
+        // print(e.toString());
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Erro: ${e.toString()}')));
