@@ -26,17 +26,21 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializa Supabase
-  await Supabase.initialize(
-    url: SupabaseConfig.supabaseUrl,
-    anonKey: SupabaseConfig.supabaseAnonKey,
-  );
+  try {
+    await Supabase.initialize(
+      url: SupabaseConfig.supabaseUrl,
+      anonKey: SupabaseConfig.supabaseAnonKey,
+    );
 
-  // Inicializa Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e, s) {
+    print("Erro na inicialização: $e\n$s");
+  }
 
   // Background handler (apenas Mobile)
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  //  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   // Permissão de notificações no Web
   if (kIsWeb) {

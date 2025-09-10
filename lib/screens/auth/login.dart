@@ -54,7 +54,7 @@ class _StateLogin extends State<Login> {
         ).showSnackBar(SnackBar(content: Text('Erro de login: ${e.message}')));
       } catch (e) {
         // Outros erros inesperados
-        // print(e.toString());
+        print(e.toString());
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Erro: ${e.toString()}')));
