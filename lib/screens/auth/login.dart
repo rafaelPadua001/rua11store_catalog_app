@@ -4,7 +4,10 @@ import 'package:rua11store_catalog_app/screens/auth/dashboard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'register.dart';
 import 'recoveryPassword.dart';
-import '../../services/register_device_token.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+//import '../../services/.register_device_token.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -19,55 +22,60 @@ class _StateLogin extends State<Login> {
   final _formKey = GlobalKey<FormState>();
 
   Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
-      String email = _emailController.text;
-      String password = _passwordController.text;
+    if (!_formKey.currentState!.validate()) return;
 
-      try {
-        // Tenta fazer login
-        final response = await Supabase.instance.client.auth.signInWithPassword(
-          email: email,
-          password: password,
+    final email = _emailController.text;
+    final password = _passwordController.text;
+
+    try {
+      // Faz login
+      final response = await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+
+      final user = response.user;
+      if (user == null) throw Exception("Usuário não encontrado após o login");
+
+      // Obtém token do dispositivo (web ou app)
+      String? deviceToken;
+      if (kIsWeb) {
+        deviceToken = await FirebaseMessaging.instance.getToken(
+          vapidKey:
+              "BIVzCDEvp452x1vdxzCEmkyS22jiTYymoOwJr-BjtTQiKeLCLGpCKlMquHg-gsooSXFfKZh4d4y47Ll0ywkjdxE",
         );
-
-        final user = response.user;
-        if (user == null) {
-          throw Exception("Usuário não encontrado após o login");
-        }
-
-        if (fcmWebToken != null) {
-          await Supabase.instance.client.from('user_devices').upsert({
-            'user_id': user.id,
-            'device_token': fcmWebToken,
-          });
-          //print("Token associado ao usuário: $fcmWebToken");
-        }
-
-        //Register token to device
-        //  await RegisterDeviceToken.registerDeviceToken(user.id);
-
-        // Se chegou aqui, o login foi bem-sucedido
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Login bem-sucedido!')));
-
-        // Redireciona para a tela principal
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => Dashboard()),
-        ); // Altere para a sua rota principal
-      } on AuthException catch (e) {
-        // Erros específicos de autenticação
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erro de login: ${e.message}')));
-      } catch (e) {
-        // Outros erros inesperados
-        print(e.toString());
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erro: ${e.toString()}')));
+      } else {
+        deviceToken = await FirebaseMessaging.instance.getToken();
       }
+
+      // Salva token no Supabase, usando upsert para não duplicar
+      if (deviceToken != null) {
+        await Supabase.instance.client.from('user_devices').upsert({
+          'user_id': user.id,
+          'device_token': deviceToken,
+        });
+        print("Token associado ao usuário: $deviceToken");
+      }
+
+      // Mostra mensagem de sucesso
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Login bem-sucedido!')));
+
+      // Redireciona para Dashboard
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Dashboard()),
+      );
+    } on AuthException catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro de login: ${e.message}')));
+    } catch (e) {
+      print(e.toString());
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro: ${e.toString()}')));
     }
   }
 

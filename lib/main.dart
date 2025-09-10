@@ -35,10 +35,10 @@ Future<void> main() async {
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
 
-  if (!kIsWeb) {
-    Firebase.initializeApp(options: DefaultFirebaseOptions.web);
-  } else {
+  if (kIsWeb) {
     await _initializeFCMWeb();
+  } else {
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   }
 
   runApp(

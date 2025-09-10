@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/screens/auth/dashboard.dart';
 import 'package:rua11store_catalog_app/services/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -20,6 +23,7 @@ class AppBarExample extends StatefulWidget implements PreferredSizeWidget {
 class _AppBarExampleState extends State<AppBarExample> {
   User? _user;
   bool hasLogo = true;
+  late final StreamSubscription<AuthState> _authSub;
 
   @override
   void initState() {
@@ -27,26 +31,34 @@ class _AppBarExampleState extends State<AppBarExample> {
     _user = Supabase.instance.client.auth.currentUser;
 
     // Escuta mudanças de autenticação (login/logout)
-    Supabase.instance.client.auth.onAuthStateChange.listen((event) {
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((event) {
+      if (!mounted) return; // garante que o widget ainda existe
       setState(() {
         _user = Supabase.instance.client.auth.currentUser;
       });
     });
   }
 
+  void dispose() {
+    _authSub.cancel(); // cancela a inscrição
+    super.dispose();
+  }
+
   Future<void> _handleLogout(BuildContext context) async {
     try {
       final user = SupabaseConfig.supabase.auth.currentUser;
-
-      if (user != null) {
+      // print(user);
+      if (user != null && fcmWebToken != null) {
+        // Remove apenas o token atual
         await SupabaseConfig.supabase
             .from('user_devices')
             .delete()
-            .eq('user_id', user.id);
-        print('token antigo removido do banco');
+            .eq('user_id', user.id)
+            .eq('device_token', fcmWebToken!);
+        //print('Token antigo removido do banco');
       }
 
-      await Supabase.instance.client.auth.signOut();
+      await SupabaseConfig.supabase.auth.signOut();
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => Login()),
