@@ -48,6 +48,7 @@ dependencies:
   font_awesome_flutter: ^10.8.0
   carousel_slider_x: ^6.0.7
   timeago: ^3.6.0
+  fl_chart: ^1.1.0
   
 
 dev_dependencies:
