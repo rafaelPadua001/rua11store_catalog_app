@@ -31,7 +31,7 @@ class _StateDashboard extends State<Dashboard> {
 
   List<dynamic> _orders = [];
 
-  final apiUrl = dotenv.env['API_URL_LOCAL'];
+  final apiUrl = dotenv.env['API_URL'];
 
   List<Widget> get _widgetOptions {
     return [
