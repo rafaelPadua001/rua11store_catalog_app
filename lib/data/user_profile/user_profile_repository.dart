@@ -34,7 +34,7 @@ class UserProfileRepository {
             user.email?.split('@').first ??
             'Usuário',
       };
-  print(authData);
+  
       // Busca dados adicionais do perfil
       final profileResponse =
           await _supabase
@@ -43,7 +43,7 @@ class UserProfileRepository {
               .eq('user_id', user.id)
               .maybeSingle();
 
-    print(profileResponse);
+    
       // Verifica se o perfil existe, se não, cria um novo
       if (profileResponse == null) {
         final newProfile = {

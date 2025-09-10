@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -30,7 +31,7 @@ class _StateDashboard extends State<Dashboard> {
 
   List<dynamic> _orders = [];
 
-  final apiUrl = dotenv.env['API_URL'];
+  final apiUrl = dotenv.env['API_URL_LOCAL'];
 
   List<Widget> get _widgetOptions {
     return [
@@ -220,6 +221,20 @@ class _StateDashboard extends State<Dashboard> {
       });
     }
     return;
+  }
+
+  Map<String, int> _groupOrdersByCategory(List<dynamic> orders) {
+    final Map<String, int> grouped = {};
+    for (var order in orders) {
+      final categories = order['categories'] as List<dynamic>?;
+      final categoryName =
+          (categories != null && categories.isNotEmpty)
+              ? categories[0]['name'] ?? 'sem categoria'
+              : 'sem categoria';
+
+      grouped[categoryName] = (grouped[categoryName] ?? 0) + 1;
+    }
+    return grouped;
   }
 
   Future<void> _loadDashboardCounts() async {
@@ -421,6 +436,31 @@ class _StateDashboard extends State<Dashboard> {
 
   @override
   Widget _buildOrdersCategoryCard(BuildContext context) {
+    final grouped = _groupOrdersByCategory(_orders);
+
+    if (grouped.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Nenhum pedido encontrado',
+            style: const TextStyle(fontSize: 16),
+          ),
+        ),
+      );
+    }
+
+    final colors = [
+      Colors.blue,
+      Colors.red,
+      Colors.green,
+      Colors.orange,
+      Colors.purple,
+      Colors.yellow,
+      Colors.cyan,
+      Colors.pink,
+    ];
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -431,6 +471,31 @@ class _StateDashboard extends State<Dashboard> {
             Text(
               'Pedidos Por Categoria:',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 370,
+              child: PieChart(
+                PieChartData(
+                  sections:
+                      grouped.entries.toList().asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final category = entry.value.key;
+                        final value = entry.value.value;
+                        return PieChartSectionData(
+                          value: value.toDouble(),
+                          title: "$category ($value)",
+                          radius: 95,
+                          color: colors[index % colors.length],
+                          titleStyle: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold
+                          ),
+                        );
+                      }).toList(),
+                ),
+              ),
             ),
           ],
         ),
