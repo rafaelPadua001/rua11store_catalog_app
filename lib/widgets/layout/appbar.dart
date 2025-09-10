@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:rua11store_catalog_app/screens/auth/dashboard.dart';
+import 'package:rua11store_catalog_app/services/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../screens/auth/login.dart';
 import 'cart_menu.dart';
@@ -35,6 +36,16 @@ class _AppBarExampleState extends State<AppBarExample> {
 
   Future<void> _handleLogout(BuildContext context) async {
     try {
+      final user = SupabaseConfig.supabase.auth.currentUser;
+
+      if (user != null) {
+        await SupabaseConfig.supabase
+            .from('user_devices')
+            .delete()
+            .eq('user_id', user.id);
+        print('token antigo removido do banco');
+      }
+
       await Supabase.instance.client.auth.signOut();
       Navigator.pushAndRemoveUntil(
         context,

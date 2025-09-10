@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rua11store_catalog_app/main.dart';
 import 'package:rua11store_catalog_app/screens/auth/dashboard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'register.dart';
@@ -34,8 +35,16 @@ class _StateLogin extends State<Login> {
           throw Exception("Usuário não encontrado após o login");
         }
 
+        if (fcmWebToken != null) {
+          await Supabase.instance.client.from('user_devices').upsert({
+            'user_id': user.id,
+            'device_token': fcmWebToken,
+          });
+          //print("Token associado ao usuário: $fcmWebToken");
+        }
+
         //Register token to device
-        await RegisterDeviceToken.registerDeviceToken(user.id);
+        //  await RegisterDeviceToken.registerDeviceToken(user.id);
 
         // Se chegou aqui, o login foi bem-sucedido
         ScaffoldMessenger.of(
