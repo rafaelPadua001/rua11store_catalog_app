@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:rua11store_catalog_app/services/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -352,7 +353,18 @@ class _StateDashboard extends State<Dashboard> {
 
   Future<void> _handleLogout(BuildContext context) async {
     try {
-      await Supabase.instance.client.auth.signOut();
+      final user = SupabaseConfig.supabase.auth.currentUser;
+
+      if (user != null && fcmWebToken != null) {
+        // Remove apenas o token atual
+        await SupabaseConfig.supabase
+            .from('user_devices')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('device_token', fcmWebToken!);
+      }
+
+      await SupabaseConfig.supabase.auth.signOut();
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => MyApp()),
@@ -490,7 +502,7 @@ class _StateDashboard extends State<Dashboard> {
                           titleStyle: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
-                            fontWeight: FontWeight.bold
+                            fontWeight: FontWeight.bold,
                           ),
                         );
                       }).toList(),

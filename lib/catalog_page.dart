@@ -31,7 +31,11 @@ class _CatalogPageState extends State<CatalogPage> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showAgeDialog();
+      Provider.of<Categoriescontroller>(
+        context,
+        listen: false,
+      ).fetchCategories();
+      Provider.of<ProductsController>(context, listen: false).fetchProducts();
     });
 
     // Carrega categorias e produtos via providers
