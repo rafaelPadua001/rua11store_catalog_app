@@ -9,7 +9,13 @@ import 'controllers/productsController.dart';
 import 'widgets/layout/appbar.dart';
 import 'catalog_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-//import 'dart:html' as html;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'firebase_options.dart';
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print('Mensagem recebida em background: ${message.notification?.title}');
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +24,10 @@ void main() async {
     url: SupabaseConfig.supabaseUrl,
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   await dotenv.load(fileName: ".env");
   final uri = Uri.base;
