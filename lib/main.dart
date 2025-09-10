@@ -14,100 +14,79 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
 
-// Handler de mensagens em background
+// Handler de mensagens em background (Mobile)
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  try {
-    print('Mensagem recebida em background: ${message.notification?.title}');
-  } catch (e) {
-    print('Erro no background handler: $e');
-  }
+  print('Mensagem recebida em background: ${message.notification?.title}');
 }
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await Supabase.initialize(
-      url: SupabaseConfig.supabaseUrl,
-      anonKey: SupabaseConfig.supabaseAnonKey,
-    );
-
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } catch (e, s) {
-    print("Erro na inicialização: $e\n$s");
-  }
-
-  // Background handler (apenas Mobile)
-  //  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  // Permissão de notificações no Web
-  if (kIsWeb) {
-    try {
-      await FirebaseMessaging.instance.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-    } catch (e) {
-      print('Permissão FCM Web falhou: $e');
-    }
-  }
-
   await dotenv.load(fileName: ".env");
-  final uri = Uri.base;
 
-  String? accessToken;
-  String? type;
+  // Inicializa Firebase
+  await Firebase.initializeApp(
+    options: kIsWeb ? DefaultFirebaseOptions.web : null,
+  );
 
-  // Primeiro tenta ler os parâmetros do fragmento (após #)
-  if (uri.fragment.isNotEmpty) {
-    final params = Uri.splitQueryString(uri.fragment);
-    accessToken = params['access_token'];
-    type = params['type'];
-  }
+  // Inicializa Supabase
+  await Supabase.initialize(
+    url: SupabaseConfig.supabaseUrl,
+    anonKey: SupabaseConfig.supabaseAnonKey,
+  );
 
-  // Se não encontrou no fragmento, tenta pegar nos queryParameters (após ?)
-  if (accessToken == null) {
-    accessToken =
-        uri.queryParameters['access_token'] ?? uri.queryParameters['code'];
-    type = uri.queryParameters['type'] ?? 'recovery';
-  }
-
-  Widget initialScreen = const MyHomePage(title: 'Rua11Store');
-
-  if (type == 'recovery' && accessToken != null && accessToken.isNotEmpty) {
-    initialScreen = ChangePasswordScreen(accessToken: accessToken);
+  if (!kIsWeb) {
+    Firebase.initializeApp(options: DefaultFirebaseOptions.web);
+  } else {
+    await _initializeFCMWeb();
   }
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => Categoriescontroller()),
-        ChangeNotifierProvider(create: (context) => ProductsController()),
+        ChangeNotifierProvider(create: (_) => Categoriescontroller()),
+        ChangeNotifierProvider(create: (_) => ProductsController()),
       ],
-      child: MyApp(initialScreen: initialScreen),
+      child: const MyApp(),
     ),
   );
 }
 
+String? fcmWebToken;
+
+Future<void> _initializeFCMWeb() async {
+  try {
+    final settings = await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      fcmWebToken = await FirebaseMessaging.instance.getToken(
+        vapidKey:
+            "BIVzCDEvp452x1vdxzCEmkyS22jiTYymoOwJr-BjtTQiKeLCLGpCKlMquHg-gsooSXFfKZh4d4y47Ll0ywkjdxE",
+      );
+      print("Token do dispositivo Web: $fcmWebToken");
+    }
+  } catch (e) {
+    print("erro ao solicitar permissão FCM Web: $e");
+  }
+}
+
 class MyApp extends StatelessWidget {
-  final Widget initialScreen;
-  const MyApp({
-    super.key,
-    this.initialScreen = const MyHomePage(title: 'Rua11Store'),
-  });
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Rua11Store',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme(
-          primary: const Color.fromARGB(255, 76, 0, 255),
-          secondary: const Color(0xFF5E4B6E),
-          surface: const Color(0xFFF5F5F5),
+        colorScheme: const ColorScheme(
+          primary: Color.fromARGB(255, 76, 0, 255),
+          secondary: Color(0xFF5E4B6E),
+          surface: Color(0xFFF5F5F5),
           error: Colors.deepPurpleAccent,
           onPrimary: Colors.black,
           onSecondary: Colors.black,
@@ -117,8 +96,7 @@ class MyApp extends StatelessWidget {
         ),
         textTheme: TextTheme(displaySmall: GoogleFonts.hahmlet(fontSize: 14)),
       ),
-      initialRoute: '/',
-      home: initialScreen,
+      home: const MyHomePage(title: 'Rua11Store'),
     );
   }
 }

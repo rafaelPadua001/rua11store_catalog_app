@@ -29,15 +29,26 @@ class _CatalogPageState extends State<CatalogPage> {
   @override
   void initState() {
     super.initState();
-    _showAgeDialog();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showAgeDialog();
+    });
 
     // Carrega categorias e produtos via providers
-    Future.microtask(() =>
-        Provider.of<Categoriescontroller>(context, listen: false)
-            .fetchCategories());
-    Future.microtask(() =>
-        Provider.of<ProductsController>(context, listen: false)
-            .fetchProducts());
+    Future.microtask(
+      () =>
+          Provider.of<Categoriescontroller>(
+            context,
+            listen: false,
+          ).fetchCategories(),
+    );
+    Future.microtask(
+      () =>
+          Provider.of<ProductsController>(
+            context,
+            listen: false,
+          ).fetchProducts(),
+    );
   }
 
   Future<void> _showAgeDialog() async {
@@ -69,134 +80,154 @@ class _CatalogPageState extends State<CatalogPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Campo de busca
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: "Buscar produto...",
-                  prefixIcon: Icon(Icons.search),
-                  border: InputBorder.none,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Campo de busca
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
-                onChanged: (value) {
-                  setState(() {
-                    searchQuery = value;
-                  });
-                },
-              ),
+              ],
             ),
-            const SizedBox(height: 10),
-
-            // Lista horizontal de categorias
-            SizedBox(
-              height: 50,
-              child: Consumer<Categoriescontroller>(
-                builder: (context, controller, child) {
-                  if (controller.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  return ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    children: controller.categories
-                        .where((c) => !c.isSubcategory)
-                        .map(
-                          (category) => Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 5),
-                            child: CategoriesChip(
-                              categories: category,
-                              onTap: () {
-                                setState(() {
-                                  selectedCategoryId = category.id.toString();
-                                });
-
-                                final productsFromProvider =
-                                    Provider.of<ProductsController>(context,
-                                            listen: false)
-                                        .products;
-
-                                final filteredProducts = productsFromProvider
-                                    .where((p) =>
-                                        p.categoryId.toString() ==
-                                        selectedCategoryId)
-                                    .toList();
-
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => CategoryProduct(
-                                      category: selectedCategoryId,
-                                      items: filteredProducts,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  );
-                },
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                hintText: "Buscar produto...",
+                prefixIcon: Icon(Icons.search),
+                border: InputBorder.none,
               ),
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
             ),
+          ),
+          const SizedBox(height: 10),
 
-            const SizedBox(height: 8),
-            const CouponCarousel(),
-            const SizedBox(height: 8),
-
-            // Grid de produtos
-            Consumer<ProductsController>(
-              builder: (context, productController, child) {
-                if (productController.isLoading) {
+          // Lista horizontal de categorias
+          SizedBox(
+            height: 50,
+            child: Consumer<Categoriescontroller>(
+              builder: (context, controller, child) {
+                if (controller.isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
+                return ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  children:
+                      controller.categories
+                          .where((c) => !c.isSubcategory)
+                          .map(
+                            (category) => Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5,
+                              ),
+                              child: CategoriesChip(
+                                categories: category,
+                                onTap: () {
+                                  setState(() {
+                                    selectedCategoryId = category.id.toString();
+                                  });
 
-                final filteredProducts =
-                    productController.products.where((product) {
-                  return product.name
-                          .toLowerCase()
-                          .contains(searchQuery.toLowerCase()) &&
-                      (selectedCategoryId.isEmpty ||
-                          product.categoryId.toString() == selectedCategoryId);
-                }).toList();
+                                  final productsFromProvider =
+                                      Provider.of<ProductsController>(
+                                        context,
+                                        listen: false,
+                                      ).products;
 
-                return GridView.builder(
-                  padding: const EdgeInsets.all(10),
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.5,
-                  ),
-                  itemCount: filteredProducts.length,
-                  itemBuilder: (context, index) {
-                    return ProductCard(product: filteredProducts[index]);
-                  },
+                                  final filteredProducts =
+                                      productsFromProvider
+                                          .where(
+                                            (p) =>
+                                                p.categoryId.toString() ==
+                                                selectedCategoryId,
+                                          )
+                                          .toList();
+
+                                  //Navigator.push(
+                                  //  context,
+                                  //  MaterialPageRoute(
+                                  //    builder: (_) => CategoryProduct(
+                                  //      category: selectedCategoryId,
+                                  //      items: filteredProducts,
+                                  //    ),
+                                  //  ),
+                                  //);
+                                  Future.microtask(() {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => CategoryProduct(
+                                              category: selectedCategoryId,
+                                              items: filteredProducts,
+                                            ),
+                                      ),
+                                    );
+                                  });
+                                },
+                              ),
+                            ),
+                          )
+                          .toList(),
                 );
               },
             ),
-          ],
-        ),
+          ),
+
+          const SizedBox(height: 8),
+          const CouponCarousel(),
+          const SizedBox(height: 8),
+
+          // Grid de produtos
+          Consumer<ProductsController>(
+            builder: (context, productController, child) {
+              if (productController.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final filteredProducts =
+                  productController.products.where((product) {
+                    return product.name.toLowerCase().contains(
+                          searchQuery.toLowerCase(),
+                        ) &&
+                        (selectedCategoryId.isEmpty ||
+                            product.categoryId.toString() ==
+                                selectedCategoryId);
+                  }).toList();
+
+              if (filteredProducts.isEmpty) {
+                return const Center(child: Text('Nenhum produto encontrado'));
+              }
+
+              return GridView.builder(
+                padding: const EdgeInsets.all(10),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.5,
+                ),
+                itemCount: filteredProducts.length,
+                itemBuilder: (context, index) {
+                  return ProductCard(product: filteredProducts[index]);
+                },
+              );
+            },
+          ),
+        ],
       ),
     );
   }
