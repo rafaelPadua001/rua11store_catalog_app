@@ -16,7 +16,47 @@ import 'firebase_options.dart';
 
 // Handler de mensagens em background (Mobile)
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print('Mensagem recebida em background: ${message.notification?.title}');
+  debugPrint('Mensagem recebida em background: ${message.notification?.title}');
+}
+
+String? fcmWebToken;
+
+// Inicialização segura do FCM Web
+Future<void> initFirebaseSafe() async {
+  // Desabilita completamente o Firebase para web
+  if (kIsWeb) {
+    debugPrint("ℹ️ Firebase desabilitado para web - Não essencial para o app");
+    return;
+  }
+
+  // Mantém apenas para mobile
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      debugPrint("✅ Firebase inicializado para mobile");
+    }
+  } catch (e) {
+    debugPrint("❌ Erro ao inicializar Firebase mobile: $e");
+  }
+}
+
+Future<void> initFCMSafe() async {
+  // Desabilita FCM para web
+  if (kIsWeb) {
+    debugPrint("ℹ️ FCM desabilitado para web");
+    return;
+  }
+
+  // Mantém apenas para mobile
+  try {
+    await FirebaseMessaging.instance.requestPermission();
+    final token = await FirebaseMessaging.instance.getToken();
+    debugPrint("✅ Token FCM Mobile: $token");
+  } catch (e) {
+    debugPrint("⚠️ FCM Mobile não inicializado: $e");
+  }
 }
 
 Future<void> main() async {
@@ -24,21 +64,22 @@ Future<void> main() async {
 
   await dotenv.load(fileName: ".env");
 
-  // Inicializa Firebase
-  await Firebase.initializeApp(
-    options: kIsWeb ? DefaultFirebaseOptions.web : null,
-  );
-
-  // Inicializa Supabase
   await Supabase.initialize(
     url: SupabaseConfig.supabaseUrl,
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
 
-  if (kIsWeb) {
-    await _initializeFCMWeb();
+  if (!kIsWeb) {
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      // login Firebase ou FCM
+    } catch (e) {
+      debugPrint("⚠️ Firebase/FCM Mobile falhou: $e");
+    }
   } else {
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    debugPrint("ℹ️ Firebase desabilitado no Web");
   }
 
   runApp(
@@ -47,31 +88,9 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => Categoriescontroller()),
         ChangeNotifierProvider(create: (_) => ProductsController()),
       ],
-      child: const MyApp(),
+      child: const MyApp(), // MyApp deve conter o CatalogPage
     ),
   );
-}
-
-String? fcmWebToken;
-
-Future<void> _initializeFCMWeb() async {
-  try {
-    final settings = await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      fcmWebToken = await FirebaseMessaging.instance.getToken(
-        vapidKey:
-            "BIVzCDEvp452x1vdxzCEmkyS22jiTYymoOwJr-BjtTQiKeLCLGpCKlMquHg-gsooSXFfKZh4d4y47Ll0ywkjdxE",
-      );
-      print("Token do dispositivo Web: $fcmWebToken");
-    }
-  } catch (e) {
-    print("erro ao solicitar permissão FCM Web: $e");
-  }
 }
 
 class MyApp extends StatelessWidget {
@@ -112,6 +131,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
+    //debugPrint("📱 Construindo MyHomePage...");
     return Scaffold(appBar: const AppBarExample(), body: CatalogPage());
   }
 }
