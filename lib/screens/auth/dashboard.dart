@@ -362,7 +362,7 @@ class _StateDashboard extends State<Dashboard> {
             .delete()
             .eq('user_id', user.id)
             .eq('device_token', fcmWebToken!);
-        debugPrint("Logout token removido: $res");
+        // debugPrint("Logout token removido: $res");
       }
 
       await SupabaseConfig.supabase.auth.signOut();

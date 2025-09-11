@@ -131,7 +131,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    debugPrint("📱 Construindo MyHomePage...");
+    //debugPrint("📱 Construindo MyHomePage...");
     return Scaffold(appBar: const AppBarExample(), body: CatalogPage());
   }
 }
