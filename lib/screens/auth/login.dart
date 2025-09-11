@@ -28,7 +28,6 @@ class _StateLogin extends State<Login> {
     final password = _passwordController.text;
 
     try {
-      // Faz login
       final response = await Supabase.instance.client.auth.signInWithPassword(
         email: email,
         password: password,
@@ -37,32 +36,28 @@ class _StateLogin extends State<Login> {
       final user = response.user;
       if (user == null) throw Exception("Usuário não encontrado após o login");
 
-      // Obtém token do dispositivo (web ou app)
+      // Obtém token apenas no mobile
       String? deviceToken;
-      if (kIsWeb) {
-        deviceToken = await FirebaseMessaging.instance.getToken(
-          vapidKey:
-              "BIVzCDEvp452x1vdxzCEmkyS22jiTYymoOwJr-BjtTQiKeLCLGpCKlMquHg-gsooSXFfKZh4d4y47Ll0ywkjdxE",
-        );
-      } else {
-        deviceToken = await FirebaseMessaging.instance.getToken();
+      if (!kIsWeb) {
+        try {
+          deviceToken = await FirebaseMessaging.instance.getToken();
+        } catch (e) {
+          debugPrint("⚠️ Erro ao obter token FCM Mobile: $e");
+        }
       }
 
-      // Salva token no Supabase, usando upsert para não duplicar
       if (deviceToken != null) {
+        fcmWebToken = deviceToken; // Salva o token globalmente
         await Supabase.instance.client.from('user_devices').upsert({
           'user_id': user.id,
           'device_token': deviceToken,
         });
-        print("Token associado ao usuário: $deviceToken");
       }
 
-      // Mostra mensagem de sucesso
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Login bem-sucedido!')));
 
-      // Redireciona para Dashboard
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => Dashboard()),
@@ -72,7 +67,7 @@ class _StateLogin extends State<Login> {
         context,
       ).showSnackBar(SnackBar(content: Text('Erro de login: ${e.message}')));
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Erro: ${e.toString()}')));

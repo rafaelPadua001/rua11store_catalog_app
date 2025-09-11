@@ -357,19 +357,23 @@ class _StateDashboard extends State<Dashboard> {
 
       if (user != null && fcmWebToken != null) {
         // Remove apenas o token atual
-        await SupabaseConfig.supabase
+        final res = await SupabaseConfig.supabase
             .from('user_devices')
             .delete()
             .eq('user_id', user.id)
             .eq('device_token', fcmWebToken!);
+        debugPrint("Logout token removido: $res");
       }
 
       await SupabaseConfig.supabase.auth.signOut();
+      fcmWebToken = null; // limpa o token global
+
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => MyApp()),
         (route) => false,
       );
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Logout realizado com sucesso!')),
       );
