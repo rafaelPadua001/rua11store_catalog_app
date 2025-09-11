@@ -12,11 +12,18 @@ import 'catalog_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'firebase_options.dart';
 
 // Handler de mensagens em background (Mobile)
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('Mensagem recebida em background: ${message.notification?.title}');
+  // Inicializar Firebase no background
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Aqui você pode salvar no Supabase ou logar no console
+  debugPrint(
+    "📩 Mensagem recebida em background: ${message.notification?.title}",
+  );
 }
 
 String? fcmWebToken;
@@ -74,9 +81,65 @@ Future<void> main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      // login Firebase ou FCM
+
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+      // Pedir permissão (iOS e Android 13+)
+      NotificationSettings settings = await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      debugPrint("🔔 Permissão: ${settings.authorizationStatus}");
+
+      // Registrar handler para mensagens em background
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
+      );
+
+      // Obter e exibir o token
+      String? token = await messaging.getToken();
+      debugPrint("📲 FCM Token: $token");
+
+      // Aqui você pode salvar no Supabase
+      if (token != null) {
+        // TODO: enviar token para Supabase (tabela user_devices)
+      }
+
+      // Inicializar flutter_local_notifications
+      final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+          FlutterLocalNotificationsPlugin();
+
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+
+      const InitializationSettings initializationSettings =
+          InitializationSettings(android: initializationSettingsAndroid);
+
+      await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+      // Listener para mensagens quando app está em foreground
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        RemoteNotification? notification = message.notification;
+        if (notification != null) {
+          flutterLocalNotificationsPlugin.show(
+            notification.hashCode,
+            notification.title,
+            notification.body,
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                'default_channel',
+                'Notificações padrão',
+                importance: Importance.max,
+                priority: Priority.high,
+              ),
+            ),
+          );
+        }
+      });
     } catch (e) {
-      debugPrint("⚠️ Firebase/FCM Mobile falhou: $e");
+      debugPrint("⚠️ Firebase/FCM falhou: $e");
     }
   } else {
     debugPrint("ℹ️ Firebase desabilitado no Web");
@@ -88,7 +151,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => Categoriescontroller()),
         ChangeNotifierProvider(create: (_) => ProductsController()),
       ],
-      child: const MyApp(), // MyApp deve conter o CatalogPage
+      child: const MyApp(),
     ),
   );
 }
@@ -131,7 +194,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    //debugPrint("📱 Construindo MyHomePage...");
+    debugPrint("📱 Construindo MyHomePage...");
     return Scaffold(appBar: const AppBarExample(), body: CatalogPage());
   }
 }
