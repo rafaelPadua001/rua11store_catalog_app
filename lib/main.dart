@@ -162,11 +162,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Rua11Store',
+      title: 'Demo Store',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: const ColorScheme(
-          primary: Color.fromARGB(255, 76, 0, 255),
+          primary: Color.fromARGB(255, 12, 12, 12),
           secondary: Color(0xFF5E4B6E),
           surface: Color(0xFFF5F5F5),
           error: Colors.deepPurpleAccent,
@@ -178,7 +178,7 @@ class MyApp extends StatelessWidget {
         ),
         textTheme: TextTheme(displaySmall: GoogleFonts.hahmlet(fontSize: 14)),
       ),
-      home: const MyHomePage(title: 'Rua11Store'),
+      home: const MyHomePage(title: 'Demo Store'),
     );
   }
 }
