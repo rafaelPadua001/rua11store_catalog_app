@@ -37,22 +37,22 @@ class _StateLogin extends State<Login> {
       if (user == null) throw Exception("Usuário não encontrado após o login");
 
       // Obtém token apenas no mobile
-      String? deviceToken;
-      if (!kIsWeb) {
-        try {
-          deviceToken = await FirebaseMessaging.instance.getToken();
-        } catch (e) {
-          debugPrint("⚠️ Erro ao obter token FCM Mobile: $e");
-        }
-      }
-
-      if (deviceToken != null) {
-        fcmWebToken = deviceToken; // Salva o token globalmente
-        await Supabase.instance.client.from('user_devices').upsert({
-          'user_id': user.id,
-          'device_token': deviceToken,
-        });
-      }
+      //  String? deviceToken;
+      //  if (!kIsWeb) {
+      //    try {
+      //      deviceToken = await FirebaseMessaging.instance.getToken();
+      //    } catch (e) {
+      //      debugPrint("⚠️ Erro ao obter token FCM Mobile: $e");
+      //    }
+      //  }
+      //
+      //  if (deviceToken != null) {
+      //    fcmWebToken = deviceToken; // Salva o token globalmente
+      //    await Supabase.instance.client.from('user_devices').upsert({
+      //      'user_id': user.id,
+      //      'device_token': deviceToken,
+      //    });
+      //  }
 
       ScaffoldMessenger.of(
         context,
@@ -89,7 +89,7 @@ class _StateLogin extends State<Login> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Rua11Store',
+                    'Demo Store',
                     style: TextStyle(
                       color: Colors.deepPurple,
                       fontSize: 24,

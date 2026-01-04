@@ -178,7 +178,7 @@ class _StateRegister extends State<Register> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Rua11Store',
+                      'Demo Store',
                       style: TextStyle(
                         color: Colors.deepPurple,
                         fontSize: 24,

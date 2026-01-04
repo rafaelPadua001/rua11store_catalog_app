@@ -7,7 +7,7 @@ class Categories {
   final IconData icon;
   final bool isSubcategory;
   final int? parentId;
-  final int userId;
+  final String? userId;
 
   Categories({
     required this.id,
@@ -25,7 +25,7 @@ class Categories {
       name: json['name'] ?? '',
       isSubcategory: json['is_subcategory'] ?? false,
       parentId: json['parentId'],
-      userId: json['user_id'],
+      userId: json['user_id']?.toString(),
       icon: _mapNameToIcon(json['name']),
     );
   }

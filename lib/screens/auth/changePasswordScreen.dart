@@ -6,7 +6,7 @@ import '../../../main.dart';
 class ChangePasswordScreen extends StatefulWidget {
   final String accessToken;
   const ChangePasswordScreen({required this.accessToken, Key? key})
-      : super(key: key);
+    : super(key: key);
 
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
@@ -34,8 +34,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   Future<void> _restoreSession() async {
     setState(() => _loading = true);
     try {
-      final response =
-          await Supabase.instance.client.auth.recoverSession(widget.accessToken);
+      final response = await Supabase.instance.client.auth.recoverSession(
+        widget.accessToken,
+      );
 
       setState(() {
         _loading = false;
@@ -66,8 +67,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     });
 
     try {
-      final response =
-          await Supabase.instance.client.auth.updateUser(UserAttributes(password: newPassword));
+      final response = await Supabase.instance.client.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
 
       if (response.user != null) {
         if (!mounted) return;
@@ -101,7 +103,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_loading)
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Nova Senha')),
@@ -122,17 +125,21 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _loadingSubmit || _passwordChanged ? null : _updatePassword,
-              child: _loadingSubmit
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Atualizar senha'),
+              onPressed:
+                  _loadingSubmit || _passwordChanged ? null : _updatePassword,
+              child:
+                  _loadingSubmit
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Atualizar senha'),
             ),
             if (_passwordChanged) ...[
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const MyHomePage(title: 'Rua11Store')),
+                    MaterialPageRoute(
+                      builder: (_) => const MyHomePage(title: 'Demo Store'),
+                    ),
                     (route) => false,
                   );
                 },
