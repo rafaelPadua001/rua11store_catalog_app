@@ -4,11 +4,11 @@ import '../models/payment.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class PaymentController {
-  //final _baseUrl = dotenv.env['API_URL'] ?? '';
-  final _baseUrl = dotenv.env['API_URL_LOCAL'] ?? '';
+  final _baseUrl = dotenv.env['API_URL'] ?? '';
+  // final _baseUrl = dotenv.env['API_URL_LOCAL'] ?? '';
   final publicKey = dotenv.env['MP_PUBLIC_KEY'];
 
-  Future<Map<String, dynamic>?> generateCardToken({
+  Future<String?> generateCardToken({
     required String cardNumber,
     required int expirationMonth,
     required int expirationYear,
@@ -48,8 +48,7 @@ class PaymentController {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        print(data);
-        return data; //card_token
+        return data['id']; //card_token
       } else {
         print("Erro ao gerar token: ${response.body}");
         return null;

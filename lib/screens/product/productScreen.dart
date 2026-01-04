@@ -476,7 +476,6 @@ class _ProductScreenState extends State<ProductScreen> {
                             "length": widget.product.length,
                             "secure_value": 0,
                             "quantity": quantity,
-                            "product_id": widget.product.id,
                           },
                         ],
                       ),
@@ -604,7 +603,7 @@ class _ProductScreenState extends State<ProductScreen> {
 
   Widget _buildCardActions() {
     return Container(
-      color: const Color.fromARGB(255, 7, 7, 7),
+      color: const Color.fromARGB(255, 113, 30, 247),
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -741,9 +740,9 @@ class _ProductScreenState extends State<ProductScreen> {
                     filled: true,
                     fillColor: const Color.fromARGB(
                       255,
-                      7,
-                      7,
-                      7,
+                      113,
+                      30,
+                      247,
                     ), // fundo preto
                     border: OutlineInputBorder(),
                   ),
@@ -763,7 +762,12 @@ class _ProductScreenState extends State<ProductScreen> {
                     ),
                     backgroundColor:
                         widget.product.stockQuantity >= 1
-                            ? const Color.fromARGB(255, 3, 3, 3) // roxo ativo
+                            ? const Color.fromARGB(
+                              255,
+                              113,
+                              30,
+                              247,
+                            ) // roxo ativo
                             : Colors.grey, // cinza desabilitado
                     minimumSize: const Size(double.infinity, 25),
                   ),

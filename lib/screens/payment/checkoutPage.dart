@@ -307,7 +307,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       _isLoading = false;
     }
 
-    Map<String, dynamic>? token;
+    String? token;
     String cleanedCardNumber = _numberCardController.text.replaceAll(
       RegExp(r'[\s\-.]'),
       '',
@@ -344,7 +344,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
       token = await paymentController.generateCardToken(
         cardNumber: tempPayment.numberCard ?? '',
-        expirationMonth: expirationMonth,
+        expirationMonth: expirationMonth ?? 0,
         expirationYear: expirationYear,
         securityCode: tempPayment.cvv ?? '',
         cardholderName: tempPayment.nameCard ?? '',
@@ -352,14 +352,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
         docNumber: _cpfController.text.replaceAll(RegExp(r'\D'), ''),
       );
     }
-    if (token == null || token['id'] == null) {
-      print("Falha ao gerar token, não enviar pagamento");
-      return;
-    }
+
     // Criar o pagamento com o token obtido
-    print('${token['expiration_month']}/${token['expiration_year']}');
     final payment = Payment(
-      cardToken: token['id'], // ✅ apenas o ID do token
+      cardToken: token,
       zipCode: widget.zipCode ?? "default_value",
       userEmail: widget.userEmail,
       userId: widget.userId,
@@ -373,7 +369,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       products: convertedProducts,
       numberCard: _selectedPayment != 'Pix' ? _numberCardController.text : null,
       nameCard: _selectedPayment != 'Pix' ? _nameCardController.text : null,
-      expiry: '${token['expiration_month']}/${token['expiration_year']}',
+      expiry: _selectedPayment != 'Pix' ? _cardExpiryController.text : null,
       cvv: _selectedPayment != 'Pix' ? _cardCVVController.text : null,
       installments: int.tryParse(_installmentsController.text) ?? 1,
       paymentMethodId: _selectedPaymentMethodId,
@@ -767,7 +763,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               const Icon(
                 Icons.local_shipping,
                 size: 24,
-                color: Color.fromARGB(255, 13, 13, 14),
+                color: Colors.deepPurpleAccent,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1248,17 +1244,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
       },
 
       child: Card(
-        color:
-            isSelected
-                ? const Color.fromARGB(255, 0, 0, 0)
-                : Colors.grey.shade200,
+        color: isSelected ? Colors.deepPurpleAccent : Colors.grey.shade200,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
-            color:
-                isSelected
-                    ? const Color.fromARGB(255, 10, 10, 10)
-                    : Colors.grey.shade300,
+            color: isSelected ? Colors.deepPurpleAccent : Colors.grey.shade300,
             width: 1,
           ),
         ),
@@ -1513,7 +1503,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       height: 60,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color.fromARGB(255, 13, 13, 14),
+          backgroundColor: Colors.deepPurpleAccent,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),

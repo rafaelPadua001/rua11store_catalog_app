@@ -46,7 +46,7 @@ class Payment {
 
   /// Envia para backend
   Map<String, dynamic> toJson() {
-    final map = {
+    return {
       'card_token': cardToken ?? '',
       'installments': installments ?? 1,
       'zipCode': zipCode,
@@ -61,24 +61,17 @@ class Payment {
       'frete': shipping.toStringAsFixed(2),
       'total': total.toStringAsFixed(2),
       'products': products,
+      if (paymentType == 'Crédito' || paymentType == 'Débito') ...{
+        'cartao': {
+          'numero': numberCard ?? '',
+          'nome': nameCard ?? '',
+          'validade': expiry ?? '',
+          'cvv': cvv ?? '',
+        },
+      },
       'coupon_amount': couponAmount ?? 0,
       'coupon_code': couponCode ?? '',
     };
-
-    // Sempre adiciona cartao se tiver dados
-    if (numberCard != null ||
-        nameCard != null ||
-        expiry != null ||
-        cvv != null) {
-      map['cartao'] = {
-        'numero': numberCard ?? '',
-        'nome': nameCard ?? '',
-        'validade': expiry ?? '',
-        'cvv': cvv ?? '',
-      };
-    }
-
-    return map;
   }
 
   /// Constrói a partir do backend

@@ -72,7 +72,7 @@ flutter_icons:
   image_path: "assets/icons/logo/logo.png"
 
 flutter_native_splash:
-    color: "#000000"  # Cor de fundo
+    color: "#6300FF"  # Cor de fundo
     image: assets/icons/splash_logo.png  # Caminho para sua imagem
     android: true
     ios: true

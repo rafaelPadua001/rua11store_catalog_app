@@ -17,7 +17,7 @@ class DeliveryService {
     final url = Uri.parse(
       isLocal
           ? 'http://127.0.0.1:5000/melhorEnvio/calculate-delivery'
-          : 'https://demo-store-zk1t.onrender.com/melhorEnvio/calculate-delivery',
+          : 'https://rua11store-catalog-api-lbp7.onrender.com/melhorEnvio/calculate-delivery',
     );
 
     final body = jsonEncode({
